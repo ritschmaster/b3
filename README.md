@@ -30,7 +30,7 @@ Then compile and install w32bindkeys. Please have a look at its [README](https:/
 
 Then compile b3:
 
-    ./configure
+    ./autogen.sh
     make
 
 Afterwards you may install b3 - depending on your MinGW environment - by performing:

@@ -23,10 +23,10 @@
 ################################################################################
 
 if DEBUG
-AM_CFLAGS = -g3 -O0
-AM_LDFLAGS = -g3 -O0
+AM_CFLAGS = -g -O0
+AM_LDFLAGS = -g -O0
 endif
 
 SUBDIRS = src tests
 
-EXTRA_DIST = README.md
+EXTRA_DIST = README README.md
