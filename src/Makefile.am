@@ -23,8 +23,8 @@
 ################################################################################
 
 if DEBUG
-AM_CFLAGS = -g3 -O0
-AM_LDFLAGS = -g3 -O0
+AM_CFLAGS = -g -O0
+AM_LDFLAGS = -g -O0
 endif
 
 bin_PROGRAMS = b3 scratch
@@ -32,40 +32,41 @@ bin_PROGRAMS = b3 scratch
 scratch_SOURCES = scratch.c
 scratch_LDFLAGS = --static -mwindows
 
-noinst_LTLIBRARIES = libb3base.la
-noinst_LTLIBRARIES += libb3parser.la
+noinst_LTLIBRARIES = libb3parser.la
 noinst_LTLIBRARIES += libb3interpreter.la
 
 
 libb3parser_la_SOURCES = win.c win.h # todo
 
-libb3interpreter_la_CFLAGS = @collectionc_CFLAGS@
+libb3parser_la_CFLAGS = $(AM_CFLAGS)
+libb3parser_la_CFLAGS += @collectionc_CFLAGS@
+libb3parser_la_LDFLAGS = --static -mwindows
+libb3parser_la_LIBADD = @collectionc_LIBS@
+
+
+libb3interpreter_la_SOURCES = wsman.c wsman.h
+libb3interpreter_la_SOURCES += monitor.c monitor.h
+libb3interpreter_la_SOURCES += ws.c ws.h
+libb3interpreter_la_SOURCES += win.c win.h
+libb3interpreter_la_SOURCES += bar.c bar.h
+libb3interpreter_la_SOURCES += ws_factory.c ws_factory.h
+libb3interpreter_la_SOURCES += til.c til.h
+libb3interpreter_la_SOURCES += counter.c counter.h
+
+libb3interpreter_la_CFLAGS = $(AM_CFLAGS)
+libb3interpreter_la_CFLAGS += @collectionc_CFLAGS@ 
+libb3interpreter_la_CFLAGS += @libwbkbase_CFLAGS@
 libb3interpreter_la_LDFLAGS = --static -mwindows
 libb3interpreter_la_LIBADD = @collectionc_LIBS@
-
-
-libb3base_la_SOURCES = win.c win.h
-libb3base_la_SOURCES += ws.c ws.h
-libb3base_la_SOURCES += wsman.c wsman.h
-libb3base_la_SOURCES += bar.c bar.h
-libb3base_la_SOURCES += barman.c barman.h
-libb3base_la_SOURCES += til.c til.h
-
-libb3base_la_CFLAGS = @collectionc_CFLAGS@
-libb3base_la_LDFLAGS = --static 
-libb3base_la_LIBADD = @collectionc_LIBS@
-
-
-libb3interpreter_la_SOURCES = win.c win.h #todo 
-
-libb3interpreter_la_CFLAGS = @collectionc_CFLAGS@
-libb3interpreter_la_LDFLAGS = --static -mwindows
-libb3interpreter_la_LIBADD = @collectionc_LIBS@
+libb3interpreter_la_LIBADD += @libwbkbase_LIBS@
 
 
 b3_SOURCES = main.c
 
+b3_CFLAGS = $(AM_CFLAGS)
+b3_CFLAGS += @libwbkbase_CFLAGS@
 b3_LDFLAGS = --static -mwindows
-b3_LDADD = libb3parser.la libb3interpreter.la
+b3_LDADD = libb3interpreter.la
+b3_LDADD += @libwbkbase_LIBS@
 
 

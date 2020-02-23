@@ -40,7 +40,7 @@ void OnNcPaint(HWND hwnd)
 }
 
 // Step 4: the Window Procedure
-LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
+LRESULT CALLBACK b3_bar_WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
 	LRESULT CALLBACK result;
 
@@ -140,7 +140,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	//Step 1: Registering the Window Class
 	wc.cbSize		= sizeof(WNDCLASSEX);
 	wc.style		 = 0;
-	wc.lpfnWndProc   = WndProc;
+	wc.lpfnWndProc   = b3_bar_WndProc;
 	wc.cbClsExtra	= 0;
 	wc.cbWndExtra	= 0;
 	wc.hInstance	 = hInstance;
@@ -172,13 +172,13 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		     1920, 10,
 		     SWP_NOACTIVATE);
 
-	GetTitleBarInfo(hwnd, titlebar_info);
-	fprintf(stdout, "Titlebar:\n");
-	fprintf(stdout, "%d\n", titlebar_info->rcTitleBar.top);
-	fprintf(stdout, "%d\n", titlebar_info->rcTitleBar.bottom);
-	fprintf(stdout, "%d\n", titlebar_info->rcTitleBar.left);
-	fprintf(stdout, "%d\n", titlebar_info->rcTitleBar.right);
-	fflush(stdout);
+//	GetTitleBarInfo(hwnd, titlebar_info);
+//	fprintf(stdout, "Titlebar:\n");
+//	fprintf(stdout, "%d\n", titlebar_info->rcTitleBar.top);
+//	fprintf(stdout, "%d\n", titlebar_info->rcTitleBar.bottom);
+//	fprintf(stdout, "%d\n", titlebar_info->rcTitleBar.left);
+//	fprintf(stdout, "%d\n", titlebar_info->rcTitleBar.right);
+//	fflush(stdout);
 
 	if(hwnd == NULL)
 	{

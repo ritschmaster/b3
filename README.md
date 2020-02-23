@@ -1,4 +1,4 @@
-__b__(aeck's implementation of ) __i3__ (for windows)
+__b__(aeck's implementation of i) __3__ (for windows)
 
 # Dependencies
 
@@ -26,12 +26,14 @@ Then compile and install Collections-C:
     cd build
     cmake -DCMAKE_INSTALL_PREFIX=/usr ..
 
+Then compile and install w32bindkeys. Please have a look at its [README](https://github.com/ritschmaster/w32bindkeys/blob/master/README.md).
+
 Then compile b3:
 
     ./configure
     make
 
-Afterwards you may install w32bindkeys - depending on your MinGW environment - by performing:
+Afterwards you may install b3 - depending on your MinGW environment - by performing:
 
     make install
 
@@ -52,6 +54,8 @@ Then compile and install Collections-C:
     mingw64-cmake ..
     sudo make install
     sudo cp /usr/x86_64-w64-mingw32/sys-root/mingw/lib/pkgconfig/collectionc.pc /usr/lib64/pkgconfig
+
+Then compile and install w32bindkeys. Please have a look at its [README](https://github.com/ritschmaster/w32bindkeys/blob/master/README.md).
 
 Then compile b3:
 

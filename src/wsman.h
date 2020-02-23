@@ -32,13 +32,18 @@
 #define WSMAN_H
 
 #include <collectc/array.h>
+#include <windows.h>
+
+#include "ws_factory.h"
 
 typedef struct b3_wsman_s
 {
 	/**
-	 * Array of b3_ws_t *
+	 * Array of b3_monitor_t *
 	 */
-	Array *ws;
+	Array *monitor_arr;
+
+	b3_ws_factory_t *ws_factory;
 } b3_wsman_t;
 
 /**
@@ -56,10 +61,25 @@ extern int
 b3_wsman_free(b3_wsman_t *wsman);
 
 /**
-  * @brief Gets the workspaces of workspace manager
-  * @return The workspaces of the workspace manager . Do not free that memory.
+ * @brief Refresh the currently available workspaces
+ */
+extern int
+b3_wsman_refresh(b3_wsman_t *wsman);
+
+/**
+  * @brief Gets the monitors of workspace manager
+  * @return The monitors of the workspace manager, as array of b3_monitor_t *.
   */
-extern Array *
-b3_wsman_get_ws(b3_wsman_t *wsman);
+extern const Array *
+b3_wsman_get_monitor_arr(b3_wsman_t *wsman);
+
+extern int
+b3_wsman_show(b3_wsman_t *wsman);
+
+/**
+ * @brief Draw the entire workspace manager
+ */
+extern int
+b3_wsman_draw(b3_wsman_t *wsman, HWND window_handler);
 
 #endif // WSMAN_H

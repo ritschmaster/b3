@@ -22,27 +22,42 @@
   SOFTWARE.
 *******************************************************************************/
 
-#include "barman.h"
+/**
+ * @author Richard B�ck
+ * @date 2020-02-16
+ * @brief File contains the counter definition
+ */
 
-#include <stdlib.h>
+#include <collectc/list.h>
 
-b3_barman_t *
-b3_barman_new(void)
+#ifndef COUNTER_H
+#define COUNTER_H
+
+typedef struct b3_counter_s
 {
-	b3_barman_t *barman;
+	int counter;
+	int reenable;
 
-	barman = NULL;
-	barman = malloc(sizeof(b3_barman_t));
+	/**
+	 * List of int *
+	 */
+	List *reenabled_ones;
+} b3_counter_t;
 
-	return barman;
-}
+extern b3_counter_t *
+b3_counter_new(int start, char reenable);
 
-int
-b3_barman_free(b3_barman_t *barman)
-{
-	free(barman);
-	return 0;
-}
+extern int
+b3_counter_free(b3_counter_t *counter);
+
+extern int
+b3_counter_next(b3_counter_t *counter);
+
+extern int
+b3_counter_add(b3_counter_t *counter, int reenable);
+
+extern char
+b3_counter_is_reenable(b3_counter_t *counter);
 
 
-
+#endif // COUNTER_H

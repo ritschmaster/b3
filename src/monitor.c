@@ -22,72 +22,77 @@
   SOFTWARE.
 *******************************************************************************/
 
-#include "ws.h"
+#include "monitor.h"
 
-#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
-#include "win.h"
-
-b3_ws_t *
-b3_ws_new(const char *name)
+b3_monitor_t *
+b3_monitor_new(const char *monitor_name, RECT monitor_area, b3_ws_factory_t *ws_factory)
 {
-	b3_ws_t *ws;
-
-	ws = NULL;
-	ws = malloc(sizeof(b3_ws_t));
-
-	array_new(&(ws->wins));
-
-	b3_ws_set_name(ws, name);
-
-	return ws;
-}
-
-int
-b3_ws_free(b3_ws_t *ws)
-{
-	array_destroy_cb(ws->wins, free); // TODO b3_win_free
-	ws->wins = NULL;
-
-	free(ws->name);
-	ws->name = NULL;
-
-	free(ws);
-	return 0;
-}
-
-Array *
-b3_ws_get_wins(b3_ws_t *ws)
-{
-	return ws->wins;
-}
-
-b3_til_mode_t
-b3_ws_get_mode(b3_ws_t *ws)
-{
-	return ws->mode;
-}
-
-int
-b3_ws_set_mode(b3_ws_t *ws, b3_til_mode_t mode)
-{
-	ws->mode = mode;
-	return 0;
-}
-
-int
-b3_ws_set_name(b3_ws_t *ws, const char *name)
-{
+	b3_monitor_t *monitor;
 	int length;
 
-	length = strlen(name) + 1;
-	ws->name = malloc(sizeof(char) * length);
-	strcpy(ws->name, name);
+	monitor = NULL;
+	monitor = malloc(sizeof(b3_monitor_t));
+
+	length = strlen(monitor_name) + 1;
+	monitor->monitor_name = malloc(length);
+	strcpy(monitor->monitor_name, monitor_name);
+
+	monitor->monitor_area = monitor_area;
+
+	monitor->bar = b3_bar_new(monitor->monitor_name, monitor->monitor_area);
+
+	monitor->ws_factory = ws_factory;
+
+	array_new(&(monitor->wsid_arr));
+
+	return monitor;
 }
 
-const char*
-b3_ws_get_name(b3_ws_t *ws)
+int
+b3_monitor_free(b3_monitor_t *monitor)
 {
-	return ws->name;
+	free(monitor->monitor_name);
+	monitor->monitor_name = NULL;
+
+	monitor->ws_factory = NULL;
+
+	array_destroy_cb(monitor->wsid_arr, free);
+	monitor->wsid_arr = NULL;
+
+	free(monitor);
+	return 0;
+}
+
+const char *
+b3_monitor_get_monitor_name(b3_monitor_t *monitor)
+{
+	return monitor->monitor_name;
+}
+
+RECT
+b3_ws_get_monitor_area(b3_monitor_t *monitor)
+{
+	return monitor->monitor_area;
+}
+
+const b3_bar_t *
+b3_monitor_get_bar(b3_monitor_t *monitor)
+{
+	return monitor->bar;
+}
+
+int
+b3_monitor_show(b3_monitor_t *monitor)
+{
+	b3_bar_create_window(monitor->bar,
+						 b3_monitor_get_monitor_name(monitor));
+	return 0;
+}
+
+int
+b3_monitor_draw(b3_monitor_t *monitor, HWND window_handler)
+{
 }

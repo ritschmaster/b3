@@ -23,39 +23,66 @@
 *******************************************************************************/
 
 /**
- * @author Richard Bäck
- * @date 27 January 2020
- * @brief File contains the status bar class definition
+ * @author Richard Bï¿½ck
+ * @date 2020-02-16
+ * @brief File contains the monitor definition
  */
 
+#include <collectc/array.h>
 #include <windows.h>
 
-#ifndef BAR_H
-#define BAR_H
+#include "bar.h"
+#include "ws_factory.h"
 
-#define DEFAULT_BAR_HEIGHT 10
+#ifndef MONITOR_H
+#define MONITOR_H
 
-typedef struct b3_bar_s
+typedef struct b3_monitor_s
 {
-	RECT area;
-} b3_bar_t;
+	char *monitor_name;
+
+	RECT monitor_area;
+
+	b3_bar_t *bar;
+
+	b3_ws_factory_t *ws_factory;
+
+	/**
+	 * Array of char *
+	 */
+	Array *wsid_arr;
+} b3_monitor_t;
 
 /**
- * @brief Creates a new status bar
- * @param monitor_area The area used by the monitor the bar is painted on.
- * @return A new status bar or NULL if allocation failed
+ * @brief Creates a new monitor object
+ * @param monitor_name A string object. It will be copied.
+ * @param monitor_area The rectangle of the work area
+ * @param ws_factory A workspace factory object. It will not be freed by the monitor.
+ * @return A new monitor object or NULL if allocation failed
  */
-extern b3_bar_t *
-b3_bar_new(const char *monitor_name, RECT monitor_area);
+extern b3_monitor_t *
+b3_monitor_new(const char *monitor_name, RECT monitor_area, b3_ws_factory_t *ws_factory);
 
 /**
- * @brief Frees a status bar
+ * @brief Frees a monitor object
  * @return Non-0 if the freeing failed
  */
 extern int
-b3_bar_free(b3_bar_t *bar);
+b3_monitor_free(b3_monitor_t *ws);
+
+extern const char *
+b3_monitor_get_monitor_name(b3_monitor_t *ws);
+
+extern RECT
+b3_ws_get_monitor_area(b3_monitor_t *ws);
+
+extern const b3_bar_t *
+b3_monitor_get_bar(b3_monitor_t *ws);
 
 extern int
-b3_bar_create_window(b3_bar_t *bar, const char *monitor_name);
+b3_monitor_show(b3_monitor_t *monitor);
 
-#endif // BAR_H
+extern int
+b3_monitor_draw(b3_monitor_t *ws, HWND window_handler);
+
+#endif // MONITOR_H

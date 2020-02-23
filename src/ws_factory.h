@@ -24,40 +24,53 @@
 
 /**
  * @author Richard Bäck
- * @date 27 January 2020
- * @brief File contains the bar manager class definition
+ * @date 2020-02-17
+ * @brief File contains the workspace factory class definition
  */
 
-#ifndef BARMAN_H
-#define BARMAN_H
-
-#include "bar.h"
+#include "counter.h"
 #include "ws.h"
 
-typedef struct b3_barman_s
+#ifndef WS_FACTORY_H
+#define WS_FACTORY_H
+
+typedef struct b3_ws_factory_s
 {
-	b3_bar_t *bar;
-} b3_barman_t;
+	/**
+	 * Array of b3_ws_t *
+	 */
+	Array *ws_arr;
+
+	b3_counter_t *ws_counter;
+} b3_ws_factory_t;
 
 /**
- * @brief Creates a new status bar manager 
- * @return A new status bar manager or NULL if allocation failed
+ * @brief Creates a new workspace factory object
+ * @return A new workspace factory object or NULL if allocation failed
  */
-extern b3_barman_t *
-b3_barman_new(void);
+extern b3_ws_factory_t *
+b3_ws_factory_new(void);
 
 /**
  * @brief Frees a status bar manager
  * @return Non-0 if the freeing failed
  */
 extern int
-b3_barman_free(b3_barman_t* barman);
+b3_ws_factory_free(b3_ws_factory_t *ws_factory);
 
 /**
- * @brief Draws a status bar manager on a workspace
- * @return Non-0 if the freeing failed
+ * @param name If NULL then the next number by ws_counter will be used
+ * @return Either an existing or a new workspace. Do not free it by yourself.
+ *         Instead free an id by calling b3_ws_factory_free_ws.
+ */
+extern b3_ws_t *
+b3_ws_factory_ws_new(b3_ws_factory_t *ws_factory, const char *id);
+
+/**
+ * @return 0 if the id was found and could be freed. Non-0 if it could not be
+ *         found or not freed.
  */
 extern int
-b3_barman_draw_on(b3_barman_t* barman, b3_ws_t *ws);
+b3_ws_factory_ws_free(b3_ws_factory_t *ws_factory, const char *id);
 
-#endif // BARMAN_H
+#endif // WS_FACTORY_H
