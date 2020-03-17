@@ -22,6 +22,12 @@
   SOFTWARE.
 *******************************************************************************/
 
+/**
+ * @author Richard Bäck <richard.baeck@mailbox.org>
+ * @date 2020-02-26
+ * @brief File contains the workspace manager implementation and its private methods
+ */
+
 #include "wsman.h"
 
 #include <stdlib.h>
@@ -34,26 +40,19 @@
 
 static wbk_logger_t logger = { "wsman" };
 
-static int
-b3_wsman_free_monitor_arr(b3_wsman_t *wsman);
-
-static const b3_monitor_t *
-b3_wsman_get_monitor_by_monitor_name(b3_wsman_t *wsman, const char *monitor_name);
-
-static BOOL CALLBACK
-b3_wsman_enum_monitors(HMONITOR monitor, HDC hdc, LPRECT rect, LPARAM data);
-
 b3_wsman_t *
-b3_wsman_new(void)
+b3_wsman_new(b3_ws_factory_t *ws_factory)
 {
 	b3_wsman_t *wsman;
 
 	wsman = NULL;
 	wsman = malloc(sizeof(b3_wsman_t));
 
-	array_new(&(wsman->monitor_arr));
+	wsman->ws_factory = ws_factory;
 
-	wsman->ws_factory = b3_ws_factory_new();
+	array_new(&(wsman->ws_arr));
+
+	wsman->focused_ws = b3_wsman_add(wsman, "1"); // TODO remove me and place me at some other level (e.g. in the director)
 
 	return wsman;
 }
@@ -61,111 +60,118 @@ b3_wsman_new(void)
 int
 b3_wsman_free(b3_wsman_t *wsman)
 {
-	b3_wsman_free_monitor_arr(wsman);
+	array_destroy_cb(wsman->ws_arr, free);
+	wsman->ws_arr = NULL;
 
-	b3_ws_factory_free(wsman->ws_factory);
 	wsman->ws_factory = NULL;
 
 	free(wsman);
 	return 0;
 }
 
-int
-b3_wsman_free_monitor_arr(b3_wsman_t *wsman)
+b3_ws_t *
+b3_wsman_add(b3_wsman_t *wsman, const char *ws_id)
 {
-	array_destroy_cb(wsman->monitor_arr, free); // TODO b3_monitor_free
-	wsman->monitor_arr = NULL;
-
-	return 0;
-}
-
-int
-b3_wsman_refresh(b3_wsman_t *wsman)
-{
-	b3_monitor_t *monitor;
-
 	char found;
+	ArrayIter iter;
+	b3_ws_t *ws;
 
-	EnumDisplayMonitors(NULL, NULL, b3_wsman_enum_monitors, wsman);
-
-	return 0;
-}
-
-BOOL CALLBACK
-b3_wsman_enum_monitors(HMONITOR wmonitor, HDC hdc, LPRECT rect, LPARAM data)
-{
-    b3_wsman_t *wsman;
-    MONITORINFOEX monitor_info;
-
-    wsman = (b3_wsman_t *) data;
-
-    monitor_info.cbSize = sizeof(MONITORINFOEX);
-    GetMonitorInfo(wmonitor, &monitor_info);
-
-    wbk_logger_log(&logger, INFO, "Found monitor: %s - %dx%d\n",
-    			   monitor_info.szDevice,
-    			   monitor_info.rcMonitor.right,
-				   monitor_info.rcMonitor.bottom);
-
-   array_add(wsman->monitor_arr,
-		     b3_monitor_new(monitor_info.szDevice,
-			   	            monitor_info.rcMonitor,
-							wsman->ws_factory));
-
-   return TRUE;
-}
-
-const Array *
-b3_wsman_get_monitor_arr(b3_wsman_t *wsman)
-{
-	return wsman->monitor_arr;
-}
-
-const b3_monitor_t *
-b3_wsman_get_monitor_by_monitor_name(b3_wsman_t *wsman, const char *monitor_name)
-{
-	ArrayIter monitor_iter;
-	b3_monitor_t *monitor;
-	char found;
-
-
-	monitor = NULL;
 	found = 0;
-	array_iter_init(&monitor_iter, wsman->monitor_arr);
-	while (array_iter_next(&monitor_iter, (void *) &monitor) != CC_ITER_END
-		   && !found) {
-		if (strcmp(b3_monitor_get_monitor_name(monitor), monitor_name) == 0) {
-			found = 1;
+	ws = NULL;
+	array_iter_init(&iter, b3_wsman_get_ws_arr(wsman));
+    while (!found && array_iter_next(&iter, (void*) &ws) != CC_ITER_END) {
+    	if (strcmp(b3_ws_get_name(ws), ws_id) == 0)	{
+    		found = 1;
+    	}
+    }
+
+    if (!found) {
+    	ws = b3_ws_factory_create(wsman->ws_factory, ws_id);
+    	array_add(b3_wsman_get_ws_arr(wsman),
+    			  ws);
+    }
+
+	return ws;
+}
+
+int
+b3_wsman_remove(b3_wsman_t *wsman, const char *ws_id)
+{
+	char found;
+	ArrayIter iter;
+	b3_ws_t *ws;
+	int ret;
+
+	found = 0;
+    ret = 1;
+	array_iter_init(&iter, b3_wsman_get_ws_arr(wsman));
+    while (!found && array_iter_next(&iter, (void*) &ws) != CC_ITER_END) {
+    	if (strcmp(b3_ws_get_name(ws), ws_id) == 0)	{
+            array_iter_remove(&iter, NULL);
+    		found = 1;
+    		ret = 0;
+    	}
+    }
+
+	return ret;
+}
+
+int
+b3_wsman_contains_ws(b3_wsman_t *wsman, const char *ws_id)
+{
+	int found;
+	ArrayIter iter;
+	b3_ws_t *ws;
+
+	found = 0;
+	array_iter_init(&iter, b3_wsman_get_ws_arr(wsman));
+    while (!found && array_iter_next(&iter, (void*) &ws) != CC_ITER_END) {
+    	if (strcmp(b3_ws_get_name(ws), ws_id) == 0)	{
+    		found = 1;
+    	}
+    }
+
+    return found;
+}
+
+b3_ws_t *
+b3_wsman_get_focused_ws(b3_wsman_t *wsman)
+{
+	return wsman->focused_ws;
+}
+
+int
+b3_wsman_set_focused_ws(b3_wsman_t *wsman, const char *ws_id)
+{
+	int found;
+	ArrayIter iter;
+	b3_ws_t *ws;
+
+	if (strcmp(b3_ws_get_name(wsman->focused_ws), ws_id) != 0) {
+		found = 0;
+		array_iter_init(&iter, b3_wsman_get_ws_arr(wsman));
+		while (!found && array_iter_next(&iter, (void*) &ws) != CC_ITER_END) {
+			if (strcmp(b3_ws_get_name(ws), ws_id) == 0)	{
+				found = 1;
+			}
 		}
+
+		if (array_size(b3_ws_get_wins(wsman->focused_ws)) <= 0) {
+			b3_wsman_remove(wsman, b3_ws_get_name(wsman->focused_ws));
+		}
+
+		if (!found) {
+			ws = b3_wsman_add(wsman, ws_id);
+		}
+
+		wsman->focused_ws = ws;
 	}
 
-	return monitor;
+    return 0;
 }
 
-int
-b3_wsman_show(b3_wsman_t *wsman)
+Array *
+b3_wsman_get_ws_arr(b3_wsman_t *wsman)
 {
-	ArrayIter monitor_iter;
-	b3_monitor_t *monitor;
-
-	array_iter_init(&monitor_iter, wsman->monitor_arr);
-	while (array_iter_next(&monitor_iter, (void *) &monitor) != CC_ITER_END) {
-		b3_monitor_show(monitor);
-	}
-
-	return 0;
-}
-
-int
-b3_wsman_draw(b3_wsman_t *wsman, HWND window_handler)
-{
-	ArrayIter monitor_iter;
-	b3_monitor_t *monitor;
-
-	array_iter_init(&monitor_iter, wsman->monitor_arr);
-	while (array_iter_next(&monitor_iter, (void *) &monitor) != CC_ITER_END) {
-		b3_monitor_draw(monitor, window_handler);
-	}
-
-	return 0;
+	return wsman->ws_arr;
 }

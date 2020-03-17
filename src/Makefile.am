@@ -24,13 +24,10 @@
 
 if DEBUG
 AM_CFLAGS = -g -O0
-AM_LDFLAGS = -g -O0
+AM_LDFLAGS = -g -O0 
 endif
 
-bin_PROGRAMS = b3 scratch
-
-scratch_SOURCES = scratch.c
-scratch_LDFLAGS = --static -mwindows
+bin_PROGRAMS = b3 
 
 noinst_LTLIBRARIES = libb3parser.la
 noinst_LTLIBRARIES += libb3interpreter.la
@@ -40,23 +37,30 @@ libb3parser_la_SOURCES = win.c win.h # todo
 
 libb3parser_la_CFLAGS = $(AM_CFLAGS)
 libb3parser_la_CFLAGS += @collectionc_CFLAGS@
-libb3parser_la_LDFLAGS = --static -mwindows
+libb3parser_la_LDFLAGS = -pthread -mwindows -static 
 libb3parser_la_LIBADD = @collectionc_LIBS@
 
 
-libb3interpreter_la_SOURCES = wsman.c wsman.h
+libb3interpreter_la_SOURCES = director.c director.h
+libb3interpreter_la_SOURCES += kc_director.c kc_director.h
+libb3interpreter_la_SOURCES += kbman.c kbman.h
+libb3interpreter_la_SOURCES += wsman.c wsman.h
 libb3interpreter_la_SOURCES += monitor.c monitor.h
 libb3interpreter_la_SOURCES += ws.c ws.h
 libb3interpreter_la_SOURCES += win.c win.h
 libb3interpreter_la_SOURCES += bar.c bar.h
 libb3interpreter_la_SOURCES += ws_factory.c ws_factory.h
+libb3interpreter_la_SOURCES += wsman_factory.c wsman_factory.h
+libb3interpreter_la_SOURCES += monitor_factory.c monitor_factory.h
+libb3interpreter_la_SOURCES += kc_director_factory.c kc_director_factory.h
+libb3interpreter_la_SOURCES += parser.c parser.h
 libb3interpreter_la_SOURCES += til.c til.h
 libb3interpreter_la_SOURCES += counter.c counter.h
 
 libb3interpreter_la_CFLAGS = $(AM_CFLAGS)
 libb3interpreter_la_CFLAGS += @collectionc_CFLAGS@ 
 libb3interpreter_la_CFLAGS += @libwbkbase_CFLAGS@
-libb3interpreter_la_LDFLAGS = --static -mwindows
+libb3interpreter_la_LDFLAGS = -pthread -mwindows -static
 libb3interpreter_la_LIBADD = @collectionc_LIBS@
 libb3interpreter_la_LIBADD += @libwbkbase_LIBS@
 
@@ -65,7 +69,7 @@ b3_SOURCES = main.c
 
 b3_CFLAGS = $(AM_CFLAGS)
 b3_CFLAGS += @libwbkbase_CFLAGS@
-b3_LDFLAGS = --static -mwindows
+b3_LDFLAGS =  -pthread -mwindows -static
 b3_LDADD = libb3interpreter.la
 b3_LDADD += @libwbkbase_LIBS@
 

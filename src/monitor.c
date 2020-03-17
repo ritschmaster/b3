@@ -28,7 +28,7 @@
 #include <string.h>
 
 b3_monitor_t *
-b3_monitor_new(const char *monitor_name, RECT monitor_area, b3_ws_factory_t *ws_factory)
+b3_monitor_new(const char *monitor_name, RECT monitor_area, b3_wsman_factory_t *wsman_factory)
 {
 	b3_monitor_t *monitor;
 	int length;
@@ -36,17 +36,17 @@ b3_monitor_new(const char *monitor_name, RECT monitor_area, b3_ws_factory_t *ws_
 	monitor = NULL;
 	monitor = malloc(sizeof(b3_monitor_t));
 
+	monitor->wsman_factory = wsman_factory;
+
 	length = strlen(monitor_name) + 1;
 	monitor->monitor_name = malloc(length);
 	strcpy(monitor->monitor_name, monitor_name);
 
 	monitor->monitor_area = monitor_area;
 
-	monitor->bar = b3_bar_new(monitor->monitor_name, monitor->monitor_area);
+	monitor->wsman = b3_wsman_factory_create(wsman_factory);
 
-	monitor->ws_factory = ws_factory;
-
-	array_new(&(monitor->wsid_arr));
+	monitor->bar = b3_bar_new(monitor->monitor_name, monitor->monitor_area, monitor->wsman);
 
 	return monitor;
 }
@@ -54,13 +54,16 @@ b3_monitor_new(const char *monitor_name, RECT monitor_area, b3_ws_factory_t *ws_
 int
 b3_monitor_free(b3_monitor_t *monitor)
 {
+	monitor->wsman_factory = NULL;
+
 	free(monitor->monitor_name);
 	monitor->monitor_name = NULL;
 
-	monitor->ws_factory = NULL;
+	b3_bar_free(monitor->bar);
+	monitor->bar = NULL;
 
-	array_destroy_cb(monitor->wsid_arr, free);
-	monitor->wsid_arr = NULL;
+	b3_wsman_free(monitor->wsman);
+	monitor->wsman = NULL;
 
 	free(monitor);
 	return 0;
@@ -82,6 +85,18 @@ const b3_bar_t *
 b3_monitor_get_bar(b3_monitor_t *monitor)
 {
 	return monitor->bar;
+}
+
+int
+b3_monitor_contains_ws(b3_monitor_t *monitor, const char *ws_id)
+{
+	return b3_wsman_contains_ws(monitor->wsman, ws_id);
+}
+
+int
+b3_monitor_set_focused_ws(b3_monitor_t *monitor, const char *ws_id)
+{
+	return b3_wsman_set_focused_ws(monitor->wsman, ws_id);
 }
 
 int

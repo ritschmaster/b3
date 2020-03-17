@@ -30,23 +30,32 @@
 
 #include <windows.h>
 
-#ifndef BAR_H
-#define BAR_H
+#include "wsman.h"
 
-#define DEFAULT_BAR_HEIGHT 10
+#ifndef B3_BAR_H
+#define B3_BAR_H
+
+#define B3_BAR_DEFAULT_BAR_HEIGHT 18
+#define B3_BAR_BORDER_TO_TEXT_DISTANCE 4
+#define B3_BAR_WORKSPACE_INDICATOR_DISTANCE 4
 
 typedef struct b3_bar_s
 {
 	RECT area;
+
+	b3_wsman_t *wsman;
+
+	int height;
 } b3_bar_t;
 
 /**
  * @brief Creates a new status bar
  * @param monitor_area The area used by the monitor the bar is painted on.
+ * @param wsman A workspace manager object. It will not be freed by the bar.
  * @return A new status bar or NULL if allocation failed
  */
 extern b3_bar_t *
-b3_bar_new(const char *monitor_name, RECT monitor_area);
+b3_bar_new(const char *monitor_name, RECT monitor_area, b3_wsman_t *wsman);
 
 /**
  * @brief Frees a status bar
@@ -58,4 +67,4 @@ b3_bar_free(b3_bar_t *bar);
 extern int
 b3_bar_create_window(b3_bar_t *bar, const char *monitor_name);
 
-#endif // BAR_H
+#endif // B3_BAR_H

@@ -66,9 +66,10 @@ b3_ws_factory_free(b3_ws_factory_t *ws_factory)
 
 
 b3_ws_t *
-b3_ws_factory_ws_new(b3_ws_factory_t *ws_factory, const char *id)
+b3_ws_factory_create(b3_ws_factory_t *ws_factory, const char *id)
 {
 	char *tmp_name;
+	b3_ws_t *ws;
 
 	if (id) {
 	} else {
@@ -76,11 +77,40 @@ b3_ws_factory_ws_new(b3_ws_factory_t *ws_factory, const char *id)
 		snprintf(tmp_name, INT_AS_STRING_LENGTH, "%d", b3_counter_next(ws_factory->ws_counter));
 		free(tmp_name);
 	}
+
+	ws = b3_ws_factory_ws_by_id(ws_factory, id);
+	if (!ws) {
+		ws = b3_ws_new(id);
+	}
+
+	return ws;
 }
 
 int
-b3_ws_factory_ws_free(b3_ws_factory_t *ws_factory, const char *id)
+b3_ws_factory_remove(b3_ws_factory_t *ws_factory, const char *id)
 {
+	ArrayIter ws_iter;
+	b3_ws_t *ws;
+	char found;
+	int ret;
+
+	ws = NULL;
+	found = 0;
+	array_iter_init(&ws_iter, ws_factory->ws_arr);
+	while (array_iter_next(&ws_iter, (void *) &ws) != CC_ITER_END
+		   && !found) {
+		if (strcmp(b3_ws_get_name(ws), id) == 0) {
+			found = 1;
+		}
+	}
+
+	ret = 1;
+	if (found) {
+		b3_ws_free(ws);
+		ret = 0;
+	}
+
+	return ret;
 
 }
 

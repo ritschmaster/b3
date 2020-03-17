@@ -23,35 +23,36 @@
 *******************************************************************************/
 
 /**
- * @author Richard B�ck
- * @date 26 January 2020
+ * @author Richard Bäck <richard.baeck@mailbox.org>
+ * @date 2020-02-26
  * @brief File contains the window class definition
  */
 
-#ifndef WSMAN_H
-#define WSMAN_H
-
-#include <collectc/array.h>
-#include <windows.h>
+#ifndef B3_WSMAN_H
+#define B3_WSMAN_H
 
 #include "ws_factory.h"
 
 typedef struct b3_wsman_s
 {
-	/**
-	 * Array of b3_monitor_t *
-	 */
-	Array *monitor_arr;
-
 	b3_ws_factory_t *ws_factory;
+
+	b3_ws_t *focused_ws;
+
+	/**
+	 * Array of b3_ws_t *
+	 */
+	Array *ws_arr;
 } b3_wsman_t;
 
 /**
  * @brief Creates a new workspace manager 
+ * @param ws_factory A workspace factory. It will not be freed by freeing the
+ * workspace manager!
  * @return A new workspace manager or NULL if allocation failed
  */
 extern b3_wsman_t *
-b3_wsman_new(void);
+b3_wsman_new(b3_ws_factory_t *ws_factory);
 
 /**
  * @brief Deletes a workspace manager 
@@ -61,25 +62,34 @@ extern int
 b3_wsman_free(b3_wsman_t *wsman);
 
 /**
- * @brief Refresh the currently available workspaces
+ * @return The workspace if the workspace was added, do not free it! Otherwise NULL.
  */
-extern int
-b3_wsman_refresh(b3_wsman_t *wsman);
+extern b3_ws_t *
+b3_wsman_add(b3_wsman_t *wsman, const char *ws_id);
 
 /**
-  * @brief Gets the monitors of workspace manager
-  * @return The monitors of the workspace manager, as array of b3_monitor_t *.
-  */
-extern const Array *
-b3_wsman_get_monitor_arr(b3_wsman_t *wsman);
-
-extern int
-b3_wsman_show(b3_wsman_t *wsman);
-
-/**
- * @brief Draw the entire workspace manager
+ * @return 0 if the workspace was removed. Otherwise non-0.
  */
 extern int
-b3_wsman_draw(b3_wsman_t *wsman, HWND window_handler);
+b3_wsman_remove(b3_wsman_t *wsman, const char *ws_id);
 
-#endif // WSMAN_H
+/**
+ * @return Non-0 if it does contain the workspace. 0 otherwise.
+ */
+extern int
+b3_wsman_contains_ws(b3_wsman_t *wsman, const char *ws_id);
+
+extern b3_ws_t *
+b3_wsman_get_focused_ws(b3_wsman_t *wsman);
+
+extern int
+b3_wsman_set_focused_ws(b3_wsman_t *wsman, const char *ws_id);
+
+/**
+ * @return The workspace array of the workspace manager. Do not free it or
+ * any element of it!
+ */
+extern Array *
+b3_wsman_get_ws_arr(b3_wsman_t *wsman);
+
+#endif // B3_WSMAN_H

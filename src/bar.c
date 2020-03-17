@@ -25,8 +25,20 @@
 #include "bar.h"
 
 #include <stdlib.h>
+#include <string.h>
 #include <collectc/hashtable.h>
+#include <collectc/array.h>
+#include <windows.h>
+#include <pthread.h>
+#include <wbkbase/logger.h>
 
+#include "ws.h"
+
+static wbk_logger_t logger = { "bar" };
+
+/**
+ * This class is thread safe.
+ */
 typedef struct b3_wb_table_s
 {
 	/**
@@ -35,6 +47,7 @@ typedef struct b3_wb_table_s
 	HashTable *wb_table;
 } b3_wb_table_t;
 
+static pthread_mutex_t g_wb_table_instance_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 static b3_wb_table_t *g_wb_table_instance = NULL;
 
@@ -66,7 +79,7 @@ static LRESULT
 CALLBACK b3_bar_WndProc(HWND window_handler, UINT msg, WPARAM wParam, LPARAM lParam);
 
 b3_bar_t *
-b3_bar_new(const char *monitor_name, RECT monitor_area)
+b3_bar_new(const char *monitor_name, RECT monitor_area, b3_wsman_t *wsman)
 {
 	b3_bar_t *bar;
 
@@ -74,9 +87,13 @@ b3_bar_new(const char *monitor_name, RECT monitor_area)
 	bar = malloc(sizeof(b3_bar_t));
 
 	bar->area.top    = monitor_area.top;
-	bar->area.bottom = DEFAULT_BAR_HEIGHT;
+	bar->area.bottom = B3_BAR_DEFAULT_BAR_HEIGHT;
 	bar->area.left   = monitor_area.left;
 	bar->area.right  = monitor_area.right;
+
+	bar->wsman = wsman;
+
+	bar->height= B3_BAR_DEFAULT_BAR_HEIGHT;
 
 	return bar;
 }
@@ -90,6 +107,8 @@ b3_bar_free(b3_bar_t *bar)
 
 	b3_wb_table_remove_bar(wb_table, bar);
 
+	bar->wsman = NULL;
+
 	free(bar);
 	return 0;
 }
@@ -102,6 +121,8 @@ b3_bar_create_window(b3_bar_t *bar, const char *monitor_name)
 	WNDCLASSEX wc;
 	HINSTANCE hInstance;
 	HWND window_handler;
+	PTITLEBARINFO titlebar_info;
+	int titlebar_height;
 
 	wb_table = b3_wb_table_get_instance();
 
@@ -130,22 +151,26 @@ b3_bar_create_window(b3_bar_t *bar, const char *monitor_name)
 		if(RegisterClassEx(&wc))
 		{
 			window_handler = CreateWindowEx(WS_EX_NOACTIVATE | WS_EX_TOPMOST,
-												 monitor_name,
-												 "b3 bar",
-												 WS_DISABLED | WS_BORDER,
-												 0, 0,
-												 0, 0,
-												 NULL, NULL, hInstance, bar);
+											monitor_name,
+											"b3 bar",
+											WS_DISABLED | WS_BORDER,
+											0, 0,
+											0, 100,
+											NULL, NULL, hInstance, bar);
+//			GetTitleBarInfo(window_handler, titlebar_info);
+//			titlebar_height = titlebar_info->rcTitleBar.bottom - titlebar_info->rcTitleBar.top;
+			titlebar_height = 30;
+
+			b3_wb_table_add_wb(wb_table, window_handler, bar);
+
 			SetWindowPos(window_handler,
 						 HWND_TOPMOST,
-						 0, -20,
-						 1920, 30 +DEFAULT_BAR_HEIGHT,
-						 SWP_NOACTIVATE);
+						 bar->area.left, bar->area.top - 20,
+						 bar->area.right, titlebar_height + bar->height,
+						 SWP_NOACTIVATE | SWP_NOSENDCHANGING);
 
 			UpdateWindow(window_handler);
 			ShowWindow(window_handler, SW_SHOW);
-
-			b3_wb_table_add_wb(wb_table, window_handler, bar);
 		} else {
 			ret = 2;
 		}
@@ -159,32 +184,59 @@ b3_bar_draw(b3_bar_t *bar, HWND window_handler)
 {
 	HDC hdc;
 	PAINTSTRUCT ps;
+	ArrayIter iter;
+	b3_ws_t *ws;
 	RECT rect;
 	RECT text_rect;
+	SIZE text_size;
+	HBRUSH brush;
+	b3_ws_t *focused_ws;
+	int i;
+	int arr_length;
+	int str_length;
 
 	rect.top = bar->area.top;
-	rect.bottom= 10;
+	rect.bottom = bar->area.bottom;
 	rect.left = bar->area.left;
-	rect.right = rect.left + 100;
 
-	text_rect.top = 0;
-	text_rect.bottom = 10;
-	text_rect.left = rect.right + 10;
-	text_rect.right = text_rect.left + 100;
+	text_rect.top = rect.top + B3_BAR_BORDER_TO_TEXT_DISTANCE;
+	text_rect.bottom = rect.bottom - B3_BAR_BORDER_TO_TEXT_DISTANCE;
+
+	brush = CreateSolidBrush(RGB(255, 0, 0));
+
+	focused_ws = b3_wsman_get_focused_ws(bar->wsman);
 
 	hdc = GetDC(window_handler);
 	BeginPaint(window_handler, &ps);
 
-	Rectangle(hdc, rect.left, rect.top, rect.right, rect.bottom);
-   	DrawText(hdc, TEXT("Hello World!"), -1, &text_rect, DT_CENTER | DT_SINGLELINE | DT_VCENTER);
+	arr_length = array_size(b3_wsman_get_ws_arr(bar->wsman));
+	for (i = 0; i < arr_length; i++) {
+		array_get_at(b3_wsman_get_ws_arr(bar->wsman), i, (void *) &ws);
+		GetTextExtentPoint32A(hdc, b3_ws_get_name(ws), strlen(b3_ws_get_name(ws)), &text_size);
+		str_length = text_size.cx + B3_BAR_BORDER_TO_TEXT_DISTANCE;
+		rect.right = rect.left + str_length + B3_BAR_BORDER_TO_TEXT_DISTANCE;
+
+		text_rect.left = rect.left + B3_BAR_BORDER_TO_TEXT_DISTANCE;
+		text_rect.right = rect.right - B3_BAR_BORDER_TO_TEXT_DISTANCE;
+
+		if (strcmp(b3_ws_get_name(ws), b3_ws_get_name(focused_ws)) == 0) {
+			FillRect(hdc, &rect, brush);
+		} else {
+			Rectangle(hdc, rect.left, rect.top, rect.right, rect.bottom);
+		}
+
+		DrawText(hdc, b3_ws_get_name(ws), -1, &text_rect, DT_CENTER | DT_SINGLELINE | DT_VCENTER);
+
+		rect.left = rect.right + B3_BAR_WORKSPACE_INDICATOR_DISTANCE;
+	}
 
    	EndPaint(window_handler, &ps);
     ReleaseDC(window_handler, hdc);
 
+	DeleteObject(brush);
+
 	return 0;
 }
-
-#include <stdio.h>
 
 LRESULT CALLBACK b3_bar_WndProc(HWND window_handler, UINT msg, WPARAM wParam, LPARAM lParam)
 {
@@ -192,20 +244,20 @@ LRESULT CALLBACK b3_bar_WndProc(HWND window_handler, UINT msg, WPARAM wParam, LP
 	b3_wb_table_t *wb_table;
 	b3_bar_t *bar;
 
+	result = 0;
+
+	// TODO add destroy logic
+	wb_table = b3_wb_table_get_instance();
+	bar = b3_wb_table_get_bar(wb_table, window_handler);
+
 	switch(msg)
 	{
     	case WM_NCPAINT:
-			fprintf(stdout, "a1\n");
-			fflush(stdout);
-			wb_table = b3_wb_table_get_instance();
-    		bar = b3_wb_table_get_bar(wb_table, window_handler);
-    		fprintf(stdout, "a2\n");
-			fflush(stdout);
 			if (bar != NULL) b3_bar_draw(bar, window_handler);
 			break;
 
 		case WM_CLOSE:
-			//DestroyWindow(window_handler);
+			DestroyWindow(window_handler);
 			break;
 
 		default:
@@ -241,9 +293,11 @@ b3_wb_table_free(b3_wb_table_t *wb_table)
 b3_wb_table_t *
 b3_wb_table_get_instance()
 {
+	pthread_mutex_lock(&g_wb_table_instance_mutex);
 	if (g_wb_table_instance == NULL) {
 		g_wb_table_instance = b3_wb_table_new();
 	}
+	pthread_mutex_unlock(&g_wb_table_instance_mutex);
 
 	return g_wb_table_instance;
 }
@@ -251,7 +305,13 @@ b3_wb_table_get_instance()
 int
 b3_wb_table_add_wb(b3_wb_table_t *wb_table, HWND window_handler, b3_bar_t *bar)
 {
+	pthread_mutex_lock(&g_wb_table_instance_mutex);
+
 	hashtable_add(wb_table->wb_table, window_handler, bar);
+
+	pthread_mutex_unlock(&g_wb_table_instance_mutex);
+
+	return 0;
 }
 
 HWND
@@ -261,6 +321,8 @@ b3_wb_table_get_w(b3_wb_table_t *wb_table, const b3_bar_t *bar)
 	TableEntry *entry;
 	HWND window_handler;
 
+	pthread_mutex_lock(&g_wb_table_instance_mutex);
+
 	window_handler = NULL;
 	hashtable_iter_init(&iter, wb_table->wb_table);
 	while (!window_handler && hashtable_iter_next(&iter, &entry) != CC_ITER_END) {
@@ -268,6 +330,8 @@ b3_wb_table_get_w(b3_wb_table_t *wb_table, const b3_bar_t *bar)
 			window_handler = entry->key;
 		}
 	}
+
+	pthread_mutex_unlock(&g_wb_table_instance_mutex);
 
 	return window_handler;
 }
@@ -277,8 +341,12 @@ b3_wb_table_get_bar(b3_wb_table_t *wb_table, HWND window_handler)
 {
 	b3_bar_t *bar;
 
+	pthread_mutex_lock(&g_wb_table_instance_mutex);
+
 	bar = NULL;
 	hashtable_get(wb_table->wb_table, window_handler, (void *) &bar);
+
+	pthread_mutex_unlock(&g_wb_table_instance_mutex);
 
 	return bar;
 }
@@ -290,6 +358,8 @@ b3_wb_table_remove_bar(b3_wb_table_t *wb_table, b3_bar_t *bar)
 	HashTableIter iter;
 	TableEntry *entry;
 
+	pthread_mutex_lock(&g_wb_table_instance_mutex);
+
 	found = 0;
 	hashtable_iter_init(&iter, wb_table->wb_table);
 	while (!found && hashtable_iter_next(&iter, &entry) != CC_ITER_END) {
@@ -298,6 +368,8 @@ b3_wb_table_remove_bar(b3_wb_table_t *wb_table, b3_bar_t *bar)
             found = 1;
 		}
 	}
+
+	pthread_mutex_unlock(&g_wb_table_instance_mutex);
 
 	if (found)
 		return 0;

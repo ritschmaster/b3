@@ -28,8 +28,8 @@
  * @brief File contains the window class definition
  */
 
-#ifndef WIN_H
-#define WIN_H
+#ifndef B3_WIN_H
+#define B3_WIN_H
 
 typedef struct b3_win_s
 {
@@ -65,4 +65,4 @@ b3_win_get_floating(b3_win_t *win);
 extern int
 b3_win_set_floating(b3_win_t *win, char floating);
 
-#endif // WIN_H
+#endif // B3_WIN_H

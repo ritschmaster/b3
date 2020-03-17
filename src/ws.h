@@ -33,8 +33,8 @@
 #include "til.h"
 #include "counter.h"
 
-#ifndef WS_H
-#define WS_H
+#ifndef B3_WS_H
+#define B3_WS_H
 
 typedef struct b3_ws_s
 {
@@ -90,4 +90,4 @@ b3_ws_set_name(b3_ws_t *ws, const char *name);
 extern const char*
 b3_ws_get_name(b3_ws_t *ws);
 
-#endif // WS_H
+#endif // B3_WS_H

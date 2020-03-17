@@ -26,14 +26,21 @@
 #include <collectc/array.h>
 #include <windows.h>
 #include <wbkbase/logger.h>
+#include <getopt.h>
 
-#include "wsman.h"
+#include "ws_factory.h"
+#include "wsman_factory.h"
+#include "monitor_factory.h"
+#include "kc_director_factory.h"
+#include "parser.h"
+#include "kbman.h"
+#include "director.h"
 
 static wbk_logger_t logger = { "main" };
 
 static const char g_szClassName[] = "myWindowClass";
 
-static b3_wsman_t *g_wsman;
+static b3_director_t *g_director;
 
 static int
 main_loop(HINSTANCE hInstance, int nCmdShow);
@@ -43,17 +50,80 @@ window_callback(HWND window_handler, UINT msg, WPARAM wParam, LPARAM lParam);
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
+	b3_ws_factory_t *ws_factory;
+	b3_wsman_factory_t *wsman_factory;
+	b3_monitor_factory_t *monitor_factory;
+	b3_kc_director_factory_t *kc_director_factory;
+	b3_parser_t *parser;
+	b3_kbman_t *kbman;
+	wbk_b_t *b; // TODO remove me
+	wbk_be_t *be; // TODO remove me
+	b3_kc_director_t *kc_director; // TODO remove me
 
 	wbk_logger_set_level(SEVERE);
+#ifdef DEBUG_ENABLED
+	wbk_logger_set_level(DEBUG);
+#else
 	wbk_logger_set_level(INFO);
+#endif
 
-	g_wsman = b3_wsman_new();
-	if (g_wsman) {
-		b3_wsman_refresh(g_wsman);
+	ws_factory = b3_ws_factory_new();
+	wsman_factory = b3_wsman_factory_new(ws_factory);
+	monitor_factory = b3_monitor_factory_new(wsman_factory);
+	kc_director_factory = b3_kc_director_factory_new();
+
+	parser = b3_parser_new(kc_director_factory, "");
+
+	g_director = b3_director_new(monitor_factory);
+	/**
+	 * Setup key bindings
+	 */
+	if (g_director) {
+		kbman = b3_kbman_new(); // TODO move me into the parser
+
+		// TODO remove begin
+		b = wbk_b_new();
+		be = wbk_be_new(ALT, 0); wbk_b_add(b, be); wbk_be_free(be);
+		be = wbk_be_new(NOT_A_MODIFIER, '1'); wbk_b_add(b, be); wbk_be_free(be);
+		kc_director = b3_kc_director_factory_create_cw(kc_director_factory, b, g_director, "1");
+		b3_kbman_add_kc_director(kbman, kc_director);
+
+		b = wbk_b_new();
+		be = wbk_be_new(ALT, 0); wbk_b_add(b, be); wbk_be_free(be);
+		be = wbk_be_new(NOT_A_MODIFIER, '2'); wbk_b_add(b, be); wbk_be_free(be);
+		kc_director = b3_kc_director_factory_create_cw(kc_director_factory, b, g_director, "2");
+		b3_kbman_add_kc_director(kbman, kc_director);
+
+		b = wbk_b_new();
+		be = wbk_be_new(ALT, 0); wbk_b_add(b, be); wbk_be_free(be);
+		be = wbk_be_new(NOT_A_MODIFIER, '3'); wbk_b_add(b, be); wbk_be_free(be);
+		kc_director = b3_kc_director_factory_create_cw(kc_director_factory, b, g_director, "3");
+		b3_kbman_add_kc_director(kbman, kc_director);
+		// TODO Remove end
+	}
+
+	/**
+	 * Start main loops
+	 */
+	if (g_director && kbman) {
+		b3_director_refresh(g_director);
+
+		b3_kbman_main_threaded(kbman);
 		main_loop(hInstance, nCmdShow);
 
-		b3_wsman_free(g_wsman);
+		b3_kbman_main_stop(kbman);
+
+		b3_director_free(g_director);
 	}
+
+	if (kbman) {
+		b3_kbman_free(kbman);
+	}
+
+	b3_ws_factory_free(ws_factory);
+	b3_wsman_factory_free(wsman_factory);
+	b3_monitor_factory_free(monitor_factory);
+	b3_kc_director_factory_free(kc_director_factory);
 
 	return 0;
 }
@@ -61,49 +131,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 int
 main_loop(HINSTANCE hInstance, int nCmdShow)
 {
-	WNDCLASSEX wc;
-	HWND hwnd;
 	MSG Msg;
-	PTITLEBARINFO titlebar_info;
 
-	wc.cbSize		= sizeof(WNDCLASSEX);
-	wc.style		 = 0;
-	wc.lpfnWndProc   = window_callback;
-	wc.cbClsExtra	= 0;
-	wc.cbWndExtra	= 0;
-	wc.hInstance	 = hInstance;
-	wc.hIcon		 = LoadIcon(NULL, IDI_APPLICATION);
-	wc.hCursor	   = LoadCursor(NULL, IDC_ARROW);
-	wc.hbrBackground = (HBRUSH)(COLOR_WINDOW+1);
-	wc.lpszMenuName  = NULL;
-	wc.lpszClassName = g_szClassName;
-	wc.hIconSm	   = LoadIcon(NULL, IDI_APPLICATION);
-
-	if(!RegisterClassEx(&wc))
-	{
-		MessageBox(NULL, "Window Registration Failed!", "Error!",
-			MB_ICONEXCLAMATION | MB_OK);
-		return 1;
-	}
-
-//	hwnd = CreateWindowEx(WS_EX_NOACTIVATE | WS_EX_TOPMOST,
-//		                  g_szClassName,
-//						  "b3",
-//						  WS_DISABLED | WS_BORDER,
-//						  0, 0,
-//						  1920, 10,
-//						  NULL, NULL, hInstance, NULL);
-//	SetWindowPos(hwnd,
-//	             HWND_TOPMOST,
-//		     0, -20,
-//		     1920, 10,
-//		     SWP_NOACTIVATE);
-
-
-//	ShowWindow(hwnd, nCmdShow);
-//	UpdateWindow(hwnd);
-
-	b3_wsman_show(g_wsman);
+	b3_director_show(g_director);
 
 	while(GetMessage(&Msg, NULL, 0, 0) > 0) {
 		TranslateMessage(&Msg);
@@ -124,7 +154,7 @@ window_callback(HWND window_handler, UINT msg, WPARAM wParam, LPARAM lParam)
 	switch(msg)
 	{
 	case WM_NCPAINT:
-		b3_wsman_draw(g_wsman, window_handler);
+		b3_director_draw(g_director, window_handler);
 		break;
 
 	case WM_CLOSE:

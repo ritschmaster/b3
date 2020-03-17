@@ -28,8 +28,8 @@
  * @brief File contains the window tiler definition
  */
 
-#ifndef TIL_H
-#define TIL_H
+#ifndef B3_TIL_H
+#define B3_TIL_H
 
 typedef enum b3_til_mode_e {
 	SPLITH,
@@ -56,4 +56,4 @@ b3_til_new(void);
 extern int
 b3_til_free(b3_til_t* b3_til);
 
-#endif // TIL_H
+#endif // B3_TIL_H

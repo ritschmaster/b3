@@ -31,8 +31,8 @@
 #include "counter.h"
 #include "ws.h"
 
-#ifndef WS_FACTORY_H
-#define WS_FACTORY_H
+#ifndef B3_WS_FACTORY_H
+#define B3_WS_FACTORY_H
 
 typedef struct b3_ws_factory_s
 {
@@ -61,16 +61,16 @@ b3_ws_factory_free(b3_ws_factory_t *ws_factory);
 /**
  * @param name If NULL then the next number by ws_counter will be used
  * @return Either an existing or a new workspace. Do not free it by yourself.
- *         Instead free an id by calling b3_ws_factory_free_ws.
+ *         Instead free an id by calling b3_ws_factory_remove.
  */
 extern b3_ws_t *
-b3_ws_factory_ws_new(b3_ws_factory_t *ws_factory, const char *id);
+b3_ws_factory_create(b3_ws_factory_t *ws_factory, const char *id);
 
 /**
  * @return 0 if the id was found and could be freed. Non-0 if it could not be
  *         found or not freed.
  */
 extern int
-b3_ws_factory_ws_free(b3_ws_factory_t *ws_factory, const char *id);
+b3_ws_factory_remove(b3_ws_factory_t *ws_factory, const char *id);
 
-#endif // WS_FACTORY_H
+#endif // B3_WS_FACTORY_H

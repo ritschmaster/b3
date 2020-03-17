@@ -32,36 +32,34 @@
 #include <windows.h>
 
 #include "bar.h"
-#include "ws_factory.h"
+#include "wsman_factory.h"
+#include "wsman.h"
 
-#ifndef MONITOR_H
-#define MONITOR_H
+#ifndef B3_MONITOR_H
+#define B3_MONITOR_H
 
 typedef struct b3_monitor_s
 {
+	b3_wsman_factory_t *wsman_factory;
+
 	char *monitor_name;
 
 	RECT monitor_area;
 
+	b3_wsman_t *wsman;
+
 	b3_bar_t *bar;
-
-	b3_ws_factory_t *ws_factory;
-
-	/**
-	 * Array of char *
-	 */
-	Array *wsid_arr;
 } b3_monitor_t;
 
 /**
  * @brief Creates a new monitor object
  * @param monitor_name A string object. It will be copied.
  * @param monitor_area The rectangle of the work area
- * @param ws_factory A workspace factory object. It will not be freed by the monitor.
+ * @param wsman_factory A workspace manager factory object. It will not be freed by the monitor.
  * @return A new monitor object or NULL if allocation failed
  */
 extern b3_monitor_t *
-b3_monitor_new(const char *monitor_name, RECT monitor_area, b3_ws_factory_t *ws_factory);
+b3_monitor_new(const char *monitor_name, RECT monitor_area, b3_wsman_factory_t *wsman_factory);
 
 /**
  * @brief Frees a monitor object
@@ -71,18 +69,27 @@ extern int
 b3_monitor_free(b3_monitor_t *ws);
 
 extern const char *
-b3_monitor_get_monitor_name(b3_monitor_t *ws);
+b3_monitor_get_monitor_name(b3_monitor_t *monitor);
 
 extern RECT
-b3_ws_get_monitor_area(b3_monitor_t *ws);
+b3_ws_get_monitor_area(b3_monitor_t *monitor);
 
 extern const b3_bar_t *
-b3_monitor_get_bar(b3_monitor_t *ws);
+b3_monitor_get_bar(b3_monitor_t *monitor);
+
+/**
+ * @return Non-0 if it does contain the workspace. 0 otherwise.
+ */
+extern int
+b3_monitor_contains_ws(b3_monitor_t *monitor, const char *ws_id);
+
+extern int
+b3_monitor_set_focused_ws(b3_monitor_t *monitor, const char *ws_id);
 
 extern int
 b3_monitor_show(b3_monitor_t *monitor);
 
 extern int
-b3_monitor_draw(b3_monitor_t *ws, HWND window_handler);
+b3_monitor_draw(b3_monitor_t *monitor, HWND window_handler);
 
-#endif // MONITOR_H
+#endif // B3_MONITOR_H

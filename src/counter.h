@@ -30,8 +30,8 @@
 
 #include <collectc/list.h>
 
-#ifndef COUNTER_H
-#define COUNTER_H
+#ifndef B3_COUNTER_H
+#define B3_COUNTER_H
 
 typedef struct b3_counter_s
 {
@@ -60,4 +60,4 @@ extern char
 b3_counter_is_reenable(b3_counter_t *counter);
 
 
-#endif // COUNTER_H
+#endif // B3_COUNTER_H
