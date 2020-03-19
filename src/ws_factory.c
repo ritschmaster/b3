@@ -71,16 +71,23 @@ b3_ws_factory_create(b3_ws_factory_t *ws_factory, const char *id)
 	char *tmp_name;
 	b3_ws_t *ws;
 
+	tmp_name = NULL;
+
 	if (id) {
 	} else {
 		tmp_name = malloc(sizeof(char) * INT_AS_STRING_LENGTH);
 		snprintf(tmp_name, INT_AS_STRING_LENGTH, "%d", b3_counter_next(ws_factory->ws_counter));
-		free(tmp_name);
+		id = tmp_name;
 	}
 
 	ws = b3_ws_factory_ws_by_id(ws_factory, id);
 	if (!ws) {
 		ws = b3_ws_new(id);
+	}
+
+	if (tmp_name) {
+		id = NULL;
+		free(tmp_name);
 	}
 
 	return ws;

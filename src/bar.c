@@ -154,8 +154,8 @@ b3_bar_create_window(b3_bar_t *bar, const char *monitor_name)
 											monitor_name,
 											"b3 bar",
 											WS_DISABLED | WS_BORDER,
-											0, 0,
-											0, 100,
+											bar->area.left, 20,
+											100, 100,
 											NULL, NULL, hInstance, bar);
 //			GetTitleBarInfo(window_handler, titlebar_info);
 //			titlebar_height = titlebar_info->rcTitleBar.bottom - titlebar_info->rcTitleBar.top;
@@ -197,7 +197,7 @@ b3_bar_draw(b3_bar_t *bar, HWND window_handler)
 
 	rect.top = bar->area.top;
 	rect.bottom = bar->area.bottom;
-	rect.left = bar->area.left;
+	rect.left = 0; /** We are drawing relative to the window! */
 
 	text_rect.top = rect.top + B3_BAR_BORDER_TO_TEXT_DISTANCE;
 	text_rect.bottom = rect.bottom - B3_BAR_BORDER_TO_TEXT_DISTANCE;

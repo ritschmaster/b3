@@ -124,8 +124,8 @@ b3_director_enum_monitors(HMONITOR wmonitor, HDC hdc, LPRECT rect, LPARAM data)
 
     wbk_logger_log(&logger, INFO, "Found monitor: %s - %dx%d\n",
     			   monitor_info.szDevice,
-    			   monitor_info.rcMonitor.right,
-				   monitor_info.rcMonitor.bottom);
+    			   monitor_info.rcMonitor.right - monitor_info.rcMonitor.left,
+				   monitor_info.rcMonitor.bottom - monitor_info.rcMonitor.top);
 
     monitor = b3_monitor_factory_create(director->monitor_factory,
 		    		 	 	 	 	   	monitor_info.szDevice,
@@ -183,8 +183,10 @@ b3_director_set_focused_monitor(b3_director_t *director, const char *monitor_nam
 
     if (found) {
     	director->focused_monitor = monitor;
+    	wbk_logger_log(&logger, INFO, "Switching to monitor %s.\n", monitor_name);
     	ret = 0;
     } else {
+    	wbk_logger_log(&logger, SEVERE, "Cannot switch monitor %s. Monitor not available.\n", monitor_name);
     	ret = 1;
     }
 
@@ -210,9 +212,11 @@ b3_director_switch_to_ws(b3_director_t *director, const char *ws_id)
 
     if (found) {
     	director->focused_monitor = monitor;
+    	wbk_logger_log(&logger, INFO, "Switching to monitor %s.\n", b3_monitor_get_monitor_name(monitor));
     }
     b3_monitor_set_focused_ws(director->focused_monitor, ws_id);
-   	wbk_logger_log(&logger, INFO, "Switching to workspace %s.\n", ws_id);
+
+    wbk_logger_log(&logger, INFO, "Switching to workspace %s.\n", ws_id);
 
    	SendMessage(HWND_BROADCAST, WM_NCPAINT, NULL, NULL);
 

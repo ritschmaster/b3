@@ -64,4 +64,22 @@ b3_kc_director_factory_create_cw(b3_kc_director_factory_t *kc_director_factory, 
 	strcpy(data, ws_id);
 
 	cw = b3_kc_director_new(comb, director, CHANGE_WORKSPACE, data);
+
+	return cw;
+}
+
+b3_kc_director_t *
+b3_kc_director_factory_create_cm(b3_kc_director_factory_t *kc_director_factory, wbk_b_t *comb, b3_director_t *director, const char *monitor_name)
+{
+	b3_kc_director_t *cm;
+	char *data;
+	int length;
+
+	length = strlen(monitor_name) + 1;
+	data = malloc(sizeof(char) * length);
+	strcpy(data, monitor_name);
+
+	cm = b3_kc_director_new(comb, director, CHANGE_MONITOR, data);
+
+	return cm;
 }

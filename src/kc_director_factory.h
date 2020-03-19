@@ -63,5 +63,12 @@ b3_kc_director_factory_free(b3_kc_director_factory_t *kc_director_factory);
 extern b3_kc_director_t *
 b3_kc_director_factory_create_cw(b3_kc_director_factory_t *kc_director_factory, wbk_b_t *comb, b3_director_t *director, const char *ws_id);
 
+/**
+ * @return A new key binding director command of the type CHANGE_MONITOR.
+ * Free it by yourself!
+ */
+extern b3_kc_director_t *
+b3_kc_director_factory_create_cm(b3_kc_director_factory_t *kc_director_factory, wbk_b_t *comb, b3_director_t *director, const char *monitor_name);
+
 
 #endif // B3_KC_DIRECTOR_FACTORY_H

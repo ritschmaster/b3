@@ -52,8 +52,9 @@ b3_wsman_new(b3_ws_factory_t *ws_factory)
 
 	array_new(&(wsman->ws_arr));
 
-	wsman->focused_ws = b3_wsman_add(wsman, "1"); // TODO remove me and place me at some other level (e.g. in the director)
-
+	wsman->focused_ws = b3_ws_factory_create(wsman->ws_factory, NULL);
+	array_add(b3_wsman_get_ws_arr(wsman),
+    		  wsman->focused_ws);
 	return wsman;
 }
 

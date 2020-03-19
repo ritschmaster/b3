@@ -37,8 +37,11 @@ static wbk_logger_t logger =  { "kc_director" };
 
 pthread_mutex_t g_exec_mutex = PTHREAD_MUTEX_INITIALIZER;
 
-int
+static int
 b3_kc_director_exec_cw(const b3_kc_director_t *kc_director);
+
+static int
+b3_kc_director_exec_cm(const b3_kc_director_t *kc_director);
 
 b3_kc_director_t *
 b3_kc_director_new(wbk_b_t *comb, b3_director_t *director, b3_kc_director_kind_t kind, void *data)
@@ -76,6 +79,11 @@ b3_kc_director_free(b3_kc_director_t *kc_director)
 		case CHANGE_WORKSPACE:
 			free(kc_director->data);
 			break;
+
+		case CHANGE_MONITOR:
+			free(kc_director->data);
+			break;
+
 		}
 	}
 
@@ -104,6 +112,11 @@ b3_kc_director_exec(const b3_kc_director_t *kc_director)
 		ret = b3_kc_director_exec_cw(kc_director);
 		break;
 
+		case CHANGE_MONITOR:
+		ret = b3_kc_director_exec_cm(kc_director);
+		break;
+
+
 	default:
 		ret = -1;
 		// TODO
@@ -123,6 +136,19 @@ b3_kc_director_exec_cw(const b3_kc_director_t *kc_director)
 	ws_id = kc_director->data;
 
 	ret = b3_director_switch_to_ws(kc_director->director, ws_id);
+
+	return ret;
+}
+
+int
+b3_kc_director_exec_cm(const b3_kc_director_t *kc_director)
+{
+	int ret;
+	char *monitor_name;
+
+	monitor_name = kc_director->data;
+
+	ret = b3_director_set_focused_monitor(kc_director->director, monitor_name);
 
 	return ret;
 }
