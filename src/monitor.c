@@ -99,6 +99,26 @@ b3_monitor_set_focused_ws(b3_monitor_t *monitor, const char *ws_id)
 	return b3_wsman_set_focused_ws(monitor->wsman, ws_id);
 }
 
+b3_ws_t *
+b3_monitor_get_focused_ws(b3_monitor_t *monitor)
+{
+	return b3_wsman_get_focused_ws(monitor->wsman);
+}
+
+int
+b3_monitor_add_win(b3_monitor_t *monitor, b3_win_t *win)
+{
+	return b3_ws_add_win(b3_monitor_get_focused_ws(monitor),
+				  	     win);
+}
+
+int
+b3_monitor_remove_win(b3_monitor_t *monitor, b3_win_t *win)
+{
+	return b3_wsman_remove_win(monitor->wsman,
+							   win);
+}
+
 int
 b3_monitor_show(b3_monitor_t *monitor)
 {

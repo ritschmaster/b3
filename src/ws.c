@@ -37,7 +37,7 @@ b3_ws_new(const char *name)
 	ws = NULL;
 	ws = malloc(sizeof(b3_ws_t));
 
-	array_new(&(ws->wins));
+	array_new(&(ws->win_arr));
 
 	b3_ws_set_name(ws, name);
 
@@ -47,8 +47,16 @@ b3_ws_new(const char *name)
 int
 b3_ws_free(b3_ws_t *ws)
 {
-	array_destroy_cb(ws->wins, free); // TODO b3_win_free
-	ws->wins = NULL;
+	ArrayIter iter;
+	b3_win_t *win_iter;
+
+	array_iter_init(&iter, ws->win_arr);
+    while (array_iter_next(&iter, (void*) &win_iter) != CC_ITER_END) {
+    	array_iter_remove(&iter, NULL);
+    	b3_win_free(win_iter);
+    }
+	array_destroy(ws->win_arr);
+	ws->win_arr = NULL;
 
 	free(ws->name);
 	ws->name = NULL;
@@ -58,9 +66,54 @@ b3_ws_free(b3_ws_t *ws)
 }
 
 Array *
-b3_ws_get_wins(b3_ws_t *ws)
+b3_ws_get_win_arr(b3_ws_t *ws)
 {
-	return ws->wins;
+	return ws->win_arr;
+}
+
+int
+b3_ws_add_win(b3_ws_t *ws, b3_win_t *win)
+{
+	ArrayIter iter;
+	b3_win_t *win_iter;
+	char found;
+
+	found = 0;
+	array_iter_init(&iter, ws->win_arr);
+    while (!found && array_iter_next(&iter, (void*) &win_iter) != CC_ITER_END) {
+    	if (b3_win_compare(win_iter, win) == 0) {
+    		found = 1;
+    	}
+    }
+
+    if (!found) {
+    	array_add(ws->win_arr, win);
+    	return 0;
+    }
+	return 1;
+}
+
+int
+b3_ws_remove_win(b3_ws_t *ws, b3_win_t *win)
+{
+	ArrayIter iter;
+	b3_win_t *win_iter;
+	int ret;
+
+	ret = 1;
+	array_iter_init(&iter, ws->win_arr);
+    while (ret && array_iter_next(&iter, (void*) &win_iter) != CC_ITER_END) {
+    	if (b3_win_compare(win_iter, win) == 0) {
+    		array_iter_remove(&iter, NULL);
+    		ret = 0;
+    	}
+    }
+
+    if (ret == 0) {
+    	b3_win_free(win_iter);
+    }
+
+    return ret;
 }
 
 b3_til_mode_t
@@ -84,6 +137,8 @@ b3_ws_set_name(b3_ws_t *ws, const char *name)
 	length = strlen(name) + 1;
 	ws->name = malloc(sizeof(char) * length);
 	strcpy(ws->name, name);
+
+	return 0;
 }
 
 const char*

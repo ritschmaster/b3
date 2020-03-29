@@ -35,6 +35,7 @@
 #include "parser.h"
 #include "kbman.h"
 #include "director.h"
+#include "win_watcher.h"
 
 static wbk_logger_t logger = { "main" };
 
@@ -56,6 +57,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	b3_kc_director_factory_t *kc_director_factory;
 	b3_parser_t *parser;
 	b3_kbman_t *kbman;
+	b3_win_watcher_t *win_watcher;
 	wbk_b_t *b; // TODO remove me
 	wbk_be_t *be; // TODO remove me
 	b3_kc_director_t *kc_director; // TODO remove me
@@ -102,6 +104,12 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		b3_kbman_add_kc_director(kbman, kc_director);
 
 		b = wbk_b_new();
+		be = wbk_be_new(ALT, 0); wbk_b_add(b, be); wbk_be_free(be);
+		be = wbk_be_new(NOT_A_MODIFIER, '4'); wbk_b_add(b, be); wbk_be_free(be);
+		kc_director = b3_kc_director_factory_create_cw(kc_director_factory, b, g_director, "test");
+		b3_kbman_add_kc_director(kbman, kc_director);
+
+		b = wbk_b_new();
 		be = wbk_be_new(CTRL, 0); wbk_b_add(b, be); wbk_be_free(be);
 		be = wbk_be_new(ALT, 0); wbk_b_add(b, be); wbk_be_free(be);
 		be = wbk_be_new(NOT_A_MODIFIER, '1'); wbk_b_add(b, be); wbk_be_free(be);
@@ -118,22 +126,37 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	}
 
 	/**
+	 * Setup window watcher
+	 */
+	if (g_director) {
+		win_watcher = b3_win_watcher_new(g_director);
+	}
+
+	/**
 	 * Start main loops
 	 */
-	if (g_director && kbman) {
+	if (g_director && kbman && win_watcher) {
 		b3_director_refresh(g_director);
 		fflush(stdout); // TODO Remove
 
 		b3_kbman_main_threaded(kbman);
+		b3_win_watcher_start(win_watcher);
 		main_loop(hInstance, nCmdShow);
 
 		b3_kbman_main_stop(kbman);
+		b3_win_watcher_stop(win_watcher);
+	}
 
+	if (g_director) {
 		b3_director_free(g_director);
 	}
 
 	if (kbman) {
 		b3_kbman_free(kbman);
+	}
+
+	if (win_watcher) {
+		b3_win_watcher_free(win_watcher);
 	}
 
 	b3_ws_factory_free(ws_factory);

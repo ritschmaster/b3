@@ -1,5 +1,5 @@
 /******************************************************************************
-  This file is part of w32bindkeys.
+  This file is part of b3.
 
   Copyright 2020 Richard Paul Baeck <richard.baeck@mailbox.org>
 
@@ -58,6 +58,8 @@ b3_kbman_free(b3_kbman_t *kbman)
 	ArrayIter kb_iter;
 	b3_kc_director_t *kc_director;
 
+	//b3_kbman_main_stop(kbman);
+
 	wbki_kbman_free(kbman->kbman);
 	kbman->kbman= NULL;
 
@@ -89,6 +91,7 @@ int
 b3_kbman_add_kc_director(b3_kbman_t *kbman, b3_kc_director_t *kc_director)
 {
 	array_add(kbman->kc_director_arr, kc_director);
+	return 0;
 }
 
 int

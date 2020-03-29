@@ -86,6 +86,22 @@ b3_monitor_contains_ws(b3_monitor_t *monitor, const char *ws_id);
 extern int
 b3_monitor_set_focused_ws(b3_monitor_t *monitor, const char *ws_id);
 
+extern b3_ws_t *
+b3_monitor_get_focused_ws(b3_monitor_t *monitor);
+
+/**
+ * @return 0 if added. Non-0 otherwise.
+ */
+extern int
+b3_monitor_add_win(b3_monitor_t *monitor, b3_win_t *win);
+
+/**
+ * @param win The object will not be freed.
+ * @return 0 if added. Non-0 otherwise.
+ */
+extern int
+b3_monitor_remove_win(b3_monitor_t *monitor, b3_win_t *win);
+
 extern int
 b3_monitor_show(b3_monitor_t *monitor);
 

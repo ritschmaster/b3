@@ -31,18 +31,22 @@
 #ifndef B3_WIN_H
 #define B3_WIN_H
 
+#include <windows.h>
+
 typedef struct b3_win_s
 {
+	HWND window_handler;
 	char floating;
-	char *title;
 } b3_win_t;
 
 /**
  * @brief Creates a new window object
+ * @param window_handler Will not be freed by the window!
+ * @param floating
  * @return A new window object or NULL if allocation failed
  */
 extern b3_win_t *
-b3_win_new(void);
+b3_win_new(HWND window_handler, char floating);
 
 /**
  * @brief Deletes a window object
@@ -50,6 +54,9 @@ b3_win_new(void);
  */
 extern int
 b3_win_free(b3_win_t *win);
+
+extern const char *
+b3_win_get_title(b3_win_t *win);
 
 /**
   * @brief Gets if the window is floating.
@@ -64,5 +71,13 @@ b3_win_get_floating(b3_win_t *win);
   */
 extern int
 b3_win_set_floating(b3_win_t *win, char floating);
+
+
+/**
+ * @brief Compares two windows
+ * @return 0 if the both are similar. Non-0 if they are not similar.
+ */
+extern int
+b3_win_compare(const b3_win_t *win, const b3_win_t *other);
 
 #endif // B3_WIN_H

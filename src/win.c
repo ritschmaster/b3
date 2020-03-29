@@ -25,25 +25,39 @@
 #include "win.h"
 
 #include <stdlib.h>
+#include <string.h>
 
 b3_win_t *
-b3_win_new(void)
+b3_win_new(HWND window_handler, char floating)
 {
-	b3_win_t *b3_win;
+	b3_win_t *win;
 
-	b3_win = NULL;
-	b3_win = malloc(sizeof(b3_win_t));
+	win = NULL;
+	win = malloc(sizeof(b3_win_t));
 
-	return b3_win;
+	win->window_handler = window_handler;
+
+	win->floating = floating;
+
+	return win;
 }
 
 int
 b3_win_free(b3_win_t *win)
 {
+	win->window_handler = NULL;
+
 	free(win);
+
 	return 0;
 }
 
+const char *
+b3_win_get_title(b3_win_t *win)
+{
+	// TODO
+	return NULL;
+}
 
 char
 b3_win_get_floating(b3_win_t *win)
@@ -58,3 +72,12 @@ b3_win_set_floating(b3_win_t *win, char floating)
 	return 0;
 }
 
+int
+b3_win_compare(const b3_win_t *win, const b3_win_t *other)
+{
+	if (win->window_handler == other->window_handler) {
+		return 0;
+	} else {
+		return 1;
+	}
+}

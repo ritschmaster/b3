@@ -28,20 +28,21 @@
  * @brief File contains the workspace definition
  */
 
+#ifndef B3_WS_H
+#define B3_WS_H
+
 #include <collectc/array.h>
 
 #include "til.h"
 #include "counter.h"
-
-#ifndef B3_WS_H
-#define B3_WS_H
+#include "win.h"
 
 typedef struct b3_ws_s
 {
 	/**
 	 * Array of b3_win_t *
 	 */
-	Array *wins;
+	Array *win_arr;
 
 	b3_til_mode_t mode;
 
@@ -68,7 +69,21 @@ b3_ws_free(b3_ws_t *ws);
   * @return A pointer to the windows. Do not free that memory.
   */
 extern Array *
-b3_ws_get_wins(b3_ws_t *ws);
+b3_ws_get_win_arr(b3_ws_t *ws);
+
+/**
+ * @param win A window object. The object will be freed by the workspace!
+ * @return 0 if added. Non-0 otherwise.
+ */
+extern int
+b3_ws_add_win(b3_ws_t *ws, b3_win_t *win);
+
+/**
+ * @param win The object will not be freed.
+ * @return 0 if added. Non-0 otherwise.
+ */
+extern int
+b3_ws_remove_win(b3_ws_t *ws, b3_win_t *win);
 
 /**
   * @brief Get the tiling mode of the workspace

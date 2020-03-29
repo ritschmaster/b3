@@ -42,6 +42,8 @@ static wbk_logger_t logger = { "bar" };
 typedef struct b3_wb_table_s
 {
 	/**
+	 * Window handler to Bar class
+	 *
 	 * HashTable of HWND and b3_bar_t *
 	 */
 	HashTable *wb_table;

@@ -86,6 +86,13 @@ extern int
 b3_wsman_set_focused_ws(b3_wsman_t *wsman, const char *ws_id);
 
 /**
+ * @param win The object will not be freed.
+ * @return 0 if added. Non-0 otherwise.
+ */
+extern int
+b3_wsman_remove_win(b3_wsman_t *wsman, b3_win_t *win);
+
+/**
  * @return The workspace array of the workspace manager. Do not free it or
  * any element of it!
  */

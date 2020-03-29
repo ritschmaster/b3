@@ -103,9 +103,9 @@ b3_director_refresh(b3_director_t *director)
 
 	char found;
 
-	EnumDisplayMonitors(NULL, NULL, b3_director_enum_monitors, director);
+	EnumDisplayMonitors(NULL, NULL, b3_director_enum_monitors, (LPARAM) director);
 
-   	SendMessage(HWND_BROADCAST, WM_NCPAINT, NULL, NULL);
+   	SendMessage(HWND_BROADCAST, WM_NCPAINT, (void *) NULL, (void *) NULL);
 
 	return 0;
 }
@@ -190,7 +190,7 @@ b3_director_set_focused_monitor(b3_director_t *director, const char *monitor_nam
     	ret = 1;
     }
 
-   	SendMessage(HWND_BROADCAST, WM_NCPAINT, NULL, NULL);
+   	SendMessage(HWND_BROADCAST, WM_NCPAINT, (void *) NULL, (void *) NULL);
 
    	return ret;
 }
@@ -218,9 +218,57 @@ b3_director_switch_to_ws(b3_director_t *director, const char *ws_id)
 
     wbk_logger_log(&logger, INFO, "Switching to workspace %s.\n", ws_id);
 
-   	SendMessage(HWND_BROADCAST, WM_NCPAINT, NULL, NULL);
+   	SendMessage(HWND_BROADCAST, WM_NCPAINT, (void *) NULL, (void *) NULL);
 
 	return 0;
+}
+
+int
+b3_director_add_win(b3_director_t *director, const char *monitor_name, b3_win_t *win)
+{
+	ArrayIter iter;
+	b3_monitor_t *monitor;
+	char found;
+	int ret;
+
+	found = 0;
+	array_iter_init(&iter, director->monitor_arr);
+    while (!found && array_iter_next(&iter, (void*) &monitor) != CC_ITER_END) {
+    	if (strcmp(b3_monitor_get_monitor_name(monitor), monitor_name) == 0) {
+    		found = 1;
+    	}
+    }
+
+    ret = 1;
+    if (found) {
+    	ret = b3_monitor_add_win(monitor, win);
+    }
+
+    if (ret == 0) {
+    	wbk_logger_log(&logger, DEBUG, "Added window %d\n", win->window_handler);
+    }
+
+	return ret;
+}
+
+int
+b3_director_remove_win(b3_director_t *director, b3_win_t *win)
+{
+	ArrayIter iter;
+	b3_monitor_t *monitor;
+	int ret;
+
+	ret = 1;
+	array_iter_init(&iter, director->monitor_arr);
+    while (ret && array_iter_next(&iter, (void*) &monitor) != CC_ITER_END) {
+    	ret = b3_monitor_remove_win(monitor, win);
+    }
+
+    if (ret == 0) {
+    	wbk_logger_log(&logger, DEBUG, "Removed window %d\n", win->window_handler);
+    }
+
+    return ret;
 }
 
 int

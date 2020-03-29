@@ -35,6 +35,7 @@
 #include <windows.h>
 
 #include "monitor_factory.h"
+#include "win.h"
 
 typedef struct b3_director_s
 {
@@ -85,6 +86,19 @@ b3_director_set_focused_monitor(b3_director_t *director, const char *monitor_nam
  */
 extern int
 b3_director_switch_to_ws(b3_director_t *director, const char *ws_id);
+
+/**
+ * @return 0 if added. Non-0 otherwise.
+ */
+extern int
+b3_director_add_win(b3_director_t *director, const char *monitor_name, b3_win_t *win);
+
+/**
+ * @param win The object will not be freed.
+ * @return 0 if removed. Non-0 otherwise.
+ */
+extern int
+b3_director_remove_win(b3_director_t *director, b3_win_t *win);
 
 /**
  * @brief Show the director

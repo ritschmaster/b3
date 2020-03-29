@@ -157,7 +157,7 @@ b3_wsman_set_focused_ws(b3_wsman_t *wsman, const char *ws_id)
 			}
 		}
 
-		if (array_size(b3_ws_get_wins(wsman->focused_ws)) <= 0) {
+		if (array_size(b3_ws_get_win_arr(wsman->focused_ws)) <= 0) {
 			b3_wsman_remove(wsman, b3_ws_get_name(wsman->focused_ws));
 		}
 
@@ -169,6 +169,25 @@ b3_wsman_set_focused_ws(b3_wsman_t *wsman, const char *ws_id)
 	}
 
     return 0;
+}
+
+int
+b3_wsman_remove_win(b3_wsman_t *wsman, b3_win_t *win)
+{
+	ArrayIter iter;
+	b3_ws_t *ws;
+	int ret;
+
+	ret = 1;
+
+	array_iter_init(&iter, b3_wsman_get_ws_arr(wsman));
+	while (array_iter_next(&iter, (void*) &ws) != CC_ITER_END) {
+		if (b3_ws_remove_win(ws, win) == 0) {
+			ret = 0;
+		}
+	}
+
+	return ret;
 }
 
 Array *
