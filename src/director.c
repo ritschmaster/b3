@@ -139,7 +139,7 @@ b3_director_enum_monitors(HMONITOR wmonitor, HDC hdc, LPRECT rect, LPARAM data)
     return TRUE;
 }
 
-const Array *
+Array *
 b3_director_get_monitor_arr(b3_director_t *director)
 {
 	return director->monitor_arr;
@@ -269,6 +269,22 @@ b3_director_remove_win(b3_director_t *director, b3_win_t *win)
     }
 
     return ret;
+}
+
+int
+b3_director_arrange_wins(b3_director_t *director)
+{
+	ArrayIter iter;
+	b3_monitor_t *monitor;
+	int ret;
+
+	ret = 1;
+	array_iter_init(&iter, director->monitor_arr);
+    while (ret && array_iter_next(&iter, (void*) &monitor) != CC_ITER_END) {
+    	b3_monitor_arrange_wins(monitor);
+    }
+
+	return 0;
 }
 
 int

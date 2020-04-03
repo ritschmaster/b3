@@ -72,6 +72,6 @@ b3_win_watcher_stop(b3_win_watcher_t *win_watcher);
  * @return 0 if the window is not managable. Non-0 if it is managable.
  */
 extern int
-b3_win_watcher_managable_window_handler(HWND window_handler);
+b3_win_watcher_managable_window_handler(b3_win_watcher_t *win_watcher, HWND window_handler);
 
 #endif // B3_WIN_WATCHER_H

@@ -120,6 +120,23 @@ b3_monitor_remove_win(b3_monitor_t *monitor, b3_win_t *win)
 }
 
 int
+b3_monitor_arrange_wins(b3_monitor_t *monitor)
+{
+	RECT monitor_area;
+	b3_bar_t *bar;
+
+	monitor_area = monitor->monitor_area;
+	bar = b3_monitor_get_bar(monitor);
+
+	if (b3_bar_get_position(bar) == TOP) {
+		monitor_area.top = b3_bar_get_area(bar).bottom; // TODO?
+		monitor_area.bottom = monitor->monitor_area.bottom - 50; // TODO?
+	} // TODO
+
+	return b3_ws_arrange_wins(b3_monitor_get_focused_ws(monitor), monitor_area);
+}
+
+int
 b3_monitor_show(b3_monitor_t *monitor)
 {
 	b3_bar_create_window(monitor->bar,

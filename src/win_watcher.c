@@ -174,6 +174,8 @@ b3_win_watcher_start(b3_win_watcher_t *win_watcher)
 
 		win_watcher->window_handler = window_handler;
 		g_window_handler = window_handler; // TODO remove me
+
+		b3_director_arrange_wins(win_watcher->director);
 	}
 
 	return 0;
@@ -215,6 +217,7 @@ b3_win_watcher_wnd_proc(HWND window_handler, UINT msg, WPARAM wParam, LPARAM lPa
 						win = b3_win_new((HWND) lParam, 0);
 						if (b3_director_add_win(win_watcher->director, monitor_info.szDevice, win)) {
 							b3_win_free(win);
+							b3_director_arrange_wins(win_watcher->director);
 						}
 
 						DeleteObject(monitor);
@@ -224,13 +227,16 @@ b3_win_watcher_wnd_proc(HWND window_handler, UINT msg, WPARAM wParam, LPARAM lPa
 				case HSHELL_WINDOWDESTROYED:
 					if (win_watcher) {
 						win = b3_win_new((HWND) lParam, 0);
-						b3_director_remove_win(win_watcher->director, win);
+						if (b3_director_remove_win(win_watcher->director, win) == 0) {
+							b3_director_arrange_wins(win_watcher->director);
+						}
 						b3_win_free(win);
 					}
 					break;
 
 				case HSHELL_WINDOWACTIVATED:
 					wbk_logger_log(&logger, DEBUG, "Activated: %d\n", (HWND)lParam);
+					b3_director_arrange_wins(win_watcher->director);
 					break;
 			}
 		} else {
@@ -249,9 +255,8 @@ b3_win_watcher_enum_windows(HWND window_handler, LPARAM param)
 	b3_win_t *win;
 	b3_win_watcher_t *win_watcher;
 
-	if (b3_win_watcher_managable_window_handler(window_handler)) {
-		win_watcher = (b3_win_watcher_t *) param;
-
+	win_watcher = (b3_win_watcher_t *) param;
+	if (b3_win_watcher_managable_window_handler(win_watcher, window_handler)) {
 		monitor = MonitorFromWindow(window_handler, MONITOR_DEFAULTTONEAREST);
 		monitor_info.cbSize = sizeof(MONITORINFOEX);
 		GetMonitorInfo(monitor, &monitor_info);
@@ -267,24 +272,82 @@ b3_win_watcher_enum_windows(HWND window_handler, LPARAM param)
 
 	return TRUE;
 }
-
+#include <stdio.h>
 int
-b3_win_watcher_managable_window_handler(HWND window_handler)
+b3_win_watcher_managable_window_handler(b3_win_watcher_t *win_watcher, HWND window_handler)
 {
 	int exstyle;
 	HWND window_owner;
+	HWND parent;
 	RECT rect;
+	ArrayIter iter;
+	b3_monitor_t *monitor_iter;
+	int parent_managable;
+	int ret;
+	char classname[B3_WIN_WATCHER_BUFFER_LENGTH];
+	char title[B3_WIN_WATCHER_BUFFER_LENGTH];
+	char iter_title[B3_WIN_WATCHER_BUFFER_LENGTH];
 
-	if (IsWindowVisible(window_handler) && (GetParent(window_handler) == 0)) {
-		exstyle = GetWindowLong(window_handler, GWL_EXSTYLE);
-		window_owner = GetWindow(window_handler, GW_OWNER);
+	parent_managable = 0;
+	if (window_handler != 0) {
+		parent = GetParent(window_handler);
+		parent_managable = b3_win_watcher_managable_window_handler(win_watcher, parent);
 
-		GetWindowRect(window_handler, &rect);
 
-		if ((((exstyle & WS_EX_TOOLWINDOW) == 0) && (window_owner == 0)) || ((exstyle & WS_EX_APPWINDOW) && (window_owner != 0))) {
-			return 1;
+		GetWindowText(window_handler, title, B3_WIN_WATCHER_BUFFER_LENGTH);
+		GetClassName(window_handler, classname, B3_WIN_WATCHER_BUFFER_LENGTH);
+
+		ret = 1;
+		array_iter_init(&iter, b3_director_get_monitor_arr(win_watcher->director));
+		while (ret && array_iter_next(&iter, (void*) &monitor_iter) != CC_ITER_END) {
+			GetWindowText(b3_monitor_get_bar(monitor_iter)->window_handler, iter_title, B3_WIN_WATCHER_BUFFER_LENGTH);
+			if (strcmp(title, iter_title) == 0) {
+				ret = 0;
+			}
+		}
+
+		GetWindowText(win_watcher->window_handler, iter_title, B3_WIN_WATCHER_BUFFER_LENGTH);
+
+	    if (ret
+	    	&& strcmp(title, iter_title)
+	    	&& strcmp(classname, "Windows.UI.Core.CoreWindow")
+	        && strcmp(title, "Windows Shell Experience Host")
+	        && strcmp(title, "Microsoft Text Input Application")
+	        && strcmp(title, "Action center")
+	        && strcmp(title, "New Notification")
+	        && strcmp(title, "Date and Time Information")
+	        && strcmp(title, "Volume Control")
+	        && strcmp(title, "Network Connections")
+	        && strcmp(title, "Cortana")
+	        && strcmp(title, "Start")
+	        && strcmp(title, "Windows Default Lock Screen")
+	        && strcmp(title, "Search")
+	        && strcmp(title, "Microsoft Store")
+	        && strcmp(title, "TaskManagerWindow")
+			&& strcmp(classname, "ForegroundStaging")
+	        && strcmp(classname, "ApplicationManager_DesktopShellWindow")
+	        && strcmp(classname, "Static")
+	        && strcmp(classname, "Scrollbar")
+	        && strcmp(classname, "Progman")
+	        && strcmp(classname, "TaskManagerWindow")
+	        && strcmp(classname, "ApplicationFrameWindow") // TODO correct?
+		    && IsWindow(window_handler)
+			&& IsWindowVisible(window_handler)
+			&& (!parent || parent_managable)
+			) {
+			exstyle = GetWindowLong(window_handler, GWL_EXSTYLE);
+			window_owner = GetWindow(window_handler, GW_OWNER);
+
+			GetWindowRect(window_handler, &rect);
+
+			if ( (((exstyle & WS_EX_TOOLWINDOW) == 0) && (window_owner == 0))
+					 || ((exstyle & WS_EX_APPWINDOW) && (window_owner != 0))) {
+				printf("%s, %s\n", title, classname); fflush(stdout);
+				return 1;
+			}
 		}
 	}
+
 	return 0;
 }
 

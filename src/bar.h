@@ -35,15 +35,27 @@
 #ifndef B3_BAR_H
 #define B3_BAR_H
 
+#define B3_BAR_WIN_NAME "b3 bar"
+#define B3_BAR_WIN_NAME_LEN strlen(B3_BAR_WIN_NAME)
 #define B3_BAR_DEFAULT_BAR_HEIGHT 18
 #define B3_BAR_BORDER_TO_TEXT_DISTANCE 4
 #define B3_BAR_WORKSPACE_INDICATOR_DISTANCE 4
 
+typedef enum b3_bar_pos_e
+{
+	TOP = 0,
+	BOTTOM
+} b3_bar_pos_t;
+
 typedef struct b3_bar_s
 {
+	b3_bar_pos_t position;
+
 	RECT area;
 
 	b3_wsman_t *wsman;
+
+	HWND window_handler;
 
 	int height;
 } b3_bar_t;
@@ -63,6 +75,12 @@ b3_bar_new(const char *monitor_name, RECT monitor_area, b3_wsman_t *wsman);
  */
 extern int
 b3_bar_free(b3_bar_t *bar);
+
+extern RECT
+b3_bar_get_area(b3_bar_t *bar);
+
+extern b3_bar_pos_t
+b3_bar_get_position(b3_bar_t *bar);
 
 extern int
 b3_bar_create_window(b3_bar_t *bar, const char *monitor_name);

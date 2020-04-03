@@ -88,6 +88,8 @@ b3_bar_new(const char *monitor_name, RECT monitor_area, b3_wsman_t *wsman)
 	bar = NULL;
 	bar = malloc(sizeof(b3_bar_t));
 
+	bar->position = TOP; // TODO default
+
 	bar->area.top    = monitor_area.top;
 	bar->area.bottom = B3_BAR_DEFAULT_BAR_HEIGHT;
 	bar->area.left   = monitor_area.left;
@@ -111,8 +113,22 @@ b3_bar_free(b3_bar_t *bar)
 
 	bar->wsman = NULL;
 
+	bar->window_handler = NULL;
+
 	free(bar);
 	return 0;
+}
+
+RECT
+b3_bar_get_area(b3_bar_t *bar)
+{
+	return bar->area;
+}
+
+b3_bar_pos_t
+b3_bar_get_position(b3_bar_t *bar)
+{
+	return bar->position;
 }
 
 int
@@ -122,9 +138,10 @@ b3_bar_create_window(b3_bar_t *bar, const char *monitor_name)
 	int ret;
 	WNDCLASSEX wc;
 	HINSTANCE hInstance;
-	HWND window_handler;
 	PTITLEBARINFO titlebar_info;
+	int monitor_name_len;
 	int titlebar_height;
+	char *win_class;
 
 	wb_table = b3_wb_table_get_instance();
 
@@ -136,6 +153,12 @@ b3_bar_create_window(b3_bar_t *bar, const char *monitor_name)
 
 	if (!ret) {
 		hInstance = GetModuleHandle(NULL);
+
+		monitor_name_len = strlen(monitor_name);
+		win_class = malloc(sizeof(char) * (B3_BAR_WIN_NAME_LEN + monitor_name_len + 1));
+		strcpy(win_class, B3_BAR_WIN_NAME);
+		strcpy(win_class + B3_BAR_WIN_NAME_LEN, monitor_name);
+		win_class[B3_BAR_WIN_NAME_LEN + monitor_name_len] = '\0';
 
 		wc.cbSize		= sizeof(WNDCLASSEX);
 		wc.style		 = 0;
@@ -152,30 +175,32 @@ b3_bar_create_window(b3_bar_t *bar, const char *monitor_name)
 
 		if(RegisterClassEx(&wc))
 		{
-			window_handler = CreateWindowEx(WS_EX_NOACTIVATE | WS_EX_TOPMOST,
-											monitor_name,
-											"b3 bar",
-											WS_DISABLED | WS_BORDER,
-											bar->area.left, 20,
-											100, 100,
-											NULL, NULL, hInstance, bar);
+			bar->window_handler = CreateWindowEx(WS_EX_NOACTIVATE | WS_EX_TOPMOST,
+												 monitor_name, // win_class,
+												 B3_BAR_WIN_NAME,
+												 WS_DISABLED | WS_BORDER,
+												 bar->area.left, 20,
+												 100, 100,
+												 NULL, NULL, hInstance, bar);
 //			GetTitleBarInfo(window_handler, titlebar_info);
 //			titlebar_height = titlebar_info->rcTitleBar.bottom - titlebar_info->rcTitleBar.top;
 			titlebar_height = 30;
 
-			b3_wb_table_add_wb(wb_table, window_handler, bar);
+			b3_wb_table_add_wb(wb_table, bar->window_handler, bar);
 
-			SetWindowPos(window_handler,
+			SetWindowPos(bar->window_handler,
 						 HWND_TOPMOST,
 						 bar->area.left, bar->area.top - 20,
 						 bar->area.right, titlebar_height + bar->height,
 						 SWP_NOACTIVATE | SWP_NOSENDCHANGING);
 
-			UpdateWindow(window_handler);
-			ShowWindow(window_handler, SW_SHOW);
+			UpdateWindow(bar->window_handler);
+			ShowWindow(bar->window_handler, SW_SHOW);
 		} else {
 			ret = 2;
 		}
+
+		free(win_class);
 	}
 
 	return ret;
@@ -204,13 +229,18 @@ b3_bar_draw(b3_bar_t *bar, HWND window_handler)
 	text_rect.top = rect.top + B3_BAR_BORDER_TO_TEXT_DISTANCE;
 	text_rect.bottom = rect.bottom - B3_BAR_BORDER_TO_TEXT_DISTANCE;
 
-	brush = CreateSolidBrush(RGB(255, 0, 0));
 
 	focused_ws = b3_wsman_get_focused_ws(bar->wsman);
 
 	hdc = GetDC(window_handler);
 	BeginPaint(window_handler, &ps);
 
+	/** Init everything */
+	brush = CreateSolidBrush(RGB(255, 255, 255));
+	FillRect(hdc, &(bar->area), brush);
+	DeleteObject(brush);
+
+	brush = CreateSolidBrush(RGB(255, 0, 0));
 	arr_length = array_size(b3_wsman_get_ws_arr(bar->wsman));
 	for (i = 0; i < arr_length; i++) {
 		array_get_at(b3_wsman_get_ws_arr(bar->wsman), i, (void *) &ws);
@@ -231,11 +261,11 @@ b3_bar_draw(b3_bar_t *bar, HWND window_handler)
 
 		rect.left = rect.right + B3_BAR_WORKSPACE_INDICATOR_DISTANCE;
 	}
+	DeleteObject(brush);
 
    	EndPaint(window_handler, &ps);
     ReleaseDC(window_handler, hdc);
 
-	DeleteObject(brush);
 
 	return 0;
 }

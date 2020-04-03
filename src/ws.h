@@ -85,6 +85,9 @@ b3_ws_add_win(b3_ws_t *ws, b3_win_t *win);
 extern int
 b3_ws_remove_win(b3_ws_t *ws, b3_win_t *win);
 
+extern int
+b3_ws_arrange_wins(b3_ws_t *ws, RECT monitor_area);
+
 /**
   * @brief Get the tiling mode of the workspace
   * @return The tiling mode of the workspace

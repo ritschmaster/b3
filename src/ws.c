@@ -115,6 +115,45 @@ b3_ws_remove_win(b3_ws_t *ws, b3_win_t *win)
 
     return ret;
 }
+#include <stdio.h>
+int
+b3_ws_arrange_wins(b3_ws_t *ws, RECT monitor_area)
+{
+	ArrayIter iter;
+	b3_win_t *win_iter;
+	int length;
+	int split_size;
+	int width;
+	int height;
+
+	length = 0;
+	array_iter_init(&iter, ws->win_arr);
+    while (array_iter_next(&iter, (void*) &win_iter) != CC_ITER_END) {
+    	if (!b3_win_get_floating(win_iter)) {
+    		length++;
+    	}
+    }
+
+    if (length) {
+		split_size =  monitor_area.right - monitor_area.left;
+		split_size /= length;
+
+		width = monitor_area.left;
+		height = monitor_area.bottom - monitor_area.top;
+
+		array_iter_init(&iter, ws->win_arr);
+		while (array_iter_next(&iter, (void*) &win_iter) != CC_ITER_END) {
+			if (!b3_win_get_floating(win_iter)) {
+				SetWindowPos(win_iter->window_handler, NULL,
+							 width, monitor_area.top,
+							 split_size, height, NULL);
+				width += split_size;
+			}
+		}
+    }
+
+    return 0;
+}
 
 b3_til_mode_t
 b3_ws_get_mode(b3_ws_t *ws)

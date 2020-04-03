@@ -75,7 +75,7 @@ b3_director_refresh(b3_director_t *director);
   * @brief Gets the monitors of the director
   * @return The monitors of the director, as array of b3_monitor_t *.
   */
-extern const Array *
+extern Array *
 b3_director_get_monitor_arr(b3_director_t *director);
 
 extern int
@@ -99,6 +99,9 @@ b3_director_add_win(b3_director_t *director, const char *monitor_name, b3_win_t 
  */
 extern int
 b3_director_remove_win(b3_director_t *director, b3_win_t *win);
+
+extern int
+b3_director_arrange_wins(b3_director_t *director);
 
 /**
  * @brief Show the director
