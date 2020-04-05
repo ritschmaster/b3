@@ -26,6 +26,9 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <wbkbase/logger.h>
+
+static wbk_logger_t logger = { "monitor" };
 
 b3_monitor_t *
 b3_monitor_new(const char *monitor_name, RECT monitor_area, b3_wsman_factory_t *wsman_factory)
@@ -87,7 +90,7 @@ b3_monitor_get_bar(b3_monitor_t *monitor)
 	return monitor->bar;
 }
 
-int
+const b3_ws_t *
 b3_monitor_contains_ws(b3_monitor_t *monitor, const char *ws_id)
 {
 	return b3_wsman_contains_ws(monitor->wsman, ws_id);
@@ -123,17 +126,36 @@ int
 b3_monitor_arrange_wins(b3_monitor_t *monitor)
 {
 	RECT monitor_area;
-	b3_bar_t *bar;
+	const b3_bar_t *bar;
+	ArrayIter iter;
+	b3_ws_t *ws_iter;
 
 	monitor_area = monitor->monitor_area;
 	bar = b3_monitor_get_bar(monitor);
 
-	if (b3_bar_get_position(bar) == TOP) {
-		monitor_area.top = b3_bar_get_area(bar).bottom; // TODO?
+	if (bar->position == TOP) {
+		monitor_area.top = bar->area.bottom; // TODO?
 		monitor_area.bottom = monitor->monitor_area.bottom - 50; // TODO?
 	} // TODO
 
-	return b3_ws_arrange_wins(b3_monitor_get_focused_ws(monitor), monitor_area);
+	array_iter_init(&iter, b3_wsman_get_ws_arr(monitor->wsman));
+	while (array_iter_next(&iter, (void*) &ws_iter) != CC_ITER_END) {
+		if (strcmp(b3_ws_get_name(ws_iter),
+				   b3_ws_get_name(b3_monitor_get_focused_ws(monitor)))) {
+			b3_ws_minimize_wins(ws_iter);
+		}
+	}
+
+	b3_ws_arrange_wins(b3_monitor_get_focused_ws(monitor), monitor_area);
+
+	return 0;
+}
+
+const b3_ws_t *
+b3_monitor_find_win(b3_monitor_t *monitor, const b3_win_t *win)
+{
+	return b3_wsman_find_win(monitor->wsman,
+						     win);
 }
 
 int

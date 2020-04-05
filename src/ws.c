@@ -26,8 +26,11 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <wbkbase/logger.h>
 
 #include "win.h"
+
+static wbk_logger_t logger = { "ws" };
 
 b3_ws_t *
 b3_ws_new(const char *name)
@@ -115,7 +118,25 @@ b3_ws_remove_win(b3_ws_t *ws, b3_win_t *win)
 
     return ret;
 }
-#include <stdio.h>
+
+int
+b3_ws_contains_win(b3_ws_t *ws, const b3_win_t *win)
+{
+	ArrayIter iter;
+	b3_win_t *win_iter;
+	int found;
+
+	found = 0;
+	array_iter_init(&iter, ws->win_arr);
+    while (!found && array_iter_next(&iter, (void*) &win_iter) != CC_ITER_END) {
+    	if (b3_win_compare(win_iter, win) == 0) {
+    		found = 1;
+    	}
+    }
+
+    return found;
+}
+
 int
 b3_ws_arrange_wins(b3_ws_t *ws, RECT monitor_area)
 {
@@ -147,9 +168,24 @@ b3_ws_arrange_wins(b3_ws_t *ws, RECT monitor_area)
 				SetWindowPos(win_iter->window_handler, NULL,
 							 width, monitor_area.top,
 							 split_size, height, NULL);
+				ShowWindow(win_iter->window_handler, SW_RESTORE);
 				width += split_size;
 			}
 		}
+    }
+
+    return 0;
+}
+
+int
+b3_ws_minimize_wins(b3_ws_t *ws)
+{
+	ArrayIter iter;
+	b3_win_t *win_iter;
+
+	array_iter_init(&iter, ws->win_arr);
+    while (array_iter_next(&iter, (void*) &win_iter) != CC_ITER_END) {
+    	ShowWindow(win_iter->window_handler, SW_MINIMIZE);
     }
 
     return 0;

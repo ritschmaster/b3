@@ -61,14 +61,29 @@ b3_kc_director_factory_free(b3_kc_director_factory_t *kc_director_factory);
  * Free it by yourself!
  */
 extern b3_kc_director_t *
-b3_kc_director_factory_create_cw(b3_kc_director_factory_t *kc_director_factory, wbk_b_t *comb, b3_director_t *director, const char *ws_id);
+b3_kc_director_factory_create_cw(b3_kc_director_factory_t *kc_director_factory,
+							     wbk_b_t *comb,
+								 b3_director_t *director,
+								 const char *ws_id);
 
 /**
  * @return A new key binding director command of the type CHANGE_MONITOR.
  * Free it by yourself!
  */
 extern b3_kc_director_t *
-b3_kc_director_factory_create_cm(b3_kc_director_factory_t *kc_director_factory, wbk_b_t *comb, b3_director_t *director, const char *monitor_name);
+b3_kc_director_factory_create_cm(b3_kc_director_factory_t *kc_director_factory,
+								 wbk_b_t *comb,
+								 b3_director_t *director,
+								 const char *monitor_name);
 
+/**
+ * @return A new key binding director command of the type MOVE_ACTIVE_WINDOW_TO_WORKSPACE.
+ * Free it by yourself!
+ */
+extern b3_kc_director_t *
+b3_kc_director_factory_create_mawtw(b3_kc_director_factory_t *kc_director_factory,
+								    wbk_b_t *comb,
+								    b3_director_t *director,
+						            const char *ws_id);
 
 #endif // B3_KC_DIRECTOR_FACTORY_H

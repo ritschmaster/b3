@@ -222,14 +222,6 @@ b3_bar_draw(b3_bar_t *bar, HWND window_handler)
 	int arr_length;
 	int str_length;
 
-	rect.top = bar->area.top;
-	rect.bottom = bar->area.bottom;
-	rect.left = 0; /** We are drawing relative to the window! */
-
-	text_rect.top = rect.top + B3_BAR_BORDER_TO_TEXT_DISTANCE;
-	text_rect.bottom = rect.bottom - B3_BAR_BORDER_TO_TEXT_DISTANCE;
-
-
 	focused_ws = b3_wsman_get_focused_ws(bar->wsman);
 
 	hdc = GetDC(window_handler);
@@ -237,8 +229,20 @@ b3_bar_draw(b3_bar_t *bar, HWND window_handler)
 
 	/** Init everything */
 	brush = CreateSolidBrush(RGB(255, 255, 255));
-	FillRect(hdc, &(bar->area), brush);
+	rect.top = bar->area.top;
+	rect.bottom = bar->area.bottom;
+	rect.left = 0; /** We are drawing relative to the window! */
+	rect.right = bar->area.right - bar->area.left;
+	FillRect(hdc, &rect, brush);
 	DeleteObject(brush);
+
+	rect.top = bar->area.top;
+	rect.bottom = bar->area.bottom;
+	rect.left = 0; /** We are drawing relative to the window! */
+	rect.right = 0; /** Will be overwritten */
+
+	text_rect.top = rect.top + B3_BAR_BORDER_TO_TEXT_DISTANCE;
+	text_rect.bottom = rect.bottom - B3_BAR_BORDER_TO_TEXT_DISTANCE;
 
 	brush = CreateSolidBrush(RGB(255, 0, 0));
 	arr_length = array_size(b3_wsman_get_ws_arr(bar->wsman));

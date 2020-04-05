@@ -49,6 +49,14 @@ b3_director_get_monitor_by_monitor_name(b3_director_t *director, const char *mon
 static BOOL CALLBACK
 b3_director_enum_monitors(HMONITOR monitor, HDC hdc, LPRECT rect, LPARAM data);
 
+static int
+b3_director_repaint_all(void);
+
+static int
+b3_director_set_active_win_internal(b3_director_t *director,
+									const b3_monitor_t *monitor,
+									const b3_ws_t *ws,
+	                                const b3_win_t *win);
 b3_director_t *
 b3_director_new(b3_monitor_factory_t *monitor_factory)
 {
@@ -57,7 +65,7 @@ b3_director_new(b3_monitor_factory_t *monitor_factory)
 	director = NULL;
 	director = malloc(sizeof(b3_director_t));
 
-	director->focused_monitor = NULL;
+	memset(director, 0, sizeof(b3_director_t));
 
 	array_new(&(director->monitor_arr));
 
@@ -74,6 +82,8 @@ b3_director_free(b3_director_t *director)
 	b3_director_free_monitor_arr(director);
 
 	director->monitor_factory = NULL;
+
+  	b3_director_set_active_win_internal(director, NULL, NULL, NULL);
 
 	free(director);
 	return 0;
@@ -105,7 +115,7 @@ b3_director_refresh(b3_director_t *director)
 
 	EnumDisplayMonitors(NULL, NULL, b3_director_enum_monitors, (LPARAM) director);
 
-   	SendMessage(HWND_BROADCAST, WM_NCPAINT, (void *) NULL, (void *) NULL);
+   	b3_director_repaint_all();
 
 	return 0;
 }
@@ -190,7 +200,7 @@ b3_director_set_focused_monitor(b3_director_t *director, const char *monitor_nam
     	ret = 1;
     }
 
-   	SendMessage(HWND_BROADCAST, WM_NCPAINT, (void *) NULL, (void *) NULL);
+    b3_director_repaint_all();
 
    	return ret;
 }
@@ -215,10 +225,11 @@ b3_director_switch_to_ws(b3_director_t *director, const char *ws_id)
     	wbk_logger_log(&logger, INFO, "Switching to monitor %s.\n", b3_monitor_get_monitor_name(monitor));
     }
     b3_monitor_set_focused_ws(director->focused_monitor, ws_id);
+    b3_director_arrange_wins(director);
 
     wbk_logger_log(&logger, INFO, "Switching to workspace %s.\n", ws_id);
 
-   	SendMessage(HWND_BROADCAST, WM_NCPAINT, (void *) NULL, (void *) NULL);
+    b3_director_repaint_all();
 
 	return 0;
 }
@@ -244,10 +255,6 @@ b3_director_add_win(b3_director_t *director, const char *monitor_name, b3_win_t 
     	ret = b3_monitor_add_win(monitor, win);
     }
 
-    if (ret == 0) {
-    	wbk_logger_log(&logger, DEBUG, "Added window %d\n", win->window_handler);
-    }
-
 	return ret;
 }
 
@@ -264,10 +271,6 @@ b3_director_remove_win(b3_director_t *director, b3_win_t *win)
     	ret = b3_monitor_remove_win(monitor, win);
     }
 
-    if (ret == 0) {
-    	wbk_logger_log(&logger, DEBUG, "Removed window %d\n", win->window_handler);
-    }
-
     return ret;
 }
 
@@ -281,10 +284,92 @@ b3_director_arrange_wins(b3_director_t *director)
 	ret = 1;
 	array_iter_init(&iter, director->monitor_arr);
     while (ret && array_iter_next(&iter, (void*) &monitor) != CC_ITER_END) {
-    	b3_monitor_arrange_wins(monitor);
+		b3_monitor_arrange_wins(director->focused_monitor);
     }
 
 	return 0;
+}
+
+int
+b3_director_set_active_win(b3_director_t *director, const b3_win_t *win)
+{
+	ArrayIter iter;
+	b3_monitor_t *monitor;
+	char found;
+	const b3_ws_t *ws;
+	int ret;
+
+	found = 0;
+	array_iter_init(&iter, director->monitor_arr);
+    while (!found && array_iter_next(&iter, (void*) &monitor) != CC_ITER_END) {
+    	ws = b3_monitor_find_win(monitor, win);
+    	if (ws) {
+    		found = 1;
+    	}
+    }
+
+    if (found) {
+    	if (director->focused_win.win != NULL
+    		&& strcmp(director->focused_win.ws->name, ws->name)) {
+    		b3_director_switch_to_ws(director, ws->name);
+    	}
+    	b3_director_set_active_win_internal(director, monitor, ws, win);
+    	ret = 0;
+    } else {
+    	wbk_logger_log(&logger, SEVERE, "Activated window is unknown\n");
+    	ret = 1;
+    }
+
+	return ret;
+}
+
+int
+b3_director_move_active_win_to_ws(b3_director_t *director, const char *ws_id)
+{
+	ArrayIter iter;
+	b3_monitor_t *monitor;
+	const b3_ws_t *ws;
+	char found;
+	int ret;
+
+	/** Find the correct monitor to add */
+	found = 0;
+	array_iter_init(&iter, director->monitor_arr);
+    while (!found && array_iter_next(&iter, (void*) &monitor) != CC_ITER_END) {
+    	ws = b3_monitor_contains_ws(monitor, ws_id);
+		if (ws) {
+			found = 1;
+		}
+    }
+
+    if (!found) {
+    	// TODO add ws
+    	ws = NULL; // TODO remove me
+    }
+
+    ret = 1;
+    if (ws) {
+    	if (b3_director_remove_win(director, director->focused_win.win) == 0) {
+			b3_ws_add_win(ws, director->focused_win.win);
+
+			// TODO focus next window on the current workspace
+	//    	b3_director_set_active_win_internal(director, monitor, ws, director->focused_win.win);
+			director->focused_win.win = NULL; /** Hack to avoid freeing it */
+			b3_director_set_active_win_internal(director, NULL, NULL, NULL);
+
+			wbk_logger_log(&logger, INFO, "Moved window to %s\n", ws_id);
+
+			b3_director_arrange_wins(director);
+
+			ret = 0;
+    	}
+    }
+
+    if (ret) {
+    	wbk_logger_log(&logger, INFO, "Unable to move window to %s\n", ws_id);
+    }
+
+   	return ret;
 }
 
 int
@@ -310,6 +395,35 @@ b3_director_draw(b3_director_t *director, HWND window_handler)
 	array_iter_init(&monitor_iter, director->monitor_arr);
 	while (array_iter_next(&monitor_iter, (void *) &monitor) != CC_ITER_END) {
 		b3_monitor_draw(monitor, window_handler);
+	}
+
+	return 0;
+}
+
+int
+b3_director_repaint_all(void)
+{
+	SendMessage(HWND_BROADCAST, WM_NCPAINT, (void *) NULL, (void *) NULL);
+	return 0;
+}
+
+int
+b3_director_set_active_win_internal(b3_director_t *director,
+									const b3_monitor_t *monitor,
+									const b3_ws_t *ws,
+	                                const b3_win_t *win)
+{
+	if (director->focused_win.win) {
+		free(director->focused_win.win);
+	}
+
+	director->focused_win.monitor = monitor;
+	director->focused_win.ws = ws;
+
+	if (win) {
+		director->focused_win.win = b3_win_copy(win);
+	} else {
+		director->focused_win.win = NULL;
 	}
 
 	return 0;

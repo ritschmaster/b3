@@ -53,7 +53,10 @@ b3_kc_director_factory_free(b3_kc_director_factory_t *kc_director_factory)
 }
 
 b3_kc_director_t *
-b3_kc_director_factory_create_cw(b3_kc_director_factory_t *kc_director_factory, wbk_b_t *comb, b3_director_t *director, const char *ws_id)
+b3_kc_director_factory_create_cw(b3_kc_director_factory_t *kc_director_factory,
+							     wbk_b_t *comb,
+								 b3_director_t *director,
+								 const char *ws_id)
 {
 	b3_kc_director_t *cw;
 	char *data;
@@ -69,7 +72,10 @@ b3_kc_director_factory_create_cw(b3_kc_director_factory_t *kc_director_factory, 
 }
 
 b3_kc_director_t *
-b3_kc_director_factory_create_cm(b3_kc_director_factory_t *kc_director_factory, wbk_b_t *comb, b3_director_t *director, const char *monitor_name)
+b3_kc_director_factory_create_cm(b3_kc_director_factory_t *kc_director_factory,
+								 wbk_b_t *comb,
+								 b3_director_t *director,
+								 const char *monitor_name)
 {
 	b3_kc_director_t *cm;
 	char *data;
@@ -82,4 +88,23 @@ b3_kc_director_factory_create_cm(b3_kc_director_factory_t *kc_director_factory, 
 	cm = b3_kc_director_new(comb, director, CHANGE_MONITOR, data);
 
 	return cm;
+}
+
+b3_kc_director_t *
+b3_kc_director_factory_create_mawtw(b3_kc_director_factory_t *kc_director_factory,
+								    wbk_b_t *comb,
+								    b3_director_t *director,
+						            const char *ws_id)
+{
+	b3_kc_director_t *mawtw;
+	char *data;
+	int length;
+
+	length = strlen(ws_id) + 1;
+	data = malloc(sizeof(char) * length);
+	strcpy(data, ws_id);
+
+	mawtw = b3_kc_director_new(comb, director, MOVE_ACTIVE_WINDOW_TO_WORKSPACE, data);
+
+	return mawtw;
 }

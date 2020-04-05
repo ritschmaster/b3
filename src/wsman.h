@@ -74,9 +74,9 @@ extern int
 b3_wsman_remove(b3_wsman_t *wsman, const char *ws_id);
 
 /**
- * @return Non-0 if it does contain the workspace. 0 otherwise.
+ * @return The workspace if found. NULL otherwise.
  */
-extern int
+extern const b3_ws_t *
 b3_wsman_contains_ws(b3_wsman_t *wsman, const char *ws_id);
 
 extern b3_ws_t *
@@ -91,6 +91,12 @@ b3_wsman_set_focused_ws(b3_wsman_t *wsman, const char *ws_id);
  */
 extern int
 b3_wsman_remove_win(b3_wsman_t *wsman, b3_win_t *win);
+
+/**
+ * @return The workspace the window is placed on or NULL if it cannot be found.
+ */
+extern const b3_ws_t *
+b3_wsman_find_win(b3_wsman_t *wsman, const b3_win_t *win);
 
 /**
  * @return The workspace array of the workspace manager. Do not free it or

@@ -117,7 +117,7 @@ b3_wsman_remove(b3_wsman_t *wsman, const char *ws_id)
 	return ret;
 }
 
-int
+const b3_ws_t *
 b3_wsman_contains_ws(b3_wsman_t *wsman, const char *ws_id)
 {
 	int found;
@@ -132,7 +132,11 @@ b3_wsman_contains_ws(b3_wsman_t *wsman, const char *ws_id)
     	}
     }
 
-    return found;
+    if (!found) {
+    	ws = NULL;
+    }
+
+    return ws;
 }
 
 b3_ws_t *
@@ -188,6 +192,28 @@ b3_wsman_remove_win(b3_wsman_t *wsman, b3_win_t *win)
 	}
 
 	return ret;
+}
+
+const b3_ws_t *
+b3_wsman_find_win(b3_wsman_t *wsman, const b3_win_t *win)
+{
+	ArrayIter iter;
+	b3_ws_t *ws;
+	char found;
+
+	found = 0;
+	array_iter_init(&iter, b3_wsman_get_ws_arr(wsman));
+	while (!found && array_iter_next(&iter, (void*) &ws) != CC_ITER_END) {
+		if (b3_ws_contains_win(ws, win)) {
+			found = 1;
+		}
+	}
+
+	if (!found) {
+		ws = NULL;
+	}
+
+	return ws;
 }
 
 Array *

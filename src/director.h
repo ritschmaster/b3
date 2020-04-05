@@ -37,6 +37,13 @@
 #include "monitor_factory.h"
 #include "win.h"
 
+typedef struct b3_focused_win_s
+{
+	const b3_monitor_t *monitor;
+	const b3_ws_t *ws;
+	b3_win_t *win;
+} b3_focused_win_t;
+
 typedef struct b3_director_s
 {
 	b3_monitor_t *focused_monitor;
@@ -47,6 +54,8 @@ typedef struct b3_director_s
 	Array *monitor_arr;
 
 	b3_monitor_factory_t *monitor_factory;
+
+	b3_focused_win_t focused_win;
 } b3_director_t;
 
 /**
@@ -88,6 +97,7 @@ extern int
 b3_director_switch_to_ws(b3_director_t *director, const char *ws_id);
 
 /**
+ * @param win If the window was added, it will be freed by the director. If it was not added, then you have to free it by yourself.
  * @return 0 if added. Non-0 otherwise.
  */
 extern int
@@ -102,6 +112,18 @@ b3_director_remove_win(b3_director_t *director, b3_win_t *win);
 
 extern int
 b3_director_arrange_wins(b3_director_t *director);
+
+/**
+ * @return 0 if it was set. Non-0 otherwise.
+ */
+extern int
+b3_director_set_active_win(b3_director_t *director, const b3_win_t *win);
+
+/**
+ * @return 0 if it was moved. Non-0 otherwise.
+ */
+extern int
+b3_director_move_active_win_to_ws(b3_director_t *director, const char *ws_id);
 
 /**
  * @brief Show the director

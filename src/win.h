@@ -48,6 +48,9 @@ typedef struct b3_win_s
 extern b3_win_t *
 b3_win_new(HWND window_handler, char floating);
 
+extern b3_win_t *
+b3_win_copy(const b3_win_t *win);
+
 /**
  * @brief Deletes a window object
  * @return Non-0 if the deletion failed

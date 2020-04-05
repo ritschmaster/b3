@@ -42,6 +42,16 @@ b3_win_new(HWND window_handler, char floating)
 	return win;
 }
 
+b3_win_t *
+b3_win_copy(const b3_win_t *win)
+{
+	b3_win_t * copy;
+
+	copy = b3_win_new(win->window_handler, win->floating);
+
+	return copy;
+}
+
 int
 b3_win_free(b3_win_t *win)
 {

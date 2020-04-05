@@ -110,16 +110,6 @@ b3_win_watcher_free(b3_win_watcher_t *win_watcher)
 int
 b3_win_watcher_start(b3_win_watcher_t *win_watcher)
 {
-//	int ret;
-//	win_watcher->stop = 0;
-//
-//	ret = pthread_create(&(win_watcher->thread), NULL, b3_win_watcher_start_thread_wrapper, win_watcher);
-//	if (ret) {
-//		wbk_logger_log(&logger, SEVERE, "Failed creating the keyboard listener!\n");
-//	}
-//
-//	return ret;
-
 	b3_ww_table_t *ww_table;
 	HINSTANCE hInstance;
 	WNDCLASSEX wc;
@@ -235,8 +225,13 @@ b3_win_watcher_wnd_proc(HWND window_handler, UINT msg, WPARAM wParam, LPARAM lPa
 					break;
 
 				case HSHELL_WINDOWACTIVATED:
-					wbk_logger_log(&logger, DEBUG, "Activated: %d\n", (HWND)lParam);
-					b3_director_arrange_wins(win_watcher->director);
+					if (win_watcher) {
+						win = b3_win_new((HWND) lParam, 0);
+						if (b3_director_set_active_win(win_watcher->director, win) == 0) {
+							b3_director_arrange_wins(win_watcher->director);
+						}
+						b3_win_free(win);
+					}
 					break;
 			}
 		} else {
@@ -342,7 +337,6 @@ b3_win_watcher_managable_window_handler(b3_win_watcher_t *win_watcher, HWND wind
 
 			if ( (((exstyle & WS_EX_TOOLWINDOW) == 0) && (window_owner == 0))
 					 || ((exstyle & WS_EX_APPWINDOW) && (window_owner != 0))) {
-				printf("%s, %s\n", title, classname); fflush(stdout);
 				return 1;
 			}
 		}
