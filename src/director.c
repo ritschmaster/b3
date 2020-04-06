@@ -329,6 +329,7 @@ b3_director_move_active_win_to_ws(b3_director_t *director, const char *ws_id)
 	ArrayIter iter;
 	b3_monitor_t *monitor;
 	const b3_ws_t *ws;
+	const b3_ws_t *ws_old;
 	char found;
 	int ret;
 
@@ -343,8 +344,7 @@ b3_director_move_active_win_to_ws(b3_director_t *director, const char *ws_id)
     }
 
     if (!found) {
-    	// TODO add ws
-    	ws = NULL; // TODO remove me
+    	ws = b3_wsman_add(director->focused_monitor->wsman, ws_id); // TODO refactor me?
     }
 
     ret = 1;
@@ -368,6 +368,8 @@ b3_director_move_active_win_to_ws(b3_director_t *director, const char *ws_id)
     if (ret) {
     	wbk_logger_log(&logger, INFO, "Unable to move window to %s\n", ws_id);
     }
+
+    b3_director_repaint_all();
 
    	return ret;
 }
