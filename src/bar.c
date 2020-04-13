@@ -36,44 +36,6 @@
 
 static wbk_logger_t logger = { "bar" };
 
-/**
- * This class is thread safe.
- */
-typedef struct b3_wb_table_s
-{
-	/**
-	 * Window handler to Bar class
-	 *
-	 * HashTable of HWND and b3_bar_t *
-	 */
-	HashTable *wb_table;
-} b3_wb_table_t;
-
-static pthread_mutex_t g_wb_table_instance_mutex = PTHREAD_MUTEX_INITIALIZER;
-
-static b3_wb_table_t *g_wb_table_instance = NULL;
-
-static b3_wb_table_t *
-b3_wb_table_new();
-
-static int
-b3_wb_table_free(b3_wb_table_t *wb_table);
-
-static b3_wb_table_t *
-b3_wb_table_get_instance();
-
-static int
-b3_wb_table_add_wb(b3_wb_table_t *wb_table, HWND window_handler, b3_bar_t *bar);
-
-static HWND
-b3_wb_table_get_w(b3_wb_table_t *wb_table, const b3_bar_t *bar);
-
-static b3_bar_t *
-b3_wb_table_get_bar(b3_wb_table_t *wb_table, HWND window_handler);
-
-static int
-b3_wb_table_remove_bar(b3_wb_table_t *wb_table, b3_bar_t *bar);
-
 static int
 b3_bar_draw(b3_bar_t *bar, HWND window_handler);
 
@@ -105,12 +67,6 @@ b3_bar_new(const char *monitor_name, RECT monitor_area, b3_wsman_t *wsman)
 int
 b3_bar_free(b3_bar_t *bar)
 {
-	b3_wb_table_t *wb_table;
-
-	wb_table = b3_wb_table_get_instance();
-
-	b3_wb_table_remove_bar(wb_table, bar);
-
 	bar->wsman = NULL;
 
 	bar->window_handler = NULL;
@@ -134,7 +90,6 @@ b3_bar_get_position(b3_bar_t *bar)
 int
 b3_bar_create_window(b3_bar_t *bar, const char *monitor_name)
 {
-	b3_wb_table_t *wb_table;
 	int ret;
 	WNDCLASSEX wc;
 	HINSTANCE hInstance;
@@ -143,13 +98,7 @@ b3_bar_create_window(b3_bar_t *bar, const char *monitor_name)
 	int titlebar_height;
 	char *win_class;
 
-	wb_table = b3_wb_table_get_instance();
-
 	ret = 0;
-
-	if (b3_wb_table_get_w(wb_table, bar)) {
-		ret = 1;
-	}
 
 	if (!ret) {
 		hInstance = GetModuleHandle(NULL);
@@ -186,7 +135,7 @@ b3_bar_create_window(b3_bar_t *bar, const char *monitor_name)
 //			titlebar_height = titlebar_info->rcTitleBar.bottom - titlebar_info->rcTitleBar.top;
 			titlebar_height = 30;
 
-			b3_wb_table_add_wb(wb_table, bar->window_handler, bar);
+			SetWindowLongPtr(bar->window_handler, GWLP_USERDATA, bar);
 
 			SetWindowPos(bar->window_handler,
 						 HWND_TOPMOST,
@@ -270,7 +219,6 @@ b3_bar_draw(b3_bar_t *bar, HWND window_handler)
    	EndPaint(window_handler, &ps);
     ReleaseDC(window_handler, hdc);
 
-
 	return 0;
 }
 
@@ -278,14 +226,11 @@ LRESULT CALLBACK
 b3_bar_WndProc(HWND window_handler, UINT msg, WPARAM wParam, LPARAM lParam)
 {
 	LRESULT CALLBACK result;
-	b3_wb_table_t *wb_table;
 	b3_bar_t *bar;
 
 	result = 0;
 
-	// TODO add destroy logic
-	wb_table = b3_wb_table_get_instance();
-	bar = b3_wb_table_get_bar(wb_table, window_handler);
+    bar = (b3_bar_t *) GetWindowLongPtr(window_handler, GWLP_USERDATA);
 
 	switch(msg)
 	{
@@ -302,114 +247,4 @@ b3_bar_WndProc(HWND window_handler, UINT msg, WPARAM wParam, LPARAM lParam)
 	}
 
 	return result;
-}
-
-b3_wb_table_t *
-b3_wb_table_new()
-{
-	b3_wb_table_t *wb_table;
-
-	wb_table = malloc(sizeof(b3_wb_table_t));
-
-	hashtable_new(&(wb_table->wb_table));
-
-	return wb_table;
-}
-
-int
-b3_wb_table_free(b3_wb_table_t *wb_table)
-{
-	hashtable_destroy(wb_table->wb_table);
-	wb_table->wb_table = NULL;
-
-	free(wb_table);
-
-	return 0;
-}
-
-b3_wb_table_t *
-b3_wb_table_get_instance()
-{
-	pthread_mutex_lock(&g_wb_table_instance_mutex);
-	if (g_wb_table_instance == NULL) {
-		g_wb_table_instance = b3_wb_table_new();
-	}
-	pthread_mutex_unlock(&g_wb_table_instance_mutex);
-
-	return g_wb_table_instance;
-}
-
-int
-b3_wb_table_add_wb(b3_wb_table_t *wb_table, HWND window_handler, b3_bar_t *bar)
-{
-	pthread_mutex_lock(&g_wb_table_instance_mutex);
-
-	hashtable_add(wb_table->wb_table, window_handler, bar);
-
-	pthread_mutex_unlock(&g_wb_table_instance_mutex);
-
-	return 0;
-}
-
-HWND
-b3_wb_table_get_w(b3_wb_table_t *wb_table, const b3_bar_t *bar)
-{
-	HashTableIter iter;
-	TableEntry *entry;
-	HWND window_handler;
-
-	pthread_mutex_lock(&g_wb_table_instance_mutex);
-
-	window_handler = NULL;
-	hashtable_iter_init(&iter, wb_table->wb_table);
-	while (!window_handler && hashtable_iter_next(&iter, &entry) != CC_ITER_END) {
-		if (entry->value == bar) {
-			window_handler = entry->key;
-		}
-	}
-
-	pthread_mutex_unlock(&g_wb_table_instance_mutex);
-
-	return window_handler;
-}
-
-b3_bar_t *
-b3_wb_table_get_bar(b3_wb_table_t *wb_table, HWND window_handler)
-{
-	b3_bar_t *bar;
-
-	pthread_mutex_lock(&g_wb_table_instance_mutex);
-
-	bar = NULL;
-	hashtable_get(wb_table->wb_table, window_handler, (void *) &bar);
-
-	pthread_mutex_unlock(&g_wb_table_instance_mutex);
-
-	return bar;
-}
-
-int
-b3_wb_table_remove_bar(b3_wb_table_t *wb_table, b3_bar_t *bar)
-{
-	char found;
-	HashTableIter iter;
-	TableEntry *entry;
-
-	pthread_mutex_lock(&g_wb_table_instance_mutex);
-
-	found = 0;
-	hashtable_iter_init(&iter, wb_table->wb_table);
-	while (!found && hashtable_iter_next(&iter, &entry) != CC_ITER_END) {
-		if (entry->value == bar) {
-            hashtable_iter_remove(&iter, NULL);
-            found = 1;
-		}
-	}
-
-	pthread_mutex_unlock(&g_wb_table_instance_mutex);
-
-	if (found)
-		return 0;
-	else
-		return 1;
 }

@@ -34,46 +34,7 @@
 
 static wbk_logger_t logger =  { "win_watcher" };
 
-static HWND g_window_handler;
 static UINT g_shellhookid;
-
-/**
- * Window handler to Window watcher class
- *
- * This class is thread safe.
- */
-typedef struct b3_ww_table_s
-{
-	/**
-	 * HashTable of HWND and b3_bar_t *
-	 */
-	HashTable *ww_table;
-} b3_ww_table_t;
-
-static pthread_mutex_t g_ww_table_instance_mutex = PTHREAD_MUTEX_INITIALIZER;
-
-static b3_ww_table_t *g_ww_table_instance = NULL;
-
-static b3_ww_table_t *
-b3_ww_table_new();
-
-static int
-b3_ww_table_free(b3_ww_table_t *ww_table);
-
-static b3_ww_table_t *
-b3_ww_table_get_instance();
-
-static int
-b3_ww_table_add_ww(b3_ww_table_t *ww_table, HWND window_handler, b3_win_watcher_t *win_watcher);
-
-static HWND
-b3_ww_table_get_w(b3_ww_table_t *ww_table, const b3_win_watcher_t *win_watcher);
-
-static b3_win_watcher_t *
-b3_ww_table_get_watcher(b3_ww_table_t *ww_table, HWND window_handler);
-
-static int
-b3_ww_table_remove_watcher(b3_ww_table_t *ww_table, b3_win_watcher_t *win_watcher);
 
 static LRESULT CALLBACK
 b3_win_watcher_wnd_proc(HWND window_handler, UINT msg, WPARAM wParam, LPARAM lParam);
@@ -114,20 +75,13 @@ b3_win_watcher_free(b3_win_watcher_t *win_watcher)
 int
 b3_win_watcher_start(b3_win_watcher_t *win_watcher)
 {
-	b3_ww_table_t *ww_table;
 	HINSTANCE hInstance;
 	WNDCLASSEX wc;
 	HWND window_handler;
 	int ret;
 	char classname[] = "b3 win watcher";
 
-	ww_table = b3_ww_table_get_instance();
-
 	ret = 0;
-
-	if (b3_ww_table_get_w(ww_table, win_watcher)) {
-		ret = 1;
-	}
 
 	if (!ret) {
 		hInstance = GetModuleHandle(NULL);
@@ -155,19 +109,17 @@ b3_win_watcher_start(b3_win_watcher_t *win_watcher)
 							0, 0,
 							NULL, NULL, hInstance, win_watcher);
 
-			b3_ww_table_add_ww(ww_table, window_handler, win_watcher);
-
 			ShowWindow(window_handler, SW_HIDE);
 
 			RegisterShellHookWindow(window_handler);
-	//		shellhookid = RegisterWindowMessageW(L"SHELLHOOK");
-			g_shellhookid = RegisterWindowMessageW(L"SHELLHOOK"); // TODO remove me
+			win_watcher->shellhookid = RegisterWindowMessageW(L"SHELLHOOK");
+
+			SetWindowLongPtr(window_handler, GWLP_USERDATA, win_watcher);
 		}
 
 		EnumWindows(b3_win_watcher_enum_windows, (LPARAM) win_watcher);
 
 		win_watcher->window_handler = window_handler;
-		g_window_handler = window_handler; // TODO remove me
 
 		b3_director_arrange_wins(win_watcher->director);
 	}
@@ -180,6 +132,7 @@ b3_win_watcher_stop(b3_win_watcher_t *win_watcher)
 {
 	if (win_watcher->window_handler) {
 		DestroyWindow(win_watcher->window_handler);
+		win_watcher->window_handler = NULL;
 	}
 
 	return 0;
@@ -188,48 +141,44 @@ b3_win_watcher_stop(b3_win_watcher_t *win_watcher)
 LRESULT CALLBACK
 b3_win_watcher_wnd_proc(HWND window_handler, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-	b3_ww_table_t *ww_table;
 	b3_win_watcher_t *win_watcher;
 	b3_win_t *win;
 	HMONITOR monitor;
     MONITORINFOEX monitor_info;
 
-	// TODO add destroy logic
-	ww_table = b3_ww_table_get_instance();
-	win_watcher = b3_ww_table_get_watcher(ww_table, window_handler);
+    win_watcher = (b3_win_watcher_t *) GetWindowLongPtr(window_handler, GWLP_USERDATA);
 
 	switch(msg) {
+	case WM_CLOSE:
+		DestroyWindow(window_handler);
+		break;
+
 	default:
-		if (msg == g_shellhookid) {
+		if (win_watcher
+		    && msg == win_watcher->shellhookid) {
 			switch (wParam & 0x7fff) {
 				case HSHELL_WINDOWCREATED:
-					if (win_watcher) {
-						monitor = MonitorFromWindow((HWND) lParam, MONITOR_DEFAULTTONEAREST);
-						monitor_info.cbSize = sizeof(MONITORINFOEX);
-						GetMonitorInfo(monitor, &monitor_info);
+					monitor = MonitorFromWindow((HWND) lParam, MONITOR_DEFAULTTONEAREST);
+					monitor_info.cbSize = sizeof(MONITORINFOEX);
+					GetMonitorInfo(monitor, &monitor_info);
 
-						win = b3_win_factory_win_create(win_watcher->win_factory, (HWND) lParam);
-						if (b3_director_add_win(win_watcher->director, monitor_info.szDevice, win)) {
-						}
-
-						DeleteObject(monitor);
+					win = b3_win_factory_win_create(win_watcher->win_factory, (HWND) lParam);
+					if (b3_director_add_win(win_watcher->director, monitor_info.szDevice, win)) {
 					}
+
+					DeleteObject(monitor);
 					break;
 
 				case HSHELL_WINDOWDESTROYED:
-					if (win_watcher) {
-						win = b3_win_factory_win_create(win_watcher->win_factory, (HWND) lParam);
-						if (b3_director_remove_win(win_watcher->director, win) == 0) {
-							b3_win_factory_win_free(win_watcher->win_factory, win);
-						}
+					win = b3_win_factory_win_create(win_watcher->win_factory, (HWND) lParam);
+					if (b3_director_remove_win(win_watcher->director, win) == 0) {
+						b3_win_factory_win_free(win_watcher->win_factory, win);
 					}
 					break;
 
 				case HSHELL_WINDOWACTIVATED:
-					if (win_watcher) {
-						win = b3_win_factory_win_create(win_watcher->win_factory, (HWND) lParam);
-						if (b3_director_set_active_win(win_watcher->director, win) == 0) {
-						}
+					win = b3_win_factory_win_create(win_watcher->win_factory, (HWND) lParam);
+					if (b3_director_set_active_win(win_watcher->director, win) == 0) {
 					}
 					break;
 			}
@@ -341,114 +290,4 @@ b3_win_watcher_managable_window_handler(b3_win_watcher_t *win_watcher, HWND wind
 	}
 
 	return 0;
-}
-
-b3_ww_table_t *
-b3_ww_table_new()
-{
-	b3_ww_table_t *ww_table;
-
-	ww_table = malloc(sizeof(b3_ww_table_t));
-
-	hashtable_new(&(ww_table->ww_table));
-
-	return ww_table;
-}
-
-int
-b3_ww_table_free(b3_ww_table_t *ww_table)
-{
-	hashtable_destroy(ww_table->ww_table);
-	ww_table->ww_table = NULL;
-
-	free(ww_table);
-
-	return 0;
-}
-
-b3_ww_table_t *
-b3_ww_table_get_instance()
-{
-	pthread_mutex_lock(&g_ww_table_instance_mutex);
-	if (g_ww_table_instance == NULL) {
-		g_ww_table_instance = b3_ww_table_new();
-	}
-	pthread_mutex_unlock(&g_ww_table_instance_mutex);
-
-	return g_ww_table_instance;
-}
-
-int
-b3_ww_table_add_ww(b3_ww_table_t *ww_table, HWND window_handler, b3_win_watcher_t *win_watcher)
-{
-	pthread_mutex_lock(&g_ww_table_instance_mutex);
-
-	hashtable_add(ww_table->ww_table, window_handler, win_watcher);
-
-	pthread_mutex_unlock(&g_ww_table_instance_mutex);
-
-	return 0;
-}
-
-HWND
-b3_ww_table_get_w(b3_ww_table_t *ww_table, const b3_win_watcher_t *win_watcher)
-{
-	HashTableIter iter;
-	TableEntry *entry;
-	HWND window_handler;
-
-	pthread_mutex_lock(&g_ww_table_instance_mutex);
-
-	window_handler = NULL;
-	hashtable_iter_init(&iter, ww_table->ww_table);
-	while (!window_handler && hashtable_iter_next(&iter, &entry) != CC_ITER_END) {
-		if (entry->value == win_watcher) {
-			window_handler = entry->key;
-		}
-	}
-
-	pthread_mutex_unlock(&g_ww_table_instance_mutex);
-
-	return window_handler;
-}
-
-b3_win_watcher_t *
-b3_ww_table_get_watcher(b3_ww_table_t *ww_table, HWND window_handler)
-{
-	b3_win_watcher_t *win_watcher;
-
-	pthread_mutex_lock(&g_ww_table_instance_mutex);
-
-	win_watcher = NULL;
-	hashtable_get(ww_table->ww_table, window_handler, (void *) &win_watcher);
-
-	pthread_mutex_unlock(&g_ww_table_instance_mutex);
-
-	return win_watcher;
-}
-
-int
-b3_ww_table_remove_watcher(b3_ww_table_t *ww_table, b3_win_watcher_t *win_watcher)
-{
-	char found;
-	HashTableIter iter;
-	TableEntry *entry;
-
-	pthread_mutex_lock(&g_ww_table_instance_mutex);
-
-	found = 0;
-	hashtable_iter_init(&iter, ww_table->ww_table);
-	while (!found && hashtable_iter_next(&iter, &entry) != CC_ITER_END) {
-		if (entry->value == win_watcher) {
-            hashtable_iter_remove(&iter, NULL);
-            found = 1;
-		}
-	}
-
-	pthread_mutex_unlock(&g_ww_table_instance_mutex);
-
-	if (found)
-		return 0;
-	else
-		return 1;
 }
