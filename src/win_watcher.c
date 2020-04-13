@@ -34,8 +34,6 @@
 
 static wbk_logger_t logger =  { "win_watcher" };
 
-static UINT g_shellhookid;
-
 static LRESULT CALLBACK
 b3_win_watcher_wnd_proc(HWND window_handler, UINT msg, WPARAM wParam, LPARAM lParam);
 
@@ -78,12 +76,12 @@ b3_win_watcher_start(b3_win_watcher_t *win_watcher)
 	HINSTANCE hInstance;
 	WNDCLASSEX wc;
 	HWND window_handler;
-	int ret;
+	int error;
 	char classname[] = "b3 win watcher";
 
-	ret = 0;
+	error = 0;
 
-	if (!ret) {
+	if (!error) {
 		hInstance = GetModuleHandle(NULL);
 
 		wc.cbSize		= sizeof(WNDCLASSEX);
@@ -99,28 +97,35 @@ b3_win_watcher_start(b3_win_watcher_t *win_watcher)
 		wc.lpszClassName = classname;
 		wc.hIconSm	   = LoadIcon(NULL, IDI_APPLICATION);
 
-		if(RegisterClassEx(&wc))
-		{
-			window_handler = CreateWindowEx(WS_EX_NOACTIVATE,
-							classname,
-							classname,
-							WS_DISABLED,
-							0, 0,
-							0, 0,
-							NULL, NULL, hInstance, win_watcher);
-
-			ShowWindow(window_handler, SW_HIDE);
-
-			RegisterShellHookWindow(window_handler);
-			win_watcher->shellhookid = RegisterWindowMessageW(L"SHELLHOOK");
-
-			SetWindowLongPtr(window_handler, GWLP_USERDATA, win_watcher);
+		if(!RegisterClassEx(&wc)) {
+			error = 1;
 		}
+	}
 
-		EnumWindows(b3_win_watcher_enum_windows, (LPARAM) win_watcher);
+	if (!error) {
+		window_handler = CreateWindowEx(WS_EX_NOACTIVATE,
+						classname,
+						classname,
+						WS_DISABLED,
+						0, 0,
+						0, 0,
+						NULL, NULL, hInstance, win_watcher);
+
+		ShowWindow(window_handler, SW_HIDE);
+
+		RegisterShellHookWindow(window_handler);
+		win_watcher->shellhookid = RegisterWindowMessageW(L"SHELLHOOK");
+
+		SetWindowLongPtr(window_handler, GWLP_USERDATA, win_watcher);
 
 		win_watcher->window_handler = window_handler;
+	}
 
+	if (!error) {
+		EnumWindows(b3_win_watcher_enum_windows, (LPARAM) win_watcher);
+	}
+
+	if (!error) {
 		b3_director_arrange_wins(win_watcher->director);
 	}
 

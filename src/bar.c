@@ -86,21 +86,22 @@ b3_bar_get_position(b3_bar_t *bar)
 {
 	return bar->position;
 }
-
+#include <stdio.h>
 int
 b3_bar_create_window(b3_bar_t *bar, const char *monitor_name)
 {
-	int ret;
+	int error;
 	WNDCLASSEX wc;
 	HINSTANCE hInstance;
-	PTITLEBARINFO titlebar_info;
+	TITLEBARINFO titlebar_info;
 	int monitor_name_len;
 	int titlebar_height;
 	char *win_class;
 
-	ret = 0;
+	error = 0;
+	win_class = NULL;
 
-	if (!ret) {
+	if (!error) {
 		hInstance = GetModuleHandle(NULL);
 
 		monitor_name_len = strlen(monitor_name);
@@ -119,40 +120,49 @@ b3_bar_create_window(b3_bar_t *bar, const char *monitor_name)
 		wc.hCursor	   = LoadCursor(NULL, IDC_ARROW);
 		wc.hbrBackground = (HBRUSH)(COLOR_WINDOW+1);
 		wc.lpszMenuName  = NULL;
-		wc.lpszClassName = monitor_name;
+		wc.lpszClassName = win_class;
 		wc.hIconSm	   = LoadIcon(NULL, IDI_APPLICATION);
 
-		if(RegisterClassEx(&wc))
-		{
-			bar->window_handler = CreateWindowEx(WS_EX_NOACTIVATE | WS_EX_TOPMOST,
-												 monitor_name, // win_class,
-												 B3_BAR_WIN_NAME,
-												 WS_DISABLED | WS_BORDER,
-												 bar->area.left, 20,
-												 100, 100,
-												 NULL, NULL, hInstance, bar);
-//			GetTitleBarInfo(window_handler, titlebar_info);
-//			titlebar_height = titlebar_info->rcTitleBar.bottom - titlebar_info->rcTitleBar.top;
-			titlebar_height = 30;
-
-			SetWindowLongPtr(bar->window_handler, GWLP_USERDATA, bar);
-
-			SetWindowPos(bar->window_handler,
-						 HWND_TOPMOST,
-						 bar->area.left, bar->area.top - 20,
-						 bar->area.right, titlebar_height + bar->height,
-						 SWP_NOACTIVATE | SWP_NOSENDCHANGING);
-
-			UpdateWindow(bar->window_handler);
-			ShowWindow(bar->window_handler, SW_SHOW);
-		} else {
-			ret = 2;
+		if(!RegisterClassEx(&wc)) {
+			error = 1;
 		}
+	}
 
+	if (!error) {
+		bar->window_handler = CreateWindowEx(WS_EX_NOACTIVATE | WS_EX_TOPMOST,
+											 win_class,
+											 B3_BAR_WIN_NAME,
+											 WS_DISABLED | WS_BORDER,
+											 bar->area.left, 20,
+											 100, 100,
+											 NULL, NULL, hInstance, bar);
+	}
+
+	if (!error) {
+		titlebar_info.cbSize = sizeof(TITLEBARINFO);
+		GetTitleBarInfo(bar->window_handler, &titlebar_info);
+		titlebar_height = titlebar_info.rcTitleBar.bottom - titlebar_info.rcTitleBar.top;
+		titlebar_height *= 1.3;
+	}
+
+	if (!error) {
+		SetWindowLongPtr(bar->window_handler, GWLP_USERDATA, bar);
+
+		SetWindowPos(bar->window_handler,
+					 HWND_TOPMOST,
+					 bar->area.left, bar->area.top - 20,
+					 bar->area.right, titlebar_height + bar->height,
+					 SWP_NOACTIVATE | SWP_NOSENDCHANGING);
+
+		UpdateWindow(bar->window_handler);
+		ShowWindow(bar->window_handler, SW_SHOW);
+	}
+
+	if (win_class) {
 		free(win_class);
 	}
 
-	return ret;
+	return error;
 }
 
 int
