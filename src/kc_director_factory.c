@@ -108,3 +108,15 @@ b3_kc_director_factory_create_mawtw(b3_kc_director_factory_t *kc_director_factor
 
 	return mawtw;
 }
+
+b3_kc_director_t *
+b3_kc_director_factory_create_awtf(b3_kc_director_factory_t *kc_director_factory,
+								   wbk_b_t *comb,
+								   b3_director_t *director)
+{
+	b3_kc_director_t *mawtw;
+
+	mawtw = b3_kc_director_new(comb, director, ACTIVE_WINDOW_TOGGLE_FLOATING, NULL);
+
+	return mawtw;
+}

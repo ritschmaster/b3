@@ -274,7 +274,8 @@ b3_bar_draw(b3_bar_t *bar, HWND window_handler)
 	return 0;
 }
 
-LRESULT CALLBACK b3_bar_WndProc(HWND window_handler, UINT msg, WPARAM wParam, LPARAM lParam)
+LRESULT CALLBACK
+b3_bar_WndProc(HWND window_handler, UINT msg, WPARAM wParam, LPARAM lParam)
 {
 	LRESULT CALLBACK result;
 	b3_wb_table_t *wb_table;

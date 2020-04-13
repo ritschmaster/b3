@@ -83,6 +83,41 @@ b3_win_set_floating(b3_win_t *win, char floating)
 }
 
 int
+b3_win_show(b3_win_t *win)
+{
+	int error;
+	RECT win_rect;
+
+	if (!win->window_handler) {
+		error = 1;
+	}
+
+	if (!error) {
+		if (b3_win_get_floating(win)) {
+			GetWindowRect(win->window_handler, &win_rect);
+//			ShowWindow(win->window_handler, SW_RESTORE);
+			ShowWindow(win->window_handler, SW_SHOWDEFAULT);
+			SetWindowPos(win->window_handler,
+						 HWND_TOPMOST,
+						 win_rect.left, win_rect.top,
+						 win_rect.right, win_rect.bottom,
+						 0);
+		} else {
+			ShowWindow(win->window_handler, SW_RESTORE);
+		}
+	}
+
+	return error;
+}
+
+int
+b3_win_minimize(b3_win_t *win)
+{
+   	ShowWindow(win->window_handler, SW_MINIMIZE);
+	return 0;
+}
+
+int
 b3_win_compare(const b3_win_t *win, const b3_win_t *other)
 {
 	if (win->window_handler == other->window_handler) {

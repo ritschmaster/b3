@@ -97,7 +97,7 @@ b3_ws_add_win(b3_ws_t *ws, b3_win_t *win)
 }
 
 int
-b3_ws_remove_win(b3_ws_t *ws, b3_win_t *win)
+b3_ws_remove_win(b3_ws_t *ws, const b3_win_t *win)
 {
 	ArrayIter iter;
 	b3_win_t *win_iter;
@@ -119,22 +119,43 @@ b3_ws_remove_win(b3_ws_t *ws, b3_win_t *win)
     return ret;
 }
 
-int
+b3_win_t *
 b3_ws_contains_win(b3_ws_t *ws, const b3_win_t *win)
 {
 	ArrayIter iter;
 	b3_win_t *win_iter;
-	int found;
+	b3_win_t *actual_win;
 
-	found = 0;
+	actual_win = NULL;
 	array_iter_init(&iter, ws->win_arr);
-    while (!found && array_iter_next(&iter, (void*) &win_iter) != CC_ITER_END) {
+    while (!actual_win && array_iter_next(&iter, (void*) &win_iter) != CC_ITER_END) {
     	if (b3_win_compare(win_iter, win) == 0) {
-    		found = 1;
+    		actual_win = win;
     	}
     }
 
-    return found;
+    return actual_win;
+}
+
+int
+b3_ws_active_win_toggle_floating(b3_ws_t *ws, const b3_win_t *win)
+{
+	int toggle_failed;
+	char floating;
+	ArrayIter iter;
+	b3_win_t *win_iter;
+
+	toggle_failed = 1;
+	array_iter_init(&iter, ws->win_arr);
+    while (toggle_failed && array_iter_next(&iter, (void*) &win_iter) != CC_ITER_END) {
+    	if (b3_win_compare(win_iter, win) == 0) {
+    		floating = b3_win_get_floating(win_iter);
+    		b3_win_set_floating(win_iter, !floating);
+    		toggle_failed = 0;
+    	}
+    }
+
+	return toggle_failed;
 }
 
 int
@@ -172,6 +193,13 @@ b3_ws_arrange_wins(b3_ws_t *ws, RECT monitor_area)
 				width += split_size;
 			}
 		}
+
+		array_iter_init(&iter, ws->win_arr);
+		while (array_iter_next(&iter, (void*) &win_iter) != CC_ITER_END) {
+			if (b3_win_get_floating(win_iter)) {
+				b3_win_show(win_iter);
+			}
+		}
     }
 
     return 0;
@@ -185,7 +213,7 @@ b3_ws_minimize_wins(b3_ws_t *ws)
 
 	array_iter_init(&iter, ws->win_arr);
     while (array_iter_next(&iter, (void*) &win_iter) != CC_ITER_END) {
-    	ShowWindow(win_iter->window_handler, SW_MINIMIZE);
+    	b3_win_minimize(win_iter);
     }
 
     return 0;

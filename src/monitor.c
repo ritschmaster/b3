@@ -108,6 +108,12 @@ b3_monitor_get_focused_ws(b3_monitor_t *monitor)
 	return b3_wsman_get_focused_ws(monitor->wsman);
 }
 
+b3_wsman_t *
+b3_monitor_get_wsman(b3_monitor_t *monitor)
+{
+	return monitor->wsman;
+}
+
 int
 b3_monitor_add_win(b3_monitor_t *monitor, b3_win_t *win)
 {
@@ -152,10 +158,11 @@ b3_monitor_arrange_wins(b3_monitor_t *monitor)
 }
 
 const b3_ws_t *
-b3_monitor_find_win(b3_monitor_t *monitor, const b3_win_t *win)
+b3_monitor_find_win(b3_monitor_t *monitor, const b3_win_t *win, b3_win_t **win_out)
 {
 	return b3_wsman_find_win(monitor->wsman,
-						     win);
+						     win,
+							 win_out);
 }
 
 int

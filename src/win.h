@@ -75,6 +75,11 @@ b3_win_get_floating(b3_win_t *win);
 extern int
 b3_win_set_floating(b3_win_t *win, char floating);
 
+extern int
+b3_win_show(b3_win_t *win);
+
+extern int
+b3_win_minimize(b3_win_t *win);
 
 /**
  * @brief Compares two windows

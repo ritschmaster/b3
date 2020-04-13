@@ -32,8 +32,7 @@
 #define B3_TIL_H
 
 typedef enum b3_til_mode_e {
-	SPLITH,
-	SPLITV,
+	DEFAULT = 1,
 	STACKING,
 	TABBED,
 } b3_til_mode_t;

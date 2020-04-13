@@ -297,12 +297,13 @@ b3_director_set_active_win(b3_director_t *director, const b3_win_t *win)
 	b3_monitor_t *monitor;
 	char found;
 	const b3_ws_t *ws;
+	b3_win_t *actual_win;
 	int ret;
 
 	found = 0;
 	array_iter_init(&iter, director->monitor_arr);
     while (!found && array_iter_next(&iter, (void*) &monitor) != CC_ITER_END) {
-    	ws = b3_monitor_find_win(monitor, win);
+    	ws = b3_monitor_find_win(monitor, win, &actual_win);
     	if (ws) {
     		found = 1;
     	}
@@ -313,7 +314,7 @@ b3_director_set_active_win(b3_director_t *director, const b3_win_t *win)
     		&& strcmp(director->focused_win.ws->name, ws->name)) {
     		b3_director_switch_to_ws(director, ws->name);
     	}
-    	b3_director_set_active_win_internal(director, monitor, ws, win);
+    	b3_director_set_active_win_internal(director, monitor, ws, actual_win);
     	ret = 0;
     } else {
     	wbk_logger_log(&logger, SEVERE, "Activated window is unknown\n");
@@ -321,6 +322,29 @@ b3_director_set_active_win(b3_director_t *director, const b3_win_t *win)
     }
 
 	return ret;
+}
+
+int
+b3_director_active_win_toggle_floating(b3_director_t *director)
+{
+	int toggle_failed;
+	char floating;
+	b3_ws_t *ws;
+
+	toggle_failed = 1;
+	if (director->focused_win.win) {
+		ws = b3_monitor_get_focused_ws(director->focused_monitor);
+
+		if (ws) {
+			toggle_failed = b3_ws_active_win_toggle_floating(ws, director->focused_win.win);
+			if (!toggle_failed) {
+				wbk_logger_log(&logger, SEVERE, "Activated window toggled floating\n");
+				b3_monitor_arrange_wins(director->focused_monitor);
+			}
+		}
+	}
+
+	return toggle_failed;
 }
 
 int
@@ -344,7 +368,7 @@ b3_director_move_active_win_to_ws(b3_director_t *director, const char *ws_id)
     }
 
     if (!found) {
-    	ws = b3_wsman_add(director->focused_monitor->wsman, ws_id); // TODO refactor me?
+    	ws = b3_wsman_add(b3_monitor_get_wsman(director->focused_monitor), ws_id);
     }
 
     ret = 1;

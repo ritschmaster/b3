@@ -46,6 +46,9 @@ b3_kc_director_exec_cm(const b3_kc_director_t *kc_director);
 static int
 b3_kc_director_exec_mawtw(const b3_kc_director_t *kc_director);
 
+static int
+b3_kc_director_exec_awtf(const b3_kc_director_t *kc_director);
+
 b3_kc_director_t *
 b3_kc_director_new(wbk_b_t *comb, b3_director_t *director, b3_kc_director_kind_t kind, void *data)
 {
@@ -81,16 +84,22 @@ b3_kc_director_free(b3_kc_director_t *kc_director)
 		switch (kc_director->kind) {
 		case CHANGE_WORKSPACE:
 			free(kc_director->data);
+			kc_director->data = NULL;
 			break;
 
 		case CHANGE_MONITOR:
 			free(kc_director->data);
+			kc_director->data = NULL;
 			break;
 
 		case MOVE_ACTIVE_WINDOW_TO_WORKSPACE:
 			free(kc_director->data);
+			kc_director->data = NULL;
 			break;
 
+		case ACTIVE_WINDOW_TOGGLE_FLOATING:
+			kc_director->data = NULL;
+			break;
 		}
 	}
 
@@ -125,6 +134,10 @@ b3_kc_director_exec(const b3_kc_director_t *kc_director)
 
 	case MOVE_ACTIVE_WINDOW_TO_WORKSPACE:
 		ret = b3_kc_director_exec_mawtw(kc_director);
+		break;
+
+	case ACTIVE_WINDOW_TOGGLE_FLOATING:
+		ret = b3_kc_director_exec_awtf(kc_director);
 		break;
 
 	default:
@@ -172,6 +185,16 @@ b3_kc_director_exec_mawtw(const b3_kc_director_t *kc_director)
 	ws_id = kc_director->data;
 
 	ret = b3_director_move_active_win_to_ws(kc_director->director, ws_id);
+
+	return ret;
+}
+
+int
+b3_kc_director_exec_awtf(const b3_kc_director_t *kc_director)
+{
+	int ret;
+
+	ret = b3_director_active_win_toggle_floating(kc_director->director);
 
 	return ret;
 }

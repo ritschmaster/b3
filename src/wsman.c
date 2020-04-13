@@ -88,8 +88,7 @@ b3_wsman_add(b3_wsman_t *wsman, const char *ws_id)
 
     if (!found) {
     	ws = b3_ws_factory_create(wsman->ws_factory, ws_id);
-    	array_add(b3_wsman_get_ws_arr(wsman),
-    			  ws);
+    	array_add(b3_wsman_get_ws_arr(wsman), ws);
     }
 
 	return ws;
@@ -195,7 +194,7 @@ b3_wsman_remove_win(b3_wsman_t *wsman, b3_win_t *win)
 }
 
 const b3_ws_t *
-b3_wsman_find_win(b3_wsman_t *wsman, const b3_win_t *win)
+b3_wsman_find_win(b3_wsman_t *wsman, const b3_win_t *win, b3_win_t **win_out)
 {
 	ArrayIter iter;
 	b3_ws_t *ws;
@@ -204,13 +203,15 @@ b3_wsman_find_win(b3_wsman_t *wsman, const b3_win_t *win)
 	found = 0;
 	array_iter_init(&iter, b3_wsman_get_ws_arr(wsman));
 	while (!found && array_iter_next(&iter, (void*) &ws) != CC_ITER_END) {
-		if (b3_ws_contains_win(ws, win)) {
+		*win_out = b3_ws_contains_win(ws, win);
+		if (*win_out) {
 			found = 1;
 		}
 	}
 
 	if (!found) {
 		ws = NULL;
+		*win_out = NULL;
 	}
 
 	return ws;

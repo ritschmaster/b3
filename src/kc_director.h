@@ -39,7 +39,8 @@ typedef enum b3_kc_director_kind_e
 {
 	CHANGE_WORKSPACE = 0,
 	CHANGE_MONITOR,
-	MOVE_ACTIVE_WINDOW_TO_WORKSPACE
+	MOVE_ACTIVE_WINDOW_TO_WORKSPACE,
+	ACTIVE_WINDOW_TOGGLE_FLOATING
 } b3_kc_director_kind_t;
 
 typedef struct b3_kc_director_s

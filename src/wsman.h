@@ -96,7 +96,7 @@ b3_wsman_remove_win(b3_wsman_t *wsman, b3_win_t *win);
  * @return The workspace the window is placed on or NULL if it cannot be found.
  */
 extern const b3_ws_t *
-b3_wsman_find_win(b3_wsman_t *wsman, const b3_win_t *win);
+b3_wsman_find_win(b3_wsman_t *wsman, const b3_win_t *win, b3_win_t **win_out);
 
 /**
  * @return The workspace array of the workspace manager. Do not free it or

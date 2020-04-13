@@ -83,7 +83,7 @@ b3_ws_add_win(b3_ws_t *ws, b3_win_t *win);
  * @return 0 if added. Non-0 otherwise.
  */
 extern int
-b3_ws_remove_win(b3_ws_t *ws, b3_win_t *win);
+b3_ws_remove_win(b3_ws_t *ws, const b3_win_t *win);
 
 extern int
 b3_ws_arrange_wins(b3_ws_t *ws, RECT monitor_area);
@@ -92,10 +92,16 @@ int
 b3_ws_minimize_wins(b3_ws_t *ws);
 
 /**
- * @return 1 if the window is within the workspace. 0 otherwise.
+ * @return The window if it is within the workspace. NULL otherwise.
+ */
+extern b3_win_t *
+b3_ws_contains_win(b3_ws_t *ws, const b3_win_t *win);
+
+/**
+ * @return 0 if it was possible to toggle the window. Non-0 otherwise (e.g. when it is not managed).
  */
 extern int
-b3_ws_contains_win(b3_ws_t *ws, const b3_win_t *win);
+b3_ws_active_win_toggle_floating(b3_ws_t *ws, const b3_win_t *win);
 
 /**
   * @brief Get the tiling mode of the workspace

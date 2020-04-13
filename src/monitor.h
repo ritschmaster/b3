@@ -23,7 +23,7 @@
 *******************************************************************************/
 
 /**
- * @author Richard Bï¿½ck
+ * @author Richard Bäck
  * @date 2020-02-16
  * @brief File contains the monitor definition
  */
@@ -89,6 +89,9 @@ b3_monitor_set_focused_ws(b3_monitor_t *monitor, const char *ws_id);
 extern b3_ws_t *
 b3_monitor_get_focused_ws(b3_monitor_t *monitor);
 
+extern b3_wsman_t *
+b3_monitor_get_wsman(b3_monitor_t *monitor);
+
 /**
  * @return 0 if added. Non-0 otherwise.
  */
@@ -106,10 +109,11 @@ extern int
 b3_monitor_arrange_wins(b3_monitor_t *monitor);
 
 /**
+ * @param win_out The actual window found or NULL if it cannot be found.
  * @return The workspace the window is placed on or NULL if it cannot be found.
  */
 extern const b3_ws_t *
-b3_monitor_find_win(b3_monitor_t *monitor, const b3_win_t *win);
+b3_monitor_find_win(b3_monitor_t *monitor, const b3_win_t *win, b3_win_t **win_out);
 
 extern int
 b3_monitor_show(b3_monitor_t *monitor);

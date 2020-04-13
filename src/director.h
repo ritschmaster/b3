@@ -120,6 +120,12 @@ extern int
 b3_director_set_active_win(b3_director_t *director, const b3_win_t *win);
 
 /**
+ * @return 0 if it was possible to toggle the window. Non-0 otherwise (e.g. when it is not managed).
+ */
+extern int
+b3_director_active_win_toggle_floating(b3_director_t *director);
+
+/**
  * @return 0 if it was moved. Non-0 otherwise.
  */
 extern int
