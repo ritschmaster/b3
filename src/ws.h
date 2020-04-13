@@ -72,7 +72,7 @@ extern Array *
 b3_ws_get_win_arr(b3_ws_t *ws);
 
 /**
- * @param win A window object. The object will be freed by the workspace!
+ * @param win The object will not be freed. Free it by yourself!
  * @return 0 if added. Non-0 otherwise.
  */
 extern int
@@ -94,7 +94,7 @@ b3_ws_minimize_wins(b3_ws_t *ws);
 /**
  * @return The window if it is within the workspace. NULL otherwise.
  */
-extern b3_win_t *
+extern const b3_win_t *
 b3_ws_contains_win(b3_ws_t *ws, const b3_win_t *win);
 
 /**

@@ -24,7 +24,6 @@
 
 #include "ws.h"
 
-#include <stdio.h>
 #include <string.h>
 #include <wbkbase/logger.h>
 
@@ -56,7 +55,6 @@ b3_ws_free(b3_ws_t *ws)
 	array_iter_init(&iter, ws->win_arr);
     while (array_iter_next(&iter, (void*) &win_iter) != CC_ITER_END) {
     	array_iter_remove(&iter, NULL);
-    	b3_win_free(win_iter);
     }
 	array_destroy(ws->win_arr);
 	ws->win_arr = NULL;
@@ -112,14 +110,10 @@ b3_ws_remove_win(b3_ws_t *ws, const b3_win_t *win)
     	}
     }
 
-    if (ret == 0) {
-    	b3_win_free(win_iter);
-    }
-
     return ret;
 }
 
-b3_win_t *
+const b3_win_t *
 b3_ws_contains_win(b3_ws_t *ws, const b3_win_t *win)
 {
 	ArrayIter iter;

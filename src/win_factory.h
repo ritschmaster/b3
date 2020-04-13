@@ -23,59 +23,51 @@
 *******************************************************************************/
 
 /**
- * @author Richard BÃ¤ck
- * @date 2020-03-20
- * @brief File contains the window watcher class definition
+ * @author Richard Bäck <richard.baeck@mailbox.org>
+ * @date 2020-04-13
+ * @brief File contains the window factory class definition
  */
 
-#ifndef B3_WIN_WATCHER_H
-#define B3_WIN_WATCHER_H
-
+#include <collectc/array.h>
 #include <windows.h>
 
-#include "win_factory.h"
-#include "director.h"
+#include "win.h"
 
-#define B3_WIN_WATCHER_BUFFER_LENGTH 1024
+#ifndef B3_WIN_FACTORY_H
+#define B3_WIN_FACTORY_H
 
-typedef struct b3_win_watcher_s
+typedef struct b3_win_factory_s
 {
-	b3_win_factory_t *win_factory;
-
-	b3_director_t *director;
-
-	HWND window_handler;
-
-	UINT shellhookid;
-} b3_win_watcher_t;
+	/**
+	 *  Array of b3_win_t *
+	 */
+	Array *win_arr;
+} b3_win_factory_t;
 
 /**
- * @param win_factory The object will not be freed. Free it by yourself!
- * @param director The object will not be freed. Free it by yourself!
+ * @brief Creates a new window factory
+ * @return A new window factory or NULL if allocation failed
  */
-extern b3_win_watcher_t *
-b3_win_watcher_new(b3_win_factory_t *win_factory, b3_director_t *director);
-
-extern b3_win_watcher_t *
-b3_win_watcher_free(b3_win_watcher_t *win_watcher);
+extern b3_win_factory_t *
+b3_win_factory_new(void);
 
 /**
- * @brief Main loop, runs forever, but in a thread.
+ * @brief Deletes a window factory
+ * @return Non-0 if the deletion failed
  */
 extern int
-b3_win_watcher_start(b3_win_watcher_t *win_watcher);
+b3_win_factory_free(b3_win_factory_t *win_factory);
 
 /**
- * @brief Stops the main loop.
+ * @return A new window. Free it by yourself by using b3_win_factory_free()!
  */
-extern int
-b3_win_watcher_stop(b3_win_watcher_t *win_watcher);
-
+extern b3_win_t *
+b3_win_factory_win_create(b3_win_factory_t *win_factory, HWND window_handler);
 
 /**
- * @return 0 if the window is not managable. Non-0 if it is managable.
+ * @return 0 if the window is managed and freed. Non-0 otherwise.
  */
 extern int
-b3_win_watcher_managable_window_handler(b3_win_watcher_t *win_watcher, HWND window_handler);
+b3_win_factory_win_free(b3_win_factory_t *win_factory, b3_win_t *win);
 
-#endif // B3_WIN_WATCHER_H
+#endif // B3_WIN_FACTORY_H

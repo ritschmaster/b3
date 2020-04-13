@@ -82,13 +82,15 @@ static BOOL CALLBACK
 b3_win_watcher_enum_windows(HWND window_handler, LPARAM param);
 
 b3_win_watcher_t *
-b3_win_watcher_new(b3_director_t *director)
+b3_win_watcher_new(b3_win_factory_t *win_factory, b3_director_t *director)
 {
 	b3_win_watcher_t *win_watcher;
 
 	win_watcher = NULL;
 	win_watcher = malloc(sizeof(b3_win_watcher_t));
 	memset(win_watcher, 0, sizeof(b3_win_watcher_t));
+
+	win_watcher->win_factory = win_factory;
 
 	win_watcher->director = director;
 
@@ -100,9 +102,11 @@ b3_win_watcher_free(b3_win_watcher_t *win_watcher)
 {
 	b3_win_watcher_stop(win_watcher);
 
-	win_watcher->window_handler = NULL;
+	win_watcher->win_factory = NULL;
 
 	win_watcher->director = NULL;
+
+	win_watcher->window_handler = NULL;
 
 	free(win_watcher);
 }
@@ -204,10 +208,8 @@ b3_win_watcher_wnd_proc(HWND window_handler, UINT msg, WPARAM wParam, LPARAM lPa
 						monitor_info.cbSize = sizeof(MONITORINFOEX);
 						GetMonitorInfo(monitor, &monitor_info);
 
-						win = b3_win_new((HWND) lParam, 0);
+						win = b3_win_factory_win_create(win_watcher->win_factory, (HWND) lParam);
 						if (b3_director_add_win(win_watcher->director, monitor_info.szDevice, win)) {
-							b3_win_free(win);
-							b3_director_arrange_wins(win_watcher->director);
 						}
 
 						DeleteObject(monitor);
@@ -216,21 +218,18 @@ b3_win_watcher_wnd_proc(HWND window_handler, UINT msg, WPARAM wParam, LPARAM lPa
 
 				case HSHELL_WINDOWDESTROYED:
 					if (win_watcher) {
-						win = b3_win_new((HWND) lParam, 0);
+						win = b3_win_factory_win_create(win_watcher->win_factory, (HWND) lParam);
 						if (b3_director_remove_win(win_watcher->director, win) == 0) {
-							b3_director_arrange_wins(win_watcher->director);
+							b3_win_factory_win_free(win_watcher->win_factory, win);
 						}
-						b3_win_free(win);
 					}
 					break;
 
 				case HSHELL_WINDOWACTIVATED:
 					if (win_watcher) {
-						win = b3_win_new((HWND) lParam, 0);
+						win = b3_win_factory_win_create(win_watcher->win_factory, (HWND) lParam);
 						if (b3_director_set_active_win(win_watcher->director, win) == 0) {
-							b3_director_arrange_wins(win_watcher->director);
 						}
-						b3_win_free(win);
 					}
 					break;
 			}
@@ -256,10 +255,10 @@ b3_win_watcher_enum_windows(HWND window_handler, LPARAM param)
 		monitor_info.cbSize = sizeof(MONITORINFOEX);
 		GetMonitorInfo(monitor, &monitor_info);
 
-		win = b3_win_new(window_handler, 0);
+		win = b3_win_factory_win_create(win_watcher->win_factory, window_handler);
 
 		if (b3_director_add_win(win_watcher->director, monitor_info.szDevice, win)) {
-			b3_win_free(win);
+			b3_win_factory_win_free(win_watcher->win_factory, win);
 		}
 
 		DeleteObject(monitor);
@@ -267,7 +266,7 @@ b3_win_watcher_enum_windows(HWND window_handler, LPARAM param)
 
 	return TRUE;
 }
-#include <stdio.h>
+
 int
 b3_win_watcher_managable_window_handler(b3_win_watcher_t *win_watcher, HWND window_handler)
 {
@@ -287,7 +286,6 @@ b3_win_watcher_managable_window_handler(b3_win_watcher_t *win_watcher, HWND wind
 	if (window_handler != 0) {
 		parent = GetParent(window_handler);
 		parent_managable = b3_win_watcher_managable_window_handler(win_watcher, parent);
-
 
 		GetWindowText(window_handler, title, B3_WIN_WATCHER_BUFFER_LENGTH);
 		GetClassName(window_handler, classname, B3_WIN_WATCHER_BUFFER_LENGTH);

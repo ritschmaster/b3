@@ -52,11 +52,6 @@ b3_director_enum_monitors(HMONITOR monitor, HDC hdc, LPRECT rect, LPARAM data);
 static int
 b3_director_repaint_all(void);
 
-static int
-b3_director_set_active_win_internal(b3_director_t *director,
-									const b3_monitor_t *monitor,
-									const b3_ws_t *ws,
-	                                const b3_win_t *win);
 b3_director_t *
 b3_director_new(b3_monitor_factory_t *monitor_factory)
 {
@@ -83,9 +78,10 @@ b3_director_free(b3_director_t *director)
 
 	director->monitor_factory = NULL;
 
-  	b3_director_set_active_win_internal(director, NULL, NULL, NULL);
+	director->active_win = NULL;
 
 	free(director);
+
 	return 0;
 }
 
@@ -240,7 +236,7 @@ b3_director_add_win(b3_director_t *director, const char *monitor_name, b3_win_t 
 	ArrayIter iter;
 	b3_monitor_t *monitor;
 	char found;
-	int ret;
+	int error;
 
 	found = 0;
 	array_iter_init(&iter, director->monitor_arr);
@@ -250,12 +246,16 @@ b3_director_add_win(b3_director_t *director, const char *monitor_name, b3_win_t 
     	}
     }
 
-    ret = 1;
+    error = 1;
     if (found) {
-    	ret = b3_monitor_add_win(monitor, win);
+    	error = b3_monitor_add_win(monitor, win);
     }
 
-	return ret;
+    if (!error) {
+		b3_director_arrange_wins(director);
+    }
+
+	return error;
 }
 
 int
@@ -263,15 +263,19 @@ b3_director_remove_win(b3_director_t *director, b3_win_t *win)
 {
 	ArrayIter iter;
 	b3_monitor_t *monitor;
-	int ret;
+	int error;
 
-	ret = 1;
+	error = 1;
 	array_iter_init(&iter, director->monitor_arr);
-    while (ret && array_iter_next(&iter, (void*) &monitor) != CC_ITER_END) {
-    	ret = b3_monitor_remove_win(monitor, win);
+    while (error && array_iter_next(&iter, (void*) &monitor) != CC_ITER_END) {
+    	error = b3_monitor_remove_win(monitor, win);
     }
 
-    return ret;
+    if (!error) {
+    	b3_director_arrange_wins(director);
+    }
+
+    return error;
 }
 
 int
@@ -291,30 +295,27 @@ b3_director_arrange_wins(b3_director_t *director)
 }
 
 int
-b3_director_set_active_win(b3_director_t *director, const b3_win_t *win)
+b3_director_set_active_win(b3_director_t *director, b3_win_t *win)
 {
 	ArrayIter iter;
 	b3_monitor_t *monitor;
 	char found;
 	const b3_ws_t *ws;
-	b3_win_t *actual_win;
 	int ret;
 
 	found = 0;
 	array_iter_init(&iter, director->monitor_arr);
     while (!found && array_iter_next(&iter, (void*) &monitor) != CC_ITER_END) {
-    	ws = b3_monitor_find_win(monitor, win, &actual_win);
+    	ws = b3_monitor_find_win(monitor, win);
     	if (ws) {
     		found = 1;
     	}
     }
 
     if (found) {
-    	if (director->focused_win.win != NULL
-    		&& strcmp(director->focused_win.ws->name, ws->name)) {
-    		b3_director_switch_to_ws(director, ws->name);
-    	}
-    	b3_director_set_active_win_internal(director, monitor, ws, actual_win);
+    	b3_director_switch_to_ws(director, ws->name);
+    	director->active_win = win;
+		b3_director_arrange_wins(director);
     	ret = 0;
     } else {
     	wbk_logger_log(&logger, SEVERE, "Activated window is unknown\n");
@@ -329,18 +330,15 @@ b3_director_active_win_toggle_floating(b3_director_t *director)
 {
 	int toggle_failed;
 	char floating;
-	b3_ws_t *ws;
 
 	toggle_failed = 1;
-	if (director->focused_win.win) {
-		ws = b3_monitor_get_focused_ws(director->focused_monitor);
-
-		if (ws) {
-			toggle_failed = b3_ws_active_win_toggle_floating(ws, director->focused_win.win);
-			if (!toggle_failed) {
-				wbk_logger_log(&logger, SEVERE, "Activated window toggled floating\n");
-				b3_monitor_arrange_wins(director->focused_monitor);
-			}
+	if (director->active_win) {
+		b3_win_set_floating(director->active_win,
+							!b3_win_get_floating(director->active_win));
+		toggle_failed = 0;
+		if (!toggle_failed) {
+			wbk_logger_log(&logger, SEVERE, "Activated window toggled floating\n");
+			b3_monitor_arrange_wins(director->focused_monitor);
 		}
 	}
 
@@ -373,13 +371,11 @@ b3_director_move_active_win_to_ws(b3_director_t *director, const char *ws_id)
 
     ret = 1;
     if (ws) {
-    	if (b3_director_remove_win(director, director->focused_win.win) == 0) {
-			b3_ws_add_win(ws, director->focused_win.win);
+    	if (b3_director_remove_win(director, director->active_win) == 0) {
+			b3_ws_add_win(ws, director->active_win);
 
 			// TODO focus next window on the current workspace
 	//    	b3_director_set_active_win_internal(director, monitor, ws, director->focused_win.win);
-			director->focused_win.win = NULL; /** Hack to avoid freeing it */
-			b3_director_set_active_win_internal(director, NULL, NULL, NULL);
 
 			wbk_logger_log(&logger, INFO, "Moved window to %s\n", ws_id);
 
@@ -430,27 +426,5 @@ int
 b3_director_repaint_all(void)
 {
 	SendMessage(HWND_BROADCAST, WM_NCPAINT, (void *) NULL, (void *) NULL);
-	return 0;
-}
-
-int
-b3_director_set_active_win_internal(b3_director_t *director,
-									const b3_monitor_t *monitor,
-									const b3_ws_t *ws,
-	                                const b3_win_t *win)
-{
-	if (director->focused_win.win) {
-		free(director->focused_win.win);
-	}
-
-	director->focused_win.monitor = monitor;
-	director->focused_win.ws = ws;
-
-	if (win) {
-		director->focused_win.win = b3_win_copy(win);
-	} else {
-		director->focused_win.win = NULL;
-	}
-
 	return 0;
 }

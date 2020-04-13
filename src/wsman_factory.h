@@ -25,7 +25,7 @@
 /**
  * @author Richard Bäck <richard.baeck@mailbox.org>
  * @date 2020-02-26
- * @brief File contains the workspace manager factory
+ * @brief File contains the workspace manager factory class definition
  */
 
 #include "ws_factory.h"

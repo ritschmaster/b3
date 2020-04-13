@@ -37,13 +37,6 @@
 #include "monitor_factory.h"
 #include "win.h"
 
-typedef struct b3_focused_win_s
-{
-	const b3_monitor_t *monitor;
-	const b3_ws_t *ws;
-	b3_win_t *win;
-} b3_focused_win_t;
-
 typedef struct b3_director_s
 {
 	b3_monitor_t *focused_monitor;
@@ -55,7 +48,7 @@ typedef struct b3_director_s
 
 	b3_monitor_factory_t *monitor_factory;
 
-	b3_focused_win_t focused_win;
+	b3_win_t *active_win;
 } b3_director_t;
 
 /**
@@ -97,14 +90,14 @@ extern int
 b3_director_switch_to_ws(b3_director_t *director, const char *ws_id);
 
 /**
- * @param win If the window was added, it will be freed by the director. If it was not added, then you have to free it by yourself.
+ * @param win The object will not be freed. Free it by yourself!
  * @return 0 if added. Non-0 otherwise.
  */
 extern int
 b3_director_add_win(b3_director_t *director, const char *monitor_name, b3_win_t *win);
 
 /**
- * @param win The object will not be freed.
+ * @param win The object will not be freed. Free it by yourself!
  * @return 0 if removed. Non-0 otherwise.
  */
 extern int
@@ -114,10 +107,11 @@ extern int
 b3_director_arrange_wins(b3_director_t *director);
 
 /**
+ * @param win The object will not be freed. Free it by yourself!
  * @return 0 if it was set. Non-0 otherwise.
  */
 extern int
-b3_director_set_active_win(b3_director_t *director, const b3_win_t *win);
+b3_director_set_active_win(b3_director_t *director, b3_win_t *win);
 
 /**
  * @return 0 if it was possible to toggle the window. Non-0 otherwise (e.g. when it is not managed).

@@ -28,6 +28,7 @@
 #include <wbkbase/logger.h>
 #include <getopt.h>
 
+#include "win_factory.h"
 #include "ws_factory.h"
 #include "wsman_factory.h"
 #include "monitor_factory.h"
@@ -51,6 +52,7 @@ window_callback(HWND window_handler, UINT msg, WPARAM wParam, LPARAM lParam);
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
+	b3_win_factory_t *win_factory;
 	b3_ws_factory_t *ws_factory;
 	b3_wsman_factory_t *wsman_factory;
 	b3_monitor_factory_t *monitor_factory;
@@ -70,6 +72,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 #endif
 	wbk_logger_set_level(DEBUG); // TODO remove me
 
+	win_factory = b3_win_factory_new();
 	ws_factory = b3_ws_factory_new();
 	wsman_factory = b3_wsman_factory_new(ws_factory);
 	monitor_factory = b3_monitor_factory_new(wsman_factory);
@@ -165,7 +168,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	 * Setup window watcher
 	 */
 	if (g_director) {
-		win_watcher = b3_win_watcher_new(g_director);
+		win_watcher = b3_win_watcher_new(win_factory, g_director);
 	}
 
 	/**
@@ -173,7 +176,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	 */
 	if (g_director && kbman && win_watcher) {
 		b3_director_refresh(g_director);
-		fflush(stdout); // TODO Remove
 
 		b3_kbman_main_threaded(kbman);
 		b3_win_watcher_start(win_watcher);
@@ -195,6 +197,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		b3_win_watcher_free(win_watcher);
 	}
 
+	b3_win_factory_free(win_factory);
 	b3_ws_factory_free(ws_factory);
 	b3_wsman_factory_free(wsman_factory);
 	b3_monitor_factory_free(monitor_factory);

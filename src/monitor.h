@@ -93,6 +93,7 @@ extern b3_wsman_t *
 b3_monitor_get_wsman(b3_monitor_t *monitor);
 
 /**
+ * @param win The object will not be freed. Free it by yourself!
  * @return 0 if added. Non-0 otherwise.
  */
 extern int
@@ -109,11 +110,10 @@ extern int
 b3_monitor_arrange_wins(b3_monitor_t *monitor);
 
 /**
- * @param win_out The actual window found or NULL if it cannot be found.
  * @return The workspace the window is placed on or NULL if it cannot be found.
  */
 extern const b3_ws_t *
-b3_monitor_find_win(b3_monitor_t *monitor, const b3_win_t *win, b3_win_t **win_out);
+b3_monitor_find_win(b3_monitor_t *monitor, const b3_win_t *win);
 
 extern int
 b3_monitor_show(b3_monitor_t *monitor);

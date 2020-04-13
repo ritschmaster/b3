@@ -194,7 +194,7 @@ b3_wsman_remove_win(b3_wsman_t *wsman, b3_win_t *win)
 }
 
 const b3_ws_t *
-b3_wsman_find_win(b3_wsman_t *wsman, const b3_win_t *win, b3_win_t **win_out)
+b3_wsman_find_win(b3_wsman_t *wsman, const b3_win_t *win)
 {
 	ArrayIter iter;
 	b3_ws_t *ws;
@@ -203,15 +203,13 @@ b3_wsman_find_win(b3_wsman_t *wsman, const b3_win_t *win, b3_win_t **win_out)
 	found = 0;
 	array_iter_init(&iter, b3_wsman_get_ws_arr(wsman));
 	while (!found && array_iter_next(&iter, (void*) &ws) != CC_ITER_END) {
-		*win_out = b3_ws_contains_win(ws, win);
-		if (*win_out) {
+		if (b3_ws_contains_win(ws, win)) {
 			found = 1;
 		}
 	}
 
 	if (!found) {
 		ws = NULL;
-		*win_out = NULL;
 	}
 
 	return ws;
