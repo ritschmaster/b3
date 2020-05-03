@@ -47,6 +47,8 @@ typedef struct b3_ws_s
 	b3_til_mode_t mode;
 
 	char *name;
+
+	b3_win_t *focused_win;
 } b3_ws_t;
 
 /**
@@ -122,5 +124,18 @@ b3_ws_set_name(b3_ws_t *ws, const char *name);
 
 extern const char*
 b3_ws_get_name(b3_ws_t *ws);
+
+/**
+ * @return NULL if the workspace does not contain any windows.
+ */
+extern b3_win_t *
+b3_ws_get_focused_win(b3_ws_t *win);
+
+/**
+ * @param win The window to focus
+ * @param 0 if the setting was successful. Non-0 otherwise (e.g. the passed window is not within the workspace).
+ */
+extern int
+b3_ws_set_focused_win(b3_ws_t *ws, const b3_win_t *win);
 
 #endif // B3_WS_H

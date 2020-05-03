@@ -108,6 +108,32 @@ b3_monitor_get_focused_ws(b3_monitor_t *monitor)
 	return b3_wsman_get_focused_ws(monitor->wsman);
 }
 
+b3_ws_t *
+b3_monitor_get_focused_win(b3_monitor_t *monitor)
+{
+	return b3_ws_get_focused_win(b3_wsman_get_focused_ws(monitor->wsman));
+}
+
+int
+b3_monitor_set_focused_win(b3_monitor_t *monitor, const char *ws_id, const b3_win_t *win)
+{
+	int error;
+	b3_ws_t *ws;
+
+	if (!error) {
+		ws = b3_wsman_contains_ws(monitor->wsman, ws_id);
+		if (!ws) {
+			error = 1;
+		}
+	}
+
+	if (!error) {
+		error = b3_ws_set_focused_win(ws, win);
+	}
+
+	return error;
+}
+
 b3_wsman_t *
 b3_monitor_get_wsman(b3_monitor_t *monitor)
 {

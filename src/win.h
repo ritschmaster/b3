@@ -75,6 +75,9 @@ b3_win_get_floating(b3_win_t *win);
 extern int
 b3_win_set_floating(b3_win_t *win, char floating);
 
+extern HWND
+b3_win_get_window_handler(b3_win_t *win);
+
 extern int
 b3_win_show(b3_win_t *win);
 

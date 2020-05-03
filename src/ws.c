@@ -43,6 +43,8 @@ b3_ws_new(const char *name)
 
 	b3_ws_set_name(ws, name);
 
+	ws->focused_win = NULL;
+
 	return ws;
 }
 
@@ -61,6 +63,8 @@ b3_ws_free(b3_ws_t *ws)
 
 	free(ws->name);
 	ws->name = NULL;
+
+	ws->focused_win = NULL;
 
 	free(ws);
 	return 0;
@@ -89,6 +93,11 @@ b3_ws_add_win(b3_ws_t *ws, b3_win_t *win)
 
     if (!found) {
     	array_add(ws->win_arr, win);
+
+    	if (ws->focused_win == NULL) {
+    		ws->focused_win = win;
+    	}
+
     	return 0;
     }
 	return 1;
@@ -107,6 +116,12 @@ b3_ws_remove_win(b3_ws_t *ws, const b3_win_t *win)
     	if (b3_win_compare(win_iter, win) == 0) {
     		array_iter_remove(&iter, NULL);
     		ret = 0;
+    	}
+    }
+
+    if (!ret) {
+    	if (array_size(ws->win_arr) == 0) {
+    		ws->focused_win = NULL;
     	}
     }
 
@@ -242,4 +257,36 @@ const char*
 b3_ws_get_name(b3_ws_t *ws)
 {
 	return ws->name;
+}
+
+b3_win_t *
+b3_ws_get_focused_win(b3_ws_t *win)
+{
+	return win->focused_win;
+}
+
+int
+b3_ws_set_focused_win(b3_ws_t *ws, const b3_win_t *win)
+{
+	int error;
+	ArrayIter iter;
+	b3_win_t *win_iter;
+	char found;
+
+	found = 0;
+	array_iter_init(&iter, ws->win_arr);
+    while (!found && array_iter_next(&iter, (void*) &win_iter) != CC_ITER_END) {
+    	if (b3_win_compare(win_iter, win) == 0) {
+    		found = 1;
+    	}
+    }
+
+   	error = 1;
+    if (found) {
+    	ws->focused_win = win_iter;
+    	wbk_logger_log(&logger, DEBUG, "Updating focused window on workspace %s\n", ws->name);
+    	error = 0;
+    }
+
+    return error;
 }

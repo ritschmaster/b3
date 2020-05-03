@@ -207,6 +207,7 @@ b3_director_switch_to_ws(b3_director_t *director, const char *ws_id)
 	char found;
 	ArrayIter iter;
 	b3_monitor_t *monitor;
+	b3_win_t *focused_win;
 
 	found = 0;
 	array_iter_init(&iter, director->monitor_arr);
@@ -222,6 +223,12 @@ b3_director_switch_to_ws(b3_director_t *director, const char *ws_id)
     }
     b3_monitor_set_focused_ws(director->focused_monitor, ws_id);
     b3_director_arrange_wins(director);
+
+    focused_win = b3_monitor_get_focused_win(director->focused_monitor);
+    if (focused_win) {
+    	SetActiveWindow(b3_win_get_window_handler(focused_win));
+    	director->active_win = focused_win;
+    }
 
     wbk_logger_log(&logger, INFO, "Switching to workspace %s.\n", ws_id);
 
@@ -314,6 +321,7 @@ b3_director_set_active_win(b3_director_t *director, b3_win_t *win)
 
     if (found) {
     	b3_director_switch_to_ws(director, ws->name);
+    	b3_ws_set_focused_win(ws, win);
     	director->active_win = win;
 		b3_director_arrange_wins(director);
     	ret = 0;

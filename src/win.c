@@ -82,6 +82,12 @@ b3_win_set_floating(b3_win_t *win, char floating)
 	return 0;
 }
 
+HWND
+b3_win_get_window_handler(b3_win_t *win)
+{
+	return win->window_handler;
+}
+
 int
 b3_win_show(b3_win_t *win)
 {

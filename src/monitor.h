@@ -89,6 +89,21 @@ b3_monitor_set_focused_ws(b3_monitor_t *monitor, const char *ws_id);
 extern b3_ws_t *
 b3_monitor_get_focused_ws(b3_monitor_t *monitor);
 
+/**
+ * @return NULL if the workspace does not contain any windows.
+ */
+extern b3_ws_t *
+b3_monitor_get_focused_win(b3_monitor_t *monitor);
+
+/**
+ * @param win The window to focus
+ * @param ws_id The ID of the workspace to set the focused window for
+ * @param 0 if the setting was successful. Non-0 otherwise (e.g. the passed window is not within the workspace).
+ */
+extern int
+b3_monitor_set_focused_win(b3_monitor_t *monitor, const char *ws_id, const b3_win_t *win);
+
+
 extern b3_wsman_t *
 b3_monitor_get_wsman(b3_monitor_t *monitor);
 
