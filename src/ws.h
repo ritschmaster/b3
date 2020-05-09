@@ -107,7 +107,7 @@ b3_ws_minimize_wins(b3_ws_t *ws);
  * @return The window instance stored in the workspace - if found. NULL
  * otherwise. Do not free the returned window!
  */
-extern const b3_win_t *
+extern b3_win_t *
 b3_ws_contains_win(b3_ws_t *ws, const b3_win_t *win);
 
 /**
@@ -154,5 +154,12 @@ b3_ws_set_focused_win(b3_ws_t *ws, const b3_win_t *win);
  */
 extern int
 b3_ws_move_active_win(b3_ws_t *ws, b3_ws_move_direction_t direction);
+
+/**
+ * @return The window in the direction next to the focused window. If not found
+ * then NULL. Do not free it!
+ */
+extern b3_win_t *
+b3_ws_get_win(b3_ws_t *ws, b3_ws_move_direction_t direction);
 
 #endif // B3_WS_H

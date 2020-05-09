@@ -107,7 +107,8 @@ extern int
 b3_director_arrange_wins(b3_director_t *director);
 
 /**
- * @param win The object will not be freed. Free it by yourself!
+ * @param win The object will not be stored to the director and will will not be
+ * freed. Free it by yourself!
  * @return 0 if it was set. Non-0 otherwise.
  */
 extern int
@@ -130,6 +131,13 @@ b3_director_move_active_win_to_ws(b3_director_t *director, const char *ws_id);
  */
 extern int
 b3_director_move_active_win(b3_director_t *director, b3_ws_move_direction_t direction);
+
+/**
+ * @return 0 if the setting was successful. Non-0 otherwise.
+ */
+extern int
+b3_director_set_active_win_by_direction(b3_director_t *director, b3_ws_move_direction_t direction);
+
 
 /**
  * @brief Show the director

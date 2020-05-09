@@ -173,7 +173,57 @@ b3_kc_director_factory_create_mawr(b3_kc_director_factory_t *kc_director_factory
 
 }
 
+b3_kc_director_t *
+b3_kc_director_factory_create_sawu(b3_kc_director_factory_t *kc_director_factory,
+								   wbk_b_t *comb,
+								   b3_director_t *director)
+{
+	b3_kc_director_t *sawu;
 
+	sawu = b3_kc_director_new(comb, director, SET_ACTIVE_WINDOW_UP, NULL);
+
+	return sawu;
+
+}
+
+b3_kc_director_t *
+b3_kc_director_factory_create_sawd(b3_kc_director_factory_t *kc_director_factory,
+								   wbk_b_t *comb,
+								   b3_director_t *director)
+{
+	b3_kc_director_t *sawd;
+
+	sawd = b3_kc_director_new(comb, director, SET_ACTIVE_WINDOW_DOWN, NULL);
+
+	return sawd;
+
+}
+
+b3_kc_director_t *
+b3_kc_director_factory_create_sawl(b3_kc_director_factory_t *kc_director_factory,
+								   wbk_b_t *comb,
+								   b3_director_t *director)
+{
+	b3_kc_director_t *sawl;
+
+	sawl = b3_kc_director_new(comb, director, SET_ACTIVE_WINDOW_LEFT, NULL);
+
+	return sawl;
+
+}
+
+b3_kc_director_t *
+b3_kc_director_factory_create_sawr(b3_kc_director_factory_t *kc_director_factory,
+								   wbk_b_t *comb,
+								   b3_director_t *director)
+{
+	b3_kc_director_t *sawr;
+
+	sawr = b3_kc_director_new(comb, director, SET_ACTIVE_WINDOW_RIGHT, NULL);
+
+	return sawr;
+
+}
 
 
 

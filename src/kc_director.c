@@ -61,6 +61,19 @@ b3_kc_director_exec_mawl(const b3_kc_director_t *kc_director);
 static int
 b3_kc_director_exec_mawr(const b3_kc_director_t *kc_director);
 
+static int
+b3_kc_director_exec_sawu(const b3_kc_director_t *kc_director);
+
+static int
+b3_kc_director_exec_sawd(const b3_kc_director_t *kc_director);
+
+static int
+b3_kc_director_exec_sawl(const b3_kc_director_t *kc_director);
+
+static int
+b3_kc_director_exec_sawr(const b3_kc_director_t *kc_director);
+
+
 b3_kc_director_t *
 b3_kc_director_new(wbk_b_t *comb, b3_director_t *director, b3_kc_director_kind_t kind, void *data)
 {
@@ -168,6 +181,22 @@ b3_kc_director_exec(const b3_kc_director_t *kc_director)
 		ret = b3_kc_director_exec_mawr(kc_director);
 		break;
 
+	case SET_ACTIVE_WINDOW_UP:
+		ret = b3_kc_director_exec_sawu(kc_director);
+		break;
+
+	case SET_ACTIVE_WINDOW_DOWN:
+		ret = b3_kc_director_exec_sawd(kc_director);
+		break;
+
+	case SET_ACTIVE_WINDOW_LEFT:
+		ret = b3_kc_director_exec_sawl(kc_director);
+		break;
+
+	case SET_ACTIVE_WINDOW_RIGHT:
+		ret = b3_kc_director_exec_sawr(kc_director);
+		break;
+
 	default:
 		ret = -1;
 		// TODO
@@ -263,6 +292,46 @@ b3_kc_director_exec_mawr(const b3_kc_director_t *kc_director)
 	int ret;
 
 	ret = b3_director_move_active_win(kc_director->director, RIGHT);
+
+	return ret;
+}
+
+int
+b3_kc_director_exec_sawu(const b3_kc_director_t *kc_director)
+{
+	int ret;
+
+	ret = b3_director_set_active_win_by_direction(kc_director->director, UP);
+
+	return ret;
+}
+
+int
+b3_kc_director_exec_sawd(const b3_kc_director_t *kc_director)
+{
+	int ret;
+
+	ret = b3_director_set_active_win_by_direction(kc_director->director, DOWN);
+
+	return ret;
+}
+
+int
+b3_kc_director_exec_sawl(const b3_kc_director_t *kc_director)
+{
+	int ret;
+
+	ret = b3_director_set_active_win_by_direction(kc_director->director, LEFT);
+
+	return ret;
+}
+
+int
+b3_kc_director_exec_sawr(const b3_kc_director_t *kc_director)
+{
+	int ret;
+
+	ret = b3_director_set_active_win_by_direction(kc_director->director, RIGHT);
 
 	return ret;
 }

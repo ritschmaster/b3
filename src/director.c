@@ -308,6 +308,7 @@ b3_director_set_active_win(b3_director_t *director, b3_win_t *win)
 	b3_monitor_t *monitor;
 	char found;
 	const b3_ws_t *ws;
+	b3_ws_t *found_win;
 	int ret;
 
 	found = 0;
@@ -315,14 +316,15 @@ b3_director_set_active_win(b3_director_t *director, b3_win_t *win)
     while (!found && array_iter_next(&iter, (void*) &monitor) != CC_ITER_END) {
     	ws = b3_monitor_find_win(monitor, win);
     	if (ws) {
+    		found_win = b3_ws_contains_win(ws, win);
     		found = 1;
     	}
     }
 
     if (found) {
     	b3_director_switch_to_ws(director, ws->name);
-    	b3_ws_set_focused_win(ws, win);
-    	director->active_win = win;
+    	b3_ws_set_focused_win(ws, found_win);
+    	director->active_win = found_win;
 		b3_director_arrange_wins(director);
     	ret = 0;
     } else {
@@ -410,6 +412,23 @@ b3_director_move_active_win(b3_director_t *director, b3_ws_move_direction_t dire
 	error = b3_ws_move_active_win(b3_monitor_get_focused_ws(director->focused_monitor),
 			 					  direction);
     b3_director_arrange_wins(director);
+
+	return error;
+}
+
+int
+b3_director_set_active_win_by_direction(b3_director_t *director, b3_ws_move_direction_t direction)
+{
+	int error;
+	b3_win_t *win;
+
+	error = 1;
+	win = b3_ws_get_win(b3_monitor_get_focused_ws(director->focused_monitor),
+		  			    direction);
+	if (win) {
+		b3_director_set_active_win(director, win);
+    	SetActiveWindow(b3_win_get_window_handler(director->active_win));
+	}
 
 	return error;
 }

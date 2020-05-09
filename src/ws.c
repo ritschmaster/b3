@@ -152,7 +152,7 @@ b3_ws_remove_win(b3_ws_t *ws, const b3_win_t *win)
 	return b3_winman_remove_win(ws->winman, win);
 }
 
-const b3_win_t *
+b3_win_t *
 b3_ws_contains_win(b3_ws_t *ws, const b3_win_t *win)
 {
 	b3_winman_t *winman;
@@ -308,6 +308,49 @@ b3_ws_move_active_win(b3_ws_t *ws, b3_ws_move_direction_t direction)
 	}
 
 	return error;
+}
+
+b3_win_t *
+b3_ws_get_win(b3_ws_t *ws, b3_ws_move_direction_t direction)
+{
+	b3_winman_t *winman;
+	ArrayIter iter;
+	b3_win_t *win;
+	int length;
+	int i;
+	int pos;
+
+	win = NULL;
+	winman = b3_winman_contains_win(ws->winman, ws->focused_win);
+	if (winman) {
+		if ((ws->mode == DEFAULT || ws->mode == TABBED)
+			 && (direction == LEFT || direction == RIGHT)) {
+			pos = -1;
+			length = array_size(b3_winman_get_win_arr(winman));
+			for (i = 0; pos < 0 && i < length; i++) {
+				array_get_at(b3_winman_get_win_arr(winman), i, &win);
+				if (b3_win_compare(win, ws->focused_win) == 0) {
+					pos = i;
+				}
+			}
+
+			win = NULL;
+
+			if ((direction == LEFT && pos > 0)
+				|| (direction == RIGHT && pos < length - 1)) {
+				if (direction == LEFT) {
+					pos--;
+					wbk_logger_log(&logger, INFO, "Got window left\n");
+				} else {
+					pos++;
+					wbk_logger_log(&logger, INFO, "Got window right\n");
+				}
+				array_get_at(b3_winman_get_win_arr(winman), pos, &win);
+			}
+		}
+	}
+
+	return win;
 }
 
 void
