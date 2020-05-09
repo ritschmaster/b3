@@ -95,5 +95,41 @@ b3_kc_director_factory_create_awtf(b3_kc_director_factory_t *kc_director_factory
 								   wbk_b_t *comb,
 								   b3_director_t *director);
 
+/**
+ * @return A new key binding director command of the type MOVE_ACTIVE_WINDOW_UP.
+ * Free it by yourself!
+ */
+extern b3_kc_director_t *
+b3_kc_director_factory_create_mawu(b3_kc_director_factory_t *kc_director_factory,
+								   wbk_b_t *comb,
+								   b3_director_t *director);
+
+/**
+ * @return A new key binding director command of the type MOVE_ACTIVE_WINDOW_DOWN.
+ * Free it by yourself!
+ */
+extern b3_kc_director_t *
+b3_kc_director_factory_create_mawd(b3_kc_director_factory_t *kc_director_factory,
+								   wbk_b_t *comb,
+								   b3_director_t *director);
+
+/**
+ * @return A new key binding director command of the type MOVE_ACTIVE_WINDOW_LEFT.
+ * Free it by yourself!
+ */
+extern b3_kc_director_t *
+b3_kc_director_factory_create_mawl(b3_kc_director_factory_t *kc_director_factory,
+								   wbk_b_t *comb,
+								   b3_director_t *director);
+
+/**
+ * @return A new key binding director command of the type MOVE_ACTIVE_WINDOW_RIGHT.
+ * Free it by yourself!
+ */
+extern b3_kc_director_t *
+b3_kc_director_factory_create_mawr(b3_kc_director_factory_t *kc_director_factory,
+								   wbk_b_t *comb,
+								   b3_director_t *director);
+
 
 #endif // B3_KC_DIRECTOR_FACTORY_H

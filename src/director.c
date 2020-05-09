@@ -403,6 +403,18 @@ b3_director_move_active_win_to_ws(b3_director_t *director, const char *ws_id)
 }
 
 int
+b3_director_move_active_win(b3_director_t *director, b3_ws_move_direction_t direction)
+{
+	int error;
+
+	error = b3_ws_move_active_win(b3_monitor_get_focused_ws(director->focused_monitor),
+			 					  direction);
+    b3_director_arrange_wins(director);
+
+	return error;
+}
+
+int
 b3_director_show(b3_director_t *director)
 {
 	ArrayIter monitor_iter;

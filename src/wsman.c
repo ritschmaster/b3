@@ -116,7 +116,7 @@ b3_wsman_remove(b3_wsman_t *wsman, const char *ws_id)
 	return ret;
 }
 
-const b3_ws_t *
+b3_ws_t *
 b3_wsman_contains_ws(b3_wsman_t *wsman, const char *ws_id)
 {
 	int found;
@@ -160,7 +160,7 @@ b3_wsman_set_focused_ws(b3_wsman_t *wsman, const char *ws_id)
 			}
 		}
 
-		if (array_size(b3_ws_get_win_arr(wsman->focused_ws)) <= 0) {
+		if (b3_ws_get_win_amount(wsman->focused_ws) <= 0) {
 			b3_wsman_remove(wsman, b3_ws_get_name(wsman->focused_ws));
 		}
 
@@ -193,7 +193,7 @@ b3_wsman_remove_win(b3_wsman_t *wsman, b3_win_t *win)
 	return ret;
 }
 
-const b3_ws_t *
+b3_ws_t *
 b3_wsman_find_win(b3_wsman_t *wsman, const b3_win_t *win)
 {
 	ArrayIter iter;

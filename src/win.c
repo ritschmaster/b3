@@ -24,6 +24,12 @@
 
 #include "win.h"
 
+/**
+ * @author Richard Bäck
+ * @date 26 January 2020
+ * @brief File contains the window class implementation and private methods
+ */
+
 #include <stdlib.h>
 #include <string.h>
 

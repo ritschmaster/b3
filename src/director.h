@@ -126,6 +126,12 @@ extern int
 b3_director_move_active_win_to_ws(b3_director_t *director, const char *ws_id);
 
 /**
+ * @return 0 if the moving was successful. Non-0 otherwise.
+ */
+extern int
+b3_director_move_active_win(b3_director_t *director, b3_ws_move_direction_t direction);
+
+/**
  * @brief Show the director
  */
 extern int

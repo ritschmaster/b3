@@ -47,6 +47,7 @@ libb3interpreter_la_SOURCES += kbman.c kbman.h
 libb3interpreter_la_SOURCES += wsman.c wsman.h
 libb3interpreter_la_SOURCES += monitor.c monitor.h
 libb3interpreter_la_SOURCES += ws.c ws.h
+libb3interpreter_la_SOURCES += winman.c winman.h
 libb3interpreter_la_SOURCES += win.c win.h
 libb3interpreter_la_SOURCES += win_watcher.c win_watcher.h
 libb3interpreter_la_SOURCES += bar.c bar.h

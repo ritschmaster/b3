@@ -35,14 +35,20 @@
 
 #include "til.h"
 #include "counter.h"
+#include "winman.h"
 #include "win.h"
+
+typedef enum b3_ws_move_direction_s
+{
+	UP,
+	DOWN,
+	LEFT,
+	RIGHT
+} b3_ws_move_direction_t;
 
 typedef struct b3_ws_s
 {
-	/**
-	 * Array of b3_win_t *
-	 */
-	Array *win_arr;
+	b3_winman_t *winman;
 
 	b3_til_mode_t mode;
 
@@ -67,14 +73,18 @@ extern int
 b3_ws_free(b3_ws_t *ws);
 
 /**
-  * @brief Get the windows of the workspace
-  * @return A pointer to the windows. Do not free that memory.
-  */
-extern Array *
-b3_ws_get_win_arr(b3_ws_t *ws);
+ * @brief Get the amount of windows of the workspace
+ */
+extern int
+b3_ws_get_win_amount(b3_ws_t *ws);
 
 /**
- * @param win The object will not be freed. Free it by yourself!
+ * Place a new window in the workspace. Depending on whether there is already a
+ * focused window, the new window will be placed either in the focused window's
+ * window manager or in the first found window manager.
+ *
+ * @param win Will be stored within the workspace. The object will not be freed,
+ * free it by yourself!
  * @return 0 if added. Non-0 otherwise.
  */
 extern int
@@ -94,7 +104,8 @@ int
 b3_ws_minimize_wins(b3_ws_t *ws);
 
 /**
- * @return The window if it is within the workspace. NULL otherwise.
+ * @return The window instance stored in the workspace - if found. NULL
+ * otherwise. Do not free the returned window!
  */
 extern const b3_win_t *
 b3_ws_contains_win(b3_ws_t *ws, const b3_win_t *win);
@@ -137,5 +148,11 @@ b3_ws_get_focused_win(b3_ws_t *win);
  */
 extern int
 b3_ws_set_focused_win(b3_ws_t *ws, const b3_win_t *win);
+
+/**
+ * @return 0 if the moving was successful. Non-0 otherwise.
+ */
+extern int
+b3_ws_move_active_win(b3_ws_t *ws, b3_ws_move_direction_t direction);
 
 #endif // B3_WS_H

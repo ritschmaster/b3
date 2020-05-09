@@ -108,7 +108,7 @@ b3_monitor_get_focused_ws(b3_monitor_t *monitor)
 	return b3_wsman_get_focused_ws(monitor->wsman);
 }
 
-b3_ws_t *
+b3_win_t *
 b3_monitor_get_focused_win(b3_monitor_t *monitor)
 {
 	return b3_ws_get_focused_win(b3_wsman_get_focused_ws(monitor->wsman));
@@ -183,7 +183,7 @@ b3_monitor_arrange_wins(b3_monitor_t *monitor)
 	return 0;
 }
 
-const b3_ws_t *
+b3_ws_t *
 b3_monitor_find_win(b3_monitor_t *monitor, const b3_win_t *win)
 {
 	return b3_wsman_find_win(monitor->wsman,

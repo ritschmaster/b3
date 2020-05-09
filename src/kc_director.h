@@ -40,7 +40,11 @@ typedef enum b3_kc_director_kind_e
 	CHANGE_WORKSPACE = 0,
 	CHANGE_MONITOR,
 	MOVE_ACTIVE_WINDOW_TO_WORKSPACE,
-	ACTIVE_WINDOW_TOGGLE_FLOATING
+	ACTIVE_WINDOW_TOGGLE_FLOATING,
+	MOVE_ACTIVE_WINDOW_UP,
+	MOVE_ACTIVE_WINDOW_DOWN,
+	MOVE_ACTIVE_WINDOW_LEFT,
+	MOVE_ACTIVE_WINDOW_RIGHT
 } b3_kc_director_kind_t;
 
 typedef struct b3_kc_director_s
@@ -53,7 +57,12 @@ typedef struct b3_kc_director_s
 
 	/**
 	 * depends on kind:
-	 * - CHANGE_WORKSPACE: will need a char *
+	 * - CHANGE_WORKSPACE: will need a char * as the name of the target
+	 *   workspace
+	 * - CHANGE_MONITOR: will need a char * as the name of the target monitor
+	 * - MOVE_ACTIVE_WINDOW_TO_WORKSPACE: will need a char * as the name of the
+	 * target workspace
+	 * - All others will need NULL
 	 */
 	void *data;
 } b3_kc_director_t;

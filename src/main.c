@@ -161,6 +161,40 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 //		be = wbk_be_new(SPACE, 0); wbk_b_add(b, be); wbk_be_free(be);
 		kc_director = b3_kc_director_factory_create_awtf(kc_director_factory, b, g_director);
 		b3_kbman_add_kc_director(kbman, kc_director);
+
+//		b = wbk_b_new();
+//		be = wbk_be_new(ALT, 0); wbk_b_add(b, be); wbk_be_free(be);
+//		be = wbk_be_new(NOT_A_MODIFIER, 'f'); wbk_b_add(b, be); wbk_be_free(be);
+//		kc_director = b3_kc_director_factory_create_awtf(kc_director_factory, b, g_director);
+//		b3_kbman_add_kc_director(kbman, kc_director);
+
+		b = wbk_b_new();
+		be = wbk_be_new(ALT, 0); wbk_b_add(b, be); wbk_be_free(be);
+		be = wbk_be_new(SHIFT, 0); wbk_b_add(b, be); wbk_be_free(be);
+		be = wbk_be_new(NOT_A_MODIFIER, 'h'); wbk_b_add(b, be); wbk_be_free(be);
+		kc_director = b3_kc_director_factory_create_mawl(kc_director_factory, b, g_director);
+		b3_kbman_add_kc_director(kbman, kc_director);
+
+		b = wbk_b_new();
+		be = wbk_be_new(ALT, 0); wbk_b_add(b, be); wbk_be_free(be);
+		be = wbk_be_new(SHIFT, 0); wbk_b_add(b, be); wbk_be_free(be);
+		be = wbk_be_new(NOT_A_MODIFIER, 'j'); wbk_b_add(b, be); wbk_be_free(be);
+		kc_director = b3_kc_director_factory_create_mawd(kc_director_factory, b, g_director);
+		b3_kbman_add_kc_director(kbman, kc_director);
+
+		b = wbk_b_new();
+		be = wbk_be_new(ALT, 0); wbk_b_add(b, be); wbk_be_free(be);
+		be = wbk_be_new(SHIFT, 0); wbk_b_add(b, be); wbk_be_free(be);
+		be = wbk_be_new(NOT_A_MODIFIER, 'k'); wbk_b_add(b, be); wbk_be_free(be);
+		kc_director = b3_kc_director_factory_create_mawu(kc_director_factory, b, g_director);
+		b3_kbman_add_kc_director(kbman, kc_director);
+
+		b = wbk_b_new();
+		be = wbk_be_new(ALT, 0); wbk_b_add(b, be); wbk_be_free(be);
+		be = wbk_be_new(SHIFT, 0); wbk_b_add(b, be); wbk_be_free(be);
+		be = wbk_be_new(NOT_A_MODIFIER, 'l'); wbk_b_add(b, be); wbk_be_free(be);
+		kc_director = b3_kc_director_factory_create_mawr(kc_director_factory, b, g_director);
+		b3_kbman_add_kc_director(kbman, kc_director);
 		// TODO Remove end
 	}
 

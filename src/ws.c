@@ -26,10 +26,46 @@
 
 #include <string.h>
 #include <wbkbase/logger.h>
+#include <pthread.h>
 
 #include "win.h"
 
 static wbk_logger_t logger = { "ws" };
+
+static pthread_mutex_t g_get_win_amount_mutex;
+static int g_get_win_amount;
+
+static pthread_mutex_t g_first_leaf_mutex;
+static b3_winman_t *g_first_leaf;
+
+static pthread_mutex_t g_active_win_toggle_floating_mutex;
+static const b3_win_t *g_active_win_toggle_floating_win;
+static int g_active_win_toggle_floating_toggle_failed;
+
+static pthread_mutex_t g_set_focused_win_found_mutex;
+static const b3_win_t *g_set_focused_win_win;
+static b3_win_t *g_set_focused_win_found;
+
+static pthread_mutex_t g_arrange_wins_mutex;
+static RECT g_arrange_wins_monitor_area;
+
+static void
+b3_ws_winman_amount_visitor(b3_winman_t *winman);
+
+static void
+b3_ws_winman_first_leaf(b3_winman_t *winman);
+
+static void
+b3_ws_winman_active_win_toggle_floating_visitor(b3_winman_t *winman);
+
+static void
+b3_ws_winman_arrange_visitor(b3_winman_t *winman);
+
+static void
+b3_ws_winman_minimize_visitor(b3_winman_t *winman);
+
+static void
+b3_ws_winman_set_focused_win_visitor(b3_winman_t *winman);
 
 b3_ws_t *
 b3_ws_new(const char *name)
@@ -39,7 +75,9 @@ b3_ws_new(const char *name)
 	ws = NULL;
 	ws = malloc(sizeof(b3_ws_t));
 
-	array_new(&(ws->win_arr));
+	ws->winman = b3_winman_new(HORIZONTAL);
+
+	ws->mode = DEFAULT;
 
 	b3_ws_set_name(ws, name);
 
@@ -51,15 +89,8 @@ b3_ws_new(const char *name)
 int
 b3_ws_free(b3_ws_t *ws)
 {
-	ArrayIter iter;
-	b3_win_t *win_iter;
-
-	array_iter_init(&iter, ws->win_arr);
-    while (array_iter_next(&iter, (void*) &win_iter) != CC_ITER_END) {
-    	array_iter_remove(&iter, NULL);
-    }
-	array_destroy(ws->win_arr);
-	ws->win_arr = NULL;
+	b3_winman_free(ws->winman);
+	ws->winman = NULL;
 
 	free(ws->name);
 	ws->name = NULL;
@@ -70,99 +101,85 @@ b3_ws_free(b3_ws_t *ws)
 	return 0;
 }
 
-Array *
-b3_ws_get_win_arr(b3_ws_t *ws)
+int
+b3_ws_get_win_amount(b3_ws_t *ws)
 {
-	return ws->win_arr;
+	int amount;
+
+	pthread_mutex_lock(&g_get_win_amount_mutex);
+
+	g_get_win_amount = 0;
+	b3_winman_traverse(ws->winman, b3_ws_winman_amount_visitor);
+	amount = g_get_win_amount;
+
+	pthread_mutex_unlock(&g_get_win_amount_mutex);
+
+	return amount;
 }
 
 int
 b3_ws_add_win(b3_ws_t *ws, b3_win_t *win)
 {
-	ArrayIter iter;
-	b3_win_t *win_iter;
-	char found;
+	b3_winman_t *winman;
+	int ret;
 
-	found = 0;
-	array_iter_init(&iter, ws->win_arr);
-    while (!found && array_iter_next(&iter, (void*) &win_iter) != CC_ITER_END) {
-    	if (b3_win_compare(win_iter, win) == 0) {
-    		found = 1;
-    	}
-    }
+	ret = 1;
+	winman = b3_winman_contains_win(ws->winman, win);
+	if (!winman) {
+		if (ws->focused_win) {
+			winman = b3_winman_contains_win(ws->winman, ws->focused_win);
+		} else {
+			pthread_mutex_lock(&g_first_leaf_mutex);
 
-    if (!found) {
-    	array_add(ws->win_arr, win);
+			g_first_leaf = NULL;
+			b3_winman_traverse(ws->winman, b3_ws_winman_first_leaf);
+			winman = g_first_leaf;
 
-    	if (ws->focused_win == NULL) {
-    		ws->focused_win = win;
-    	}
+			pthread_mutex_unlock(&g_first_leaf_mutex);
+		}
 
-    	return 0;
-    }
-	return 1;
+		if (winman) {
+			ret = b3_winman_add_win(winman, win);
+		}
+	}
+
+	return ret;
 }
 
 int
 b3_ws_remove_win(b3_ws_t *ws, const b3_win_t *win)
 {
-	ArrayIter iter;
-	b3_win_t *win_iter;
-	int ret;
-
-	ret = 1;
-	array_iter_init(&iter, ws->win_arr);
-    while (ret && array_iter_next(&iter, (void*) &win_iter) != CC_ITER_END) {
-    	if (b3_win_compare(win_iter, win) == 0) {
-    		array_iter_remove(&iter, NULL);
-    		ret = 0;
-    	}
-    }
-
-    if (!ret) {
-    	if (array_size(ws->win_arr) == 0) {
-    		ws->focused_win = NULL;
-    	}
-    }
-
-    return ret;
+	return b3_winman_remove_win(ws->winman, win);
 }
 
 const b3_win_t *
 b3_ws_contains_win(b3_ws_t *ws, const b3_win_t *win)
 {
-	ArrayIter iter;
-	b3_win_t *win_iter;
-	b3_win_t *actual_win;
+	b3_winman_t *winman;
+	b3_win_t *found_win;
 
-	actual_win = NULL;
-	array_iter_init(&iter, ws->win_arr);
-    while (!actual_win && array_iter_next(&iter, (void*) &win_iter) != CC_ITER_END) {
-    	if (b3_win_compare(win_iter, win) == 0) {
-    		actual_win = win;
-    	}
-    }
+	found_win = NULL;
+	winman = b3_winman_contains_win(ws->winman, win);
+	if (winman) {
+		found_win = b3_winman_contains_win_leaf(ws->winman, win);
+	}
 
-    return actual_win;
+	return found_win;
 }
 
 int
 b3_ws_active_win_toggle_floating(b3_ws_t *ws, const b3_win_t *win)
 {
 	int toggle_failed;
-	char floating;
-	ArrayIter iter;
-	b3_win_t *win_iter;
 
-	toggle_failed = 1;
-	array_iter_init(&iter, ws->win_arr);
-    while (toggle_failed && array_iter_next(&iter, (void*) &win_iter) != CC_ITER_END) {
-    	if (b3_win_compare(win_iter, win) == 0) {
-    		floating = b3_win_get_floating(win_iter);
-    		b3_win_set_floating(win_iter, !floating);
-    		toggle_failed = 0;
-    	}
-    }
+	pthread_mutex_lock(&g_active_win_toggle_floating_mutex);
+
+	g_active_win_toggle_floating_win = win;
+	g_active_win_toggle_floating_toggle_failed = 1;
+	b3_winman_traverse(ws->winman, b3_ws_winman_active_win_toggle_floating_visitor);
+	toggle_failed = g_active_win_toggle_floating_toggle_failed;
+
+	pthread_mutex_unlock(&g_active_win_toggle_floating_mutex);
 
 	return toggle_failed;
 }
@@ -170,46 +187,13 @@ b3_ws_active_win_toggle_floating(b3_ws_t *ws, const b3_win_t *win)
 int
 b3_ws_arrange_wins(b3_ws_t *ws, RECT monitor_area)
 {
-	ArrayIter iter;
-	b3_win_t *win_iter;
-	int length;
-	int split_size;
-	int width;
-	int height;
 
-	length = 0;
-	array_iter_init(&iter, ws->win_arr);
-    while (array_iter_next(&iter, (void*) &win_iter) != CC_ITER_END) {
-    	if (!b3_win_get_floating(win_iter)) {
-    		length++;
-    	}
-    }
+	pthread_mutex_lock(&g_arrange_wins_mutex);
 
-    if (length) {
-		split_size =  monitor_area.right - monitor_area.left;
-		split_size /= length;
+	g_arrange_wins_monitor_area = monitor_area;
+	b3_winman_traverse(ws->winman, b3_ws_winman_arrange_visitor);
 
-		width = monitor_area.left;
-		height = monitor_area.bottom - monitor_area.top;
-
-		array_iter_init(&iter, ws->win_arr);
-		while (array_iter_next(&iter, (void*) &win_iter) != CC_ITER_END) {
-			if (!b3_win_get_floating(win_iter)) {
-				SetWindowPos(win_iter->window_handler, NULL,
-							 width, monitor_area.top,
-							 split_size, height, NULL);
-				ShowWindow(win_iter->window_handler, SW_RESTORE);
-				width += split_size;
-			}
-		}
-
-		array_iter_init(&iter, ws->win_arr);
-		while (array_iter_next(&iter, (void*) &win_iter) != CC_ITER_END) {
-			if (b3_win_get_floating(win_iter)) {
-				b3_win_show(win_iter);
-			}
-		}
-    }
+	pthread_mutex_unlock(&g_arrange_wins_mutex);
 
     return 0;
 }
@@ -217,13 +201,7 @@ b3_ws_arrange_wins(b3_ws_t *ws, RECT monitor_area)
 int
 b3_ws_minimize_wins(b3_ws_t *ws)
 {
-	ArrayIter iter;
-	b3_win_t *win_iter;
-
-	array_iter_init(&iter, ws->win_arr);
-    while (array_iter_next(&iter, (void*) &win_iter) != CC_ITER_END) {
-    	b3_win_minimize(win_iter);
-    }
+	b3_winman_traverse(ws->winman, b3_ws_winman_minimize_visitor);
 
     return 0;
 }
@@ -260,33 +238,186 @@ b3_ws_get_name(b3_ws_t *ws)
 }
 
 b3_win_t *
-b3_ws_get_focused_win(b3_ws_t *win)
+b3_ws_get_focused_win(b3_ws_t *ws)
 {
-	return win->focused_win;
+	return ws->focused_win;
 }
 
 int
 b3_ws_set_focused_win(b3_ws_t *ws, const b3_win_t *win)
 {
+	b3_win_t *set_focused_win_found;
 	int error;
+
+	pthread_mutex_lock(&g_set_focused_win_found_mutex);
+
+	g_set_focused_win_win = win;
+	g_set_focused_win_found = NULL;
+	b3_winman_traverse(ws->winman, b3_ws_winman_set_focused_win_visitor);
+	set_focused_win_found = g_set_focused_win_found;
+
+	pthread_mutex_unlock(&g_set_focused_win_found_mutex);
+
+	error = 1;
+	if (set_focused_win_found) {
+		ws->focused_win = set_focused_win_found;
+		wbk_logger_log(&logger, DEBUG, "Updating focused window on workspace %s\n", ws->name);
+		error = 0;
+	}
+
+	return error;
+}
+
+int
+b3_ws_move_active_win(b3_ws_t *ws, b3_ws_move_direction_t direction)
+{
+	int error;
+	b3_winman_t *winman;
+	b3_win_t *win;
+	int i;
+	int length;
+	int pos;
+
+	error = 1;
+	winman = b3_winman_contains_win(ws->winman, ws->focused_win);
+	if (winman) {
+		if ((ws->mode == DEFAULT || ws->mode == TABBED)
+			 && (direction == LEFT || direction == RIGHT)) {
+			pos = -1;
+			length = array_size(b3_winman_get_win_arr(winman));
+			for (i = 0; pos < 0 && i < length; i++) {
+				array_get_at(b3_winman_get_win_arr(winman), i, &win);
+				if (b3_win_compare(win, ws->focused_win) == 0) {
+					pos = i;
+				}
+			}
+
+			if ((direction == LEFT && pos > 0)
+				|| (direction == RIGHT && pos < length - 1)) {
+				array_remove_at(b3_winman_get_win_arr(winman), pos, NULL);
+				if (direction == LEFT) {
+					pos--;
+					wbk_logger_log(&logger, INFO, "Moved window left\n");
+				} else {
+					pos++;
+					wbk_logger_log(&logger, INFO, "Moved window right\n");
+				}
+				array_add_at(b3_winman_get_win_arr(winman), win, pos);
+			}
+		}
+	}
+
+	return error;
+}
+
+void
+b3_ws_winman_amount_visitor(b3_winman_t *winman)
+{
+	 if (winman->type == LEAF) {
+		 g_get_win_amount += array_size(b3_winman_get_win_arr(winman));
+	 }
+}
+
+void
+b3_ws_winman_first_leaf(b3_winman_t *winman)
+{
+	if (winman->type == LEAF && g_first_leaf == NULL) {
+		g_first_leaf = winman;
+	}
+}
+
+void
+b3_ws_winman_active_win_toggle_floating_visitor(b3_winman_t *winman)
+{
+	char floating;
 	ArrayIter iter;
 	b3_win_t *win_iter;
-	char found;
 
-	found = 0;
-	array_iter_init(&iter, ws->win_arr);
-    while (!found && array_iter_next(&iter, (void*) &win_iter) != CC_ITER_END) {
-    	if (b3_win_compare(win_iter, win) == 0) {
-    		found = 1;
-    	}
-    }
-
-   	error = 1;
-    if (found) {
-    	ws->focused_win = win_iter;
-    	wbk_logger_log(&logger, DEBUG, "Updating focused window on workspace %s\n", ws->name);
-    	error = 0;
-    }
-
-    return error;
+	if (winman->type == LEAF) {
+		array_iter_init(&iter, b3_winman_get_win_arr(winman));
+		while (g_active_win_toggle_floating_toggle_failed && array_iter_next(&iter, (void*) &win_iter) != CC_ITER_END) {
+			if (b3_win_compare(win_iter, g_active_win_toggle_floating_win) == 0) {
+				floating = b3_win_get_floating(win_iter);
+				b3_win_set_floating(win_iter, !floating);
+				g_active_win_toggle_floating_toggle_failed = 0;
+			}
+		}
+	}
 }
+
+void
+b3_ws_winman_arrange_visitor(b3_winman_t *winman)
+{
+	ArrayIter iter;
+	b3_win_t *win_iter;
+	int length;
+	int split_size;
+	int width;
+	int height;
+
+	if (winman->type == LEAF) {
+		length = 0;
+		array_iter_init(&iter, b3_winman_get_win_arr(winman));
+		while (array_iter_next(&iter, (void*) &win_iter) != CC_ITER_END) {
+			if (!b3_win_get_floating(win_iter)) {
+				length++;
+			}
+		}
+		if (length) {
+			split_size =  g_arrange_wins_monitor_area.right - g_arrange_wins_monitor_area.left;
+			split_size /= length;
+
+			width = g_arrange_wins_monitor_area.left;
+			height = g_arrange_wins_monitor_area.bottom - g_arrange_wins_monitor_area.top;
+
+			array_iter_init(&iter, b3_winman_get_win_arr(winman));
+			while (array_iter_next(&iter, (void*) &win_iter) != CC_ITER_END) {
+				if (!b3_win_get_floating(win_iter)) {
+					SetWindowPos(win_iter->window_handler, NULL,
+								 width, g_arrange_wins_monitor_area.top,
+								 split_size, height, NULL);
+					ShowWindow(win_iter->window_handler, SW_RESTORE);
+					width += split_size;
+				}
+			}
+
+			array_iter_init(&iter, b3_winman_get_win_arr(winman));
+			while (array_iter_next(&iter, (void*) &win_iter) != CC_ITER_END) {
+				if (b3_win_get_floating(win_iter)) {
+					b3_win_show(win_iter);
+				}
+			}
+		}
+	}
+}
+
+void
+b3_ws_winman_minimize_visitor(b3_winman_t *winman)
+{
+	ArrayIter iter;
+	b3_win_t *win_iter;
+
+	if (winman->type == LEAF) {
+		array_iter_init(&iter, b3_winman_get_win_arr(winman));
+		while (array_iter_next(&iter, (void*) &win_iter) != CC_ITER_END) {
+			b3_win_minimize(win_iter);
+		}
+	}
+}
+
+void
+b3_ws_winman_set_focused_win_visitor(b3_winman_t *winman)
+{
+	ArrayIter iter;
+	b3_win_t *win_iter;
+
+	if (winman->type == LEAF) {
+		array_iter_init(&iter, b3_winman_get_win_arr(winman));
+		while (!g_set_focused_win_found && array_iter_next(&iter, (void*) &win_iter) != CC_ITER_END) {
+			if (b3_win_compare(win_iter, g_set_focused_win_win) == 0) {
+				g_set_focused_win_found = win_iter;
+			}
+		}
+	}
+}
+

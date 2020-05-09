@@ -92,7 +92,7 @@ b3_monitor_get_focused_ws(b3_monitor_t *monitor);
 /**
  * @return NULL if the workspace does not contain any windows.
  */
-extern b3_ws_t *
+extern b3_win_t *
 b3_monitor_get_focused_win(b3_monitor_t *monitor);
 
 /**
@@ -126,8 +126,9 @@ b3_monitor_arrange_wins(b3_monitor_t *monitor);
 
 /**
  * @return The workspace the window is placed on or NULL if it cannot be found.
+ * Do not free it!
  */
-extern const b3_ws_t *
+extern b3_ws_t *
 b3_monitor_find_win(b3_monitor_t *monitor, const b3_win_t *win);
 
 extern int
