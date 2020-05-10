@@ -435,6 +435,25 @@ b3_director_set_active_win_by_direction(b3_director_t *director, b3_ws_move_dire
 }
 
 int
+b3_director_toggle_active_win_fullscreen(b3_director_t *director)
+{
+	WINDOWPLACEMENT windowplacement;
+
+	windowplacement.length = sizeof(WINDOWPLACEMENT);
+
+	GetWindowPlacement(b3_win_get_window_handler(director->active_win),
+			           &windowplacement);
+
+	if (windowplacement.showCmd == SW_SHOWMAXIMIZED) {
+		b3_director_arrange_wins(director);
+	} else {
+		ShowWindow(b3_win_get_window_handler(director->active_win), SW_MAXIMIZE);
+	}
+
+	return 0;
+}
+
+int
 b3_director_show(b3_director_t *director)
 {
 	ArrayIter monitor_iter;

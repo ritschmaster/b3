@@ -225,5 +225,16 @@ b3_kc_director_factory_create_sawr(b3_kc_director_factory_t *kc_director_factory
 
 }
 
+b3_kc_director_t *
+b3_kc_director_factory_create_tawf(b3_kc_director_factory_t *kc_director_factory,
+								   wbk_b_t *comb,
+								   b3_director_t *director)
+{
+	b3_kc_director_t *tawf;
 
+	tawf = b3_kc_director_new(comb, director, TOGGLE_ACTIVE_WINDOW_FULLSCREEN, NULL);
+
+	return tawf;
+
+}
 

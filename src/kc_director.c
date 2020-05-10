@@ -73,6 +73,8 @@ b3_kc_director_exec_sawl(const b3_kc_director_t *kc_director);
 static int
 b3_kc_director_exec_sawr(const b3_kc_director_t *kc_director);
 
+static int
+b3_kc_director_exec_tawf(const b3_kc_director_t *kc_director);
 
 b3_kc_director_t *
 b3_kc_director_new(wbk_b_t *comb, b3_director_t *director, b3_kc_director_kind_t kind, void *data)
@@ -195,6 +197,10 @@ b3_kc_director_exec(const b3_kc_director_t *kc_director)
 
 	case SET_ACTIVE_WINDOW_RIGHT:
 		ret = b3_kc_director_exec_sawr(kc_director);
+		break;
+
+	case TOGGLE_ACTIVE_WINDOW_FULLSCREEN:
+		ret = b3_kc_director_exec_tawf(kc_director);
 		break;
 
 	default:
@@ -332,6 +338,16 @@ b3_kc_director_exec_sawr(const b3_kc_director_t *kc_director)
 	int ret;
 
 	ret = b3_director_set_active_win_by_direction(kc_director->director, RIGHT);
+
+	return ret;
+}
+
+int
+b3_kc_director_exec_tawf(const b3_kc_director_t *kc_director)
+{
+	int ret;
+
+	ret = b3_director_toggle_active_win_fullscreen(kc_director->director);
 
 	return ret;
 }

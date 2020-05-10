@@ -167,4 +167,13 @@ b3_kc_director_factory_create_sawr(b3_kc_director_factory_t *kc_director_factory
 								   wbk_b_t *comb,
 								   b3_director_t *director);
 
+/**
+ * @return A new key binding director command of the type TOGGLE_ACTIVE_WINDOW_FULLSCREEN.
+ * Free it by yourself!
+ */
+extern b3_kc_director_t *
+b3_kc_director_factory_create_tawf(b3_kc_director_factory_t *kc_director_factory,
+								   wbk_b_t *comb,
+								   b3_director_t *director);
+
 #endif // B3_KC_DIRECTOR_FACTORY_H
