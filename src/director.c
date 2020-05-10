@@ -52,6 +52,9 @@ b3_director_enum_monitors(HMONITOR monitor, HDC hdc, LPRECT rect, LPARAM data);
 static int
 b3_director_repaint_all(void);
 
+static int
+b3_director_set_active_win_internal(b3_director_t *director, b3_win_t *win);
+
 b3_director_t *
 b3_director_new(b3_monitor_factory_t *monitor_factory)
 {
@@ -226,7 +229,6 @@ b3_director_switch_to_ws(b3_director_t *director, const char *ws_id)
 
     focused_win = b3_monitor_get_focused_win(director->focused_monitor);
     if (focused_win) {
-    	SetActiveWindow(b3_win_get_window_handler(focused_win));
     	director->active_win = focused_win;
     }
 
@@ -326,7 +328,7 @@ b3_director_set_active_win(b3_director_t *director, b3_win_t *win)
     	b3_ws_set_focused_win(ws, found_win);
     	director->active_win = found_win;
 		b3_director_arrange_wins(director);
-    	ret = 0;
+		ret = 0;
     } else {
     	wbk_logger_log(&logger, SEVERE, "Activated window is unknown\n");
     	ret = 1;
@@ -426,8 +428,7 @@ b3_director_set_active_win_by_direction(b3_director_t *director, b3_ws_move_dire
 	win = b3_ws_get_win(b3_monitor_get_focused_ws(director->focused_monitor),
 		  			    direction);
 	if (win) {
-		b3_director_set_active_win(director, win);
-    	SetActiveWindow(b3_win_get_window_handler(director->active_win));
+		b3_director_set_active_win_internal(director, win);
 	}
 
 	return error;
@@ -462,8 +463,52 @@ b3_director_draw(b3_director_t *director, HWND window_handler)
 }
 
 int
+b3_director_w32_set_active_window(HWND window_handler)
+{
+	int i;
+	DWORD this_tid;
+	DWORD foreground_tid;
+
+	foreground_tid = GetCurrentThreadId();
+	this_tid = GetWindowThreadProcessId(GetForegroundWindow(), 0);
+
+	if(this_tid != foreground_tid) {
+		AttachThreadInput(this_tid, foreground_tid, TRUE);
+		AllowSetForegroundWindow(ASFW_ANY);
+	}
+
+	/** 
+	 * For some reason the WIN32 API needs to be spammed to actually update
+	 * the focus.
+	 */
+	for (i = 0; i < 10000; i++) {
+		SetForegroundWindow(window_handler);
+		SetActiveWindow(window_handler);
+		SetFocus(window_handler);
+	}
+
+	if(this_tid != foreground_tid) {
+		AttachThreadInput(this_tid, foreground_tid, FALSE);
+	}
+
+	return 0;
+}
+
+int
 b3_director_repaint_all(void)
 {
 	SendMessage(HWND_BROADCAST, WM_NCPAINT, (void *) NULL, (void *) NULL);
 	return 0;
 }
+
+int
+b3_director_set_active_win_internal(b3_director_t *director, b3_win_t *win)
+{
+	int error;
+
+	director->active_win = win;
+	error = b3_director_w32_set_active_window(b3_win_get_window_handler(win));
+
+	return error;
+}
+

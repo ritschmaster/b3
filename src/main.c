@@ -237,6 +237,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 		b3_kbman_main_threaded(kbman);
 		b3_win_watcher_start(win_watcher);
+
 		main_loop(hInstance, nCmdShow);
 
 		b3_kbman_main_stop(kbman);

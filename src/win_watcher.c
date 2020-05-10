@@ -129,6 +129,16 @@ b3_win_watcher_start(b3_win_watcher_t *win_watcher)
 		b3_director_arrange_wins(win_watcher->director);
 	}
 
+	if (!error) {
+				/**
+		 * Hack to automatically retrieve the currently active window
+		 */
+		HWND foreground_window = GetForegroundWindow();
+		ShowWindow(foreground_window, SW_MINIMIZE);
+		b3_director_w32_set_active_window(foreground_window);
+
+	}
+
 	return 0;
 }
 
