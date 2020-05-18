@@ -80,29 +80,4 @@ b3_kbman_add_kc_sys(b3_kbman_t *kbman, wbk_kc_sys_t *kc_sys);
 extern int
 b3_kbman_add_kc_director(b3_kbman_t *kbman, b3_kc_director_t *kc_director);
 
-/**
- * @brief Execute a key binding matching a combination
- * @return Non-0 if the combination was not found.
- */
-extern int
-b3_kbman_exec(b3_kbman_t *kbman, wbk_b_t *b);
-
-/**
- * @brief Main loop, runs forever.
- */
-extern int
-b3_kbman_main(b3_kbman_t *kbman);
-
-/**
- * @brief Main loop, runs forever, but in a thread.
- */
-extern int
-b3_kbman_main_threaded(b3_kbman_t *kbman);
-
-/**
- * @brief Stops the main loop.
- */
-extern int
-b3_kbman_main_stop(b3_kbman_t *kbman);
-
 #endif // B3_KBMAN_H

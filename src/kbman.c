@@ -45,7 +45,7 @@ b3_kbman_new()
 	kbman = malloc(sizeof(b3_kbman_t));
 	memset(kbman, 0, sizeof(b3_kbman_t));
 
-	kbman->kbman = wbki_kbman_new();
+	kbman->kbman = wbk_kbman_new();
 
 	array_new(&(kbman->kc_director_arr));
 
@@ -60,10 +60,10 @@ b3_kbman_free(b3_kbman_t *kbman)
 
 	//b3_kbman_main_stop(kbman);
 
-	wbki_kbman_free(kbman->kbman);
+	wbk_kbman_free(kbman->kbman);
 	kbman->kbman= NULL;
 
-	array_iter_init(&kb_iter, wbki_kbman_get_kb(kbman->kbman));
+	array_iter_init(&kb_iter, wbk_kbman_get_kb(kbman->kbman));
 	while (array_iter_next(&kb_iter, (void *) &kc_director) != CC_ITER_END) {
 		array_iter_remove(&kb_iter, NULL);
 		b3_kc_director_free(kc_director);
@@ -84,7 +84,7 @@ b3_kbman_get_kb(b3_kbman_t* kbman)
 int
 b3_kbman_add_kc_sys(b3_kbman_t *kbman, wbk_kc_sys_t *kc_sys)
 {
-	return wbki_kbman_add(kbman->kbman, kc_sys);
+	return wbk_kbman_add(kbman->kbman, kc_sys);
 }
 
 int
@@ -102,7 +102,7 @@ b3_kbman_exec(b3_kbman_t *kbman, wbk_b_t *b)
 	ret = -1;
 
 	if (ret) {
-		ret = wbki_kbman_exec(kbman->kbman, b);
+		ret = wbk_kbman_exec(kbman->kbman, b);
 	}
 
 	if (ret) {
@@ -136,87 +136,4 @@ b3_kbman_exec_kc_director(b3_kbman_t *kbman, wbk_b_t *b)
 	}
 
 	return ret;
-}
-
-int
-b3_kbman_main(b3_kbman_t *kbman)
-{
-	unsigned char c;
-	wbk_b_t *b;
-	wbk_be_t *be;
-	SHORT rv;
-	char changed;
-
-	b = wbk_b_new();
-
-	while(!kbman->stop) {
-		usleep(100);
-
-		changed = 0;
-		for(c = 1; c < 255; c++){
-			rv = GetKeyState(c);
-			be = wbk_be_new(wbki_kbman_win32_to_mk(c), wbki_kbman_win32_to_char(c));
-			if (wbk_be_get_modifier(be) || wbk_be_get_key(be)) {
-				if(rv < 0) {
-					if (wbk_b_add(b, be) == 0) {
-						changed = 1;
-						wbk_logger_log(&logger, DEBUG, "pressed %d, %c\n", wbk_be_get_modifier(be), wbk_be_get_key(be));
-					}
-				} else {
-					if (wbk_b_remove(b, be) == 0) {
-						changed = 1;
-						wbk_logger_log(&logger, DEBUG, "released %d, %c\n", wbk_be_get_modifier(be), wbk_be_get_key(be));
-					}
-				}
-			}
-			wbk_be_free(be);
-		}
-
-		if (changed) {
-			b3_kbman_exec(kbman, b);
-		}
-	}
-
-	wbk_b_free(b);
-
-
-	return 0;
-}
-
-int
-b3_kbman_main_threaded(b3_kbman_t *kbman)
-{
-	int ret;
-	kbman->stop = 0;
-
-	ret = pthread_create(&(kbman->thread), NULL, b3_kbman_main_thread_wrapper, kbman);
-	if (ret) {
-		wbk_logger_log(&logger, SEVERE, "Failed creating the keyboard listener!\n");
-	}
-
-	return ret;
-}
-
-int
-b3_kbman_main_stop(b3_kbman_t *kbman)
-{
-	if (kbman->thread) {
-		kbman->stop = 1;
-		pthread_join(kbman->thread, NULL);
-		memset(&(kbman->thread), 0, sizeof(pthread_t));
-	}
-
-	return 0;
-}
-
-void *
-b3_kbman_main_thread_wrapper(void *arg)
-{
-	b3_kbman_t *kbman;
-
-	kbman = (b3_kbman_t *) arg;
-
-	b3_kbman_main(kbman);
-
-	return NULL;
 }
