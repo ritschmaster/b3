@@ -102,6 +102,9 @@ b3_winman_get_winman_arr(b3_winman_t *winman);
 extern int
 b3_winman_add_winman(b3_winman_t *winman, b3_winman_t *other);
 
+extern b3_win_t *
+b3_winman_get_next_window(b3_winman_t *winman);
+
 /**
  * @brief Remove empty window managers within the window manager
  * @return 0 if no node was removed. Otherwise the number of nodes deleted is

@@ -26,6 +26,8 @@
 
 #include <wbkbase/logger.h>
 #include <collectc/array.h>
+#include <sys/types.h>
+#include <unistd.h>
 #include <windows.h>
 
 static wbk_logger_t logger =  { "kbman" };
@@ -33,8 +35,8 @@ static wbk_logger_t logger =  { "kbman" };
 static int
 b3_kbman_exec_kc_director(b3_kbman_t *kbman, wbk_b_t *b);
 
-static void *
-b3_kbman_main_thread_wrapper(void *arg);
+DWORD WINAPI
+b3_kbman_kc_director_exec_threaded(LPVOID param);
 
 b3_kbman_t *
 b3_kbman_new()
@@ -63,12 +65,12 @@ b3_kbman_free(b3_kbman_t *kbman)
 	wbk_kbman_free(kbman->kbman);
 	kbman->kbman= NULL;
 
-	array_iter_init(&kb_iter, wbk_kbman_get_kb(kbman->kbman));
+	array_iter_init(&kb_iter, kbman->kc_director_arr);
 	while (array_iter_next(&kb_iter, (void *) &kc_director) != CC_ITER_END) {
 		array_iter_remove(&kb_iter, NULL);
 		b3_kc_director_free(kc_director);
 	}
-	array_destroy_cb(kbman->kc_director_arr, free);
+	array_destroy(kbman->kc_director_arr);
 	kbman->kc_director_arr = NULL;
 
 
@@ -101,9 +103,9 @@ b3_kbman_exec(b3_kbman_t *kbman, wbk_b_t *b)
 
 	ret = -1;
 
-	if (ret) {
-		ret = wbk_kbman_exec(kbman->kbman, b);
-	}
+//	if (ret) {
+//		ret = wbk_kbman_exec(kbman->kbman, b);
+//	}
 
 	if (ret) {
 		ret = b3_kbman_exec_kc_director(kbman, b);
@@ -119,6 +121,7 @@ b3_kbman_exec_kc_director(b3_kbman_t *kbman, wbk_b_t *b)
 	char found;
 	ArrayIter kb_iter;
 	b3_kc_director_t *kc_director;
+	HANDLE thread_handler;
 
 	ret = -1;
 
@@ -131,9 +134,26 @@ b3_kbman_exec_kc_director(b3_kbman_t *kbman, wbk_b_t *b)
 	}
 
 	if (found) {
-		b3_kc_director_exec(kc_director);
+		thread_handler = CreateThread(NULL,
+						 0,
+						 b3_kbman_kc_director_exec_threaded,
+						 kc_director,
+						 0,
+						 NULL);
 		ret = 0;
 	}
 
 	return ret;
+}
+
+DWORD WINAPI
+b3_kbman_kc_director_exec_threaded(LPVOID param)
+{
+	b3_kc_director_t *kc_director;
+
+	wbk_logger_log(&logger, DEBUG, "Executing key binding\n");
+
+	kc_director = (b3_kc_director_t *) param;
+
+	return b3_kc_director_exec(kc_director);
 }

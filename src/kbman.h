@@ -41,7 +41,7 @@
 
 typedef struct b3_kbman_s
 {
-	wbki_kbman_t *kbman;
+	wbk_kbman_t *kbman;
 
 	/**
 	 * Array of b3_kc_director_t *
@@ -79,5 +79,8 @@ b3_kbman_add_kc_sys(b3_kbman_t *kbman, wbk_kc_sys_t *kc_sys);
  */
 extern int
 b3_kbman_add_kc_director(b3_kbman_t *kbman, b3_kc_director_t *kc_director);
+
+extern int
+b3_kbman_exec(b3_kbman_t *kbman, wbk_b_t *b);
 
 #endif // B3_KBMAN_H

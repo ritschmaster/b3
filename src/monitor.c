@@ -90,7 +90,7 @@ b3_monitor_get_bar(b3_monitor_t *monitor)
 	return monitor->bar;
 }
 
-const b3_ws_t *
+b3_ws_t *
 b3_monitor_contains_ws(b3_monitor_t *monitor, const char *ws_id)
 {
 	return b3_wsman_contains_ws(monitor->wsman, ws_id);

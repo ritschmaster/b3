@@ -54,7 +54,15 @@ b3_ws_factory_new(void)
 int
 b3_ws_factory_free(b3_ws_factory_t *ws_factory)
 {
-	array_destroy_cb(ws_factory->ws_arr, free); // TODO b3_ws_free
+	ArrayIter ws_iter;
+	b3_ws_t *ws;
+
+	array_iter_init(&ws_iter, ws_factory->ws_arr);
+	while (array_iter_next(&ws_iter, (void *) &ws) != CC_ITER_END) {
+		array_iter_remove(&ws_iter, NULL);
+		b3_ws_free(ws);
+	}
+	array_destroy(ws_factory->ws_arr);
 	ws_factory->ws_arr = NULL;
 
 	b3_counter_free(ws_factory->ws_counter);

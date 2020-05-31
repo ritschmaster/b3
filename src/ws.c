@@ -135,6 +135,8 @@ b3_ws_add_win(b3_ws_t *ws, b3_win_t *win)
 			b3_winman_traverse(ws->winman, b3_ws_winman_first_leaf);
 			winman = g_first_leaf;
 
+			ws->focused_win = win;
+
 			pthread_mutex_unlock(&g_first_leaf_mutex);
 		}
 
@@ -149,7 +151,14 @@ b3_ws_add_win(b3_ws_t *ws, b3_win_t *win)
 int
 b3_ws_remove_win(b3_ws_t *ws, const b3_win_t *win)
 {
-	return b3_winman_remove_win(ws->winman, win);
+	int remove_failed;
+
+	remove_failed = b3_winman_remove_win(ws->winman, win);
+	if (!remove_failed && b3_win_compare(win, ws->focused_win)) {
+		ws->focused_win = b3_winman_get_next_window(ws->winman);
+	}
+
+	return remove_failed;
 }
 
 b3_win_t *
@@ -286,7 +295,7 @@ b3_ws_move_active_win(b3_ws_t *ws, b3_ws_move_direction_t direction)
 			pos = -1;
 			length = array_size(b3_winman_get_win_arr(winman));
 			for (i = 0; pos < 0 && i < length; i++) {
-				array_get_at(b3_winman_get_win_arr(winman), i, &win);
+				array_get_at(b3_winman_get_win_arr(winman), i, (void *) &win);
 				if (b3_win_compare(win, ws->focused_win) == 0) {
 					pos = i;
 				}
@@ -328,7 +337,7 @@ b3_ws_get_win(b3_ws_t *ws, b3_ws_move_direction_t direction)
 			pos = -1;
 			length = array_size(b3_winman_get_win_arr(winman));
 			for (i = 0; pos < 0 && i < length; i++) {
-				array_get_at(b3_winman_get_win_arr(winman), i, &win);
+				array_get_at(b3_winman_get_win_arr(winman), i, (void *) &win);
 				if (b3_win_compare(win, ws->focused_win) == 0) {
 					pos = i;
 				}
@@ -345,7 +354,7 @@ b3_ws_get_win(b3_ws_t *ws, b3_ws_move_direction_t direction)
 					pos++;
 					wbk_logger_log(&logger, INFO, "Got window right\n");
 				}
-				array_get_at(b3_winman_get_win_arr(winman), pos, &win);
+				array_get_at(b3_winman_get_win_arr(winman), pos, (void *) &win);
 			}
 		}
 	}
@@ -418,7 +427,7 @@ b3_ws_winman_arrange_visitor(b3_winman_t *winman)
 				if (!b3_win_get_floating(win_iter)) {
 					SetWindowPos(win_iter->window_handler, NULL,
 								 width, g_arrange_wins_monitor_area.top,
-								 split_size, height, NULL);
+								 split_size, height, 0);
 					ShowWindow(win_iter->window_handler, SW_RESTORE);
 					width += split_size;
 				}

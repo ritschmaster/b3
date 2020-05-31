@@ -78,9 +78,10 @@ extern const b3_bar_t *
 b3_monitor_get_bar(b3_monitor_t *monitor);
 
 /**
- * @return The workspace if found. NULL otherwise.
+ * @return The workspace if found. NULL otherwise. Do not free the returned
+ * workspace!
  */
-extern const b3_ws_t *
+extern b3_ws_t *
 b3_monitor_contains_ws(b3_monitor_t *monitor, const char *ws_id);
 
 extern int

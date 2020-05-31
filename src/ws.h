@@ -91,8 +91,12 @@ extern int
 b3_ws_add_win(b3_ws_t *ws, b3_win_t *win);
 
 /**
+ * Removes a window from the workspace. If it was the currently focused window,
+ * then the currently focused window will point to the next found one according
+ * to the window manager.
+ *
  * @param win The object will not be freed.
- * @return 0 if added. Non-0 otherwise.
+ * @return 0 if removed. Non-0 otherwise.
  */
 extern int
 b3_ws_remove_win(b3_ws_t *ws, const b3_win_t *win);

@@ -38,43 +38,43 @@ static wbk_logger_t logger =  { "kc_director" };
 pthread_mutex_t g_exec_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 static int
-b3_kc_director_exec_cw(const b3_kc_director_t *kc_director);
+b3_kc_director_exec_cw(b3_kc_director_t *kc_director);
 
 static int
-b3_kc_director_exec_cm(const b3_kc_director_t *kc_director);
+b3_kc_director_exec_cm(b3_kc_director_t *kc_director);
 
 static int
-b3_kc_director_exec_mawtw(const b3_kc_director_t *kc_director);
+b3_kc_director_exec_mawtw(b3_kc_director_t *kc_director);
 
 static int
-b3_kc_director_exec_awtf(const b3_kc_director_t *kc_director);
+b3_kc_director_exec_awtf(b3_kc_director_t *kc_director);
 
 static int
-b3_kc_director_exec_mawu(const b3_kc_director_t *kc_director);
+b3_kc_director_exec_mawu(b3_kc_director_t *kc_director);
 
 static int
-b3_kc_director_exec_mawd(const b3_kc_director_t *kc_director);
+b3_kc_director_exec_mawd(b3_kc_director_t *kc_director);
 
 static int
-b3_kc_director_exec_mawl(const b3_kc_director_t *kc_director);
+b3_kc_director_exec_mawl(b3_kc_director_t *kc_director);
 
 static int
-b3_kc_director_exec_mawr(const b3_kc_director_t *kc_director);
+b3_kc_director_exec_mawr(b3_kc_director_t *kc_director);
 
 static int
-b3_kc_director_exec_sawu(const b3_kc_director_t *kc_director);
+b3_kc_director_exec_sawu(b3_kc_director_t *kc_director);
 
 static int
-b3_kc_director_exec_sawd(const b3_kc_director_t *kc_director);
+b3_kc_director_exec_sawd(b3_kc_director_t *kc_director);
 
 static int
-b3_kc_director_exec_sawl(const b3_kc_director_t *kc_director);
+b3_kc_director_exec_sawl(b3_kc_director_t *kc_director);
 
 static int
-b3_kc_director_exec_sawr(const b3_kc_director_t *kc_director);
+b3_kc_director_exec_sawr(b3_kc_director_t *kc_director);
 
 static int
-b3_kc_director_exec_tawf(const b3_kc_director_t *kc_director);
+b3_kc_director_exec_tawf(b3_kc_director_t *kc_director);
 
 b3_kc_director_t *
 b3_kc_director_new(wbk_b_t *comb, b3_director_t *director, b3_kc_director_kind_t kind, void *data)
@@ -144,7 +144,7 @@ b3_kc_director_get_binding(const b3_kc_director_t *kc)
 }
 
 int
-b3_kc_director_exec(const b3_kc_director_t *kc_director)
+b3_kc_director_exec(b3_kc_director_t *kc_director)
 {
 	int ret;
 
@@ -214,7 +214,7 @@ b3_kc_director_exec(const b3_kc_director_t *kc_director)
 }
 
 int
-b3_kc_director_exec_cw(const b3_kc_director_t *kc_director)
+b3_kc_director_exec_cw(b3_kc_director_t *kc_director)
 {
 	int ret;
 	char *ws_id;
@@ -227,7 +227,7 @@ b3_kc_director_exec_cw(const b3_kc_director_t *kc_director)
 }
 
 int
-b3_kc_director_exec_cm(const b3_kc_director_t *kc_director)
+b3_kc_director_exec_cm(b3_kc_director_t *kc_director)
 {
 	int ret;
 	char *monitor_name;
@@ -240,7 +240,7 @@ b3_kc_director_exec_cm(const b3_kc_director_t *kc_director)
 }
 
 int
-b3_kc_director_exec_mawtw(const b3_kc_director_t *kc_director)
+b3_kc_director_exec_mawtw(b3_kc_director_t *kc_director)
 {
 	int ret;
 	char *ws_id;
@@ -253,7 +253,7 @@ b3_kc_director_exec_mawtw(const b3_kc_director_t *kc_director)
 }
 
 int
-b3_kc_director_exec_awtf(const b3_kc_director_t *kc_director)
+b3_kc_director_exec_awtf(b3_kc_director_t *kc_director)
 {
 	int ret;
 
@@ -263,7 +263,7 @@ b3_kc_director_exec_awtf(const b3_kc_director_t *kc_director)
 }
 
 int
-b3_kc_director_exec_mawu(const b3_kc_director_t *kc_director)
+b3_kc_director_exec_mawu(b3_kc_director_t *kc_director)
 {
 	int ret;
 
@@ -273,7 +273,7 @@ b3_kc_director_exec_mawu(const b3_kc_director_t *kc_director)
 }
 
 int
-b3_kc_director_exec_mawd(const b3_kc_director_t *kc_director)
+b3_kc_director_exec_mawd(b3_kc_director_t *kc_director)
 {
 	int ret;
 
@@ -283,7 +283,7 @@ b3_kc_director_exec_mawd(const b3_kc_director_t *kc_director)
 }
 
 int
-b3_kc_director_exec_mawl(const b3_kc_director_t *kc_director)
+b3_kc_director_exec_mawl(b3_kc_director_t *kc_director)
 {
 	int ret;
 
@@ -293,7 +293,7 @@ b3_kc_director_exec_mawl(const b3_kc_director_t *kc_director)
 }
 
 int
-b3_kc_director_exec_mawr(const b3_kc_director_t *kc_director)
+b3_kc_director_exec_mawr(b3_kc_director_t *kc_director)
 {
 	int ret;
 
@@ -303,7 +303,7 @@ b3_kc_director_exec_mawr(const b3_kc_director_t *kc_director)
 }
 
 int
-b3_kc_director_exec_sawu(const b3_kc_director_t *kc_director)
+b3_kc_director_exec_sawu(b3_kc_director_t *kc_director)
 {
 	int ret;
 
@@ -313,7 +313,7 @@ b3_kc_director_exec_sawu(const b3_kc_director_t *kc_director)
 }
 
 int
-b3_kc_director_exec_sawd(const b3_kc_director_t *kc_director)
+b3_kc_director_exec_sawd(b3_kc_director_t *kc_director)
 {
 	int ret;
 
@@ -323,7 +323,7 @@ b3_kc_director_exec_sawd(const b3_kc_director_t *kc_director)
 }
 
 int
-b3_kc_director_exec_sawl(const b3_kc_director_t *kc_director)
+b3_kc_director_exec_sawl(b3_kc_director_t *kc_director)
 {
 	int ret;
 
@@ -333,7 +333,7 @@ b3_kc_director_exec_sawl(const b3_kc_director_t *kc_director)
 }
 
 int
-b3_kc_director_exec_sawr(const b3_kc_director_t *kc_director)
+b3_kc_director_exec_sawr(b3_kc_director_t *kc_director)
 {
 	int ret;
 
@@ -343,7 +343,7 @@ b3_kc_director_exec_sawr(const b3_kc_director_t *kc_director)
 }
 
 int
-b3_kc_director_exec_tawf(const b3_kc_director_t *kc_director)
+b3_kc_director_exec_tawf(b3_kc_director_t *kc_director)
 {
 	int ret;
 

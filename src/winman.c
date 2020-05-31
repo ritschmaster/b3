@@ -94,6 +94,25 @@ b3_winman_add_winman(b3_winman_t *winman, b3_winman_t *other)
 	return array_add(winman->winman_arr, other);
 }
 
+b3_win_t *
+b3_winman_get_next_window(b3_winman_t *winman) {
+	b3_win_t *next;
+	Array *win_arr;
+
+	next = NULL;
+	if (winman->type == LEAF) {
+		win_arr = b3_winman_get_win_arr(winman);
+
+		if (array_size(win_arr) >= 1) {
+			array_get_at(win_arr, 1, (void *) &next);
+		}
+	} else {
+		next = b3_winman_get_next_window(winman);
+	}
+
+	return next;
+}
+
 int
 b3_winman_remove_empty_nodes(b3_winman_t *winman)
 {

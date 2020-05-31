@@ -51,7 +51,7 @@ b3_win_factory_free(b3_win_factory_t *win_factory)
 	b3_win_t *win_iter;
 
 	array_iter_init(&iter, win_factory->win_arr);
-	while (array_iter_next(&iter, &win_iter) != CC_ITER_END) {
+	while (array_iter_next(&iter, (void *) &win_iter) != CC_ITER_END) {
 		array_iter_remove(&iter, NULL);
 		b3_win_free(win_iter);
 	}
@@ -99,7 +99,7 @@ b3_win_factory_win_free(b3_win_factory_t *win_factory, b3_win_t *win)
 
 	found = 0;
 	array_iter_init(&iter, win_factory->win_arr);
-	while (!found && array_iter_next(&iter, &win_iter) != CC_ITER_END) {
+	while (!found && array_iter_next(&iter, (void *) &win_iter) != CC_ITER_END) {
 		if (b3_win_compare(win, win_iter) == 0) {
 			array_iter_remove(&iter, NULL);
 			found = 1;

@@ -49,11 +49,11 @@ b3_director_get_monitor_by_monitor_name(b3_director_t *director, const char *mon
 static BOOL CALLBACK
 b3_director_enum_monitors(HMONITOR monitor, HDC hdc, LPRECT rect, LPARAM data);
 
-static int
-b3_director_repaint_all(void);
+static DWORD WINAPI
+b3_director_repaint_all_threaded(_In_ LPVOID param);
 
 static int
-b3_director_set_active_win_internal(b3_director_t *director, b3_win_t *win);
+b3_director_repaint_all(void);
 
 b3_director_t *
 b3_director_new(b3_monitor_factory_t *monitor_factory)
@@ -65,6 +65,8 @@ b3_director_new(b3_monitor_factory_t *monitor_factory)
 
 	memset(director, 0, sizeof(b3_director_t));
 
+	director->director_mutex = CreateMutex(NULL, FALSE, NULL);
+
 	array_new(&(director->monitor_arr));
 
 	director->monitor_factory = monitor_factory;
@@ -75,13 +77,14 @@ b3_director_new(b3_monitor_factory_t *monitor_factory)
 int
 b3_director_free(b3_director_t *director)
 {
+	ReleaseMutex(director->director_mutex);
+	CloseHandle(director->director_mutex);
+
 	director->focused_monitor = NULL;
 
 	b3_director_free_monitor_arr(director);
 
 	director->monitor_factory = NULL;
-
-	director->active_win = NULL;
 
 	free(director);
 
@@ -109,12 +112,15 @@ int
 b3_director_refresh(b3_director_t *director)
 {
 	b3_monitor_t *monitor;
-
 	char found;
+
+	WaitForSingleObject(director->director_mutex, INFINITE);
 
 	EnumDisplayMonitors(NULL, NULL, b3_director_enum_monitors, (LPARAM) director);
 
    	b3_director_repaint_all();
+
+	ReleaseMutex(director->director_mutex);
 
 	return 0;
 }
@@ -129,7 +135,7 @@ b3_director_enum_monitors(HMONITOR wmonitor, HDC hdc, LPRECT rect, LPARAM data)
     director = (b3_director_t *) data;
 
     monitor_info.cbSize = sizeof(MONITORINFOEX);
-    GetMonitorInfo(wmonitor, &monitor_info);
+    GetMonitorInfo(wmonitor, (LPMONITORINFO) &monitor_info);
 
     wbk_logger_log(&logger, INFO, "Found monitor: %s - %dx%d\n",
     			   monitor_info.szDevice,
@@ -161,6 +167,8 @@ b3_director_get_monitor_by_monitor_name(b3_director_t *director, const char *mon
 	b3_monitor_t *monitor;
 	char found;
 
+	WaitForSingleObject(director->director_mutex, INFINITE);
+
 	monitor = NULL;
 	found = 0;
 	array_iter_init(&monitor_iter, director->monitor_arr);
@@ -170,6 +178,8 @@ b3_director_get_monitor_by_monitor_name(b3_director_t *director, const char *mon
 			found = 1;
 		}
 	}
+
+	ReleaseMutex(director->director_mutex);
 
 	return monitor;
 }
@@ -181,6 +191,8 @@ b3_director_set_focused_monitor(b3_director_t *director, const char *monitor_nam
 	ArrayIter iter;
 	b3_monitor_t *monitor;
 	int ret;
+
+	WaitForSingleObject(director->director_mutex, INFINITE);
 
 	found = 0;
 	array_iter_init(&iter, director->monitor_arr);
@@ -201,6 +213,8 @@ b3_director_set_focused_monitor(b3_director_t *director, const char *monitor_nam
 
     b3_director_repaint_all();
 
+	ReleaseMutex(director->director_mutex);
+
    	return ret;
 }
 
@@ -210,7 +224,8 @@ b3_director_switch_to_ws(b3_director_t *director, const char *ws_id)
 	char found;
 	ArrayIter iter;
 	b3_monitor_t *monitor;
-	b3_win_t *focused_win;
+
+	WaitForSingleObject(director->director_mutex, INFINITE);
 
 	found = 0;
 	array_iter_init(&iter, director->monitor_arr);
@@ -225,16 +240,14 @@ b3_director_switch_to_ws(b3_director_t *director, const char *ws_id)
     	wbk_logger_log(&logger, INFO, "Switching to monitor %s.\n", b3_monitor_get_monitor_name(monitor));
     }
     b3_monitor_set_focused_ws(director->focused_monitor, ws_id);
-    b3_director_arrange_wins(director);
 
-    focused_win = b3_monitor_get_focused_win(director->focused_monitor);
-    if (focused_win) {
-    	director->active_win = focused_win;
-    }
+    b3_director_arrange_wins(director);
 
     wbk_logger_log(&logger, INFO, "Switching to workspace %s.\n", ws_id);
 
     b3_director_repaint_all();
+
+	ReleaseMutex(director->director_mutex);
 
 	return 0;
 }
@@ -246,6 +259,8 @@ b3_director_add_win(b3_director_t *director, const char *monitor_name, b3_win_t 
 	b3_monitor_t *monitor;
 	char found;
 	int error;
+
+	WaitForSingleObject(director->director_mutex, INFINITE);
 
 	found = 0;
 	array_iter_init(&iter, director->monitor_arr);
@@ -264,6 +279,8 @@ b3_director_add_win(b3_director_t *director, const char *monitor_name, b3_win_t 
 		b3_director_arrange_wins(director);
     }
 
+	ReleaseMutex(director->director_mutex);
+
 	return error;
 }
 
@@ -273,6 +290,8 @@ b3_director_remove_win(b3_director_t *director, b3_win_t *win)
 	ArrayIter iter;
 	b3_monitor_t *monitor;
 	int error;
+
+	WaitForSingleObject(director->director_mutex, INFINITE);
 
 	error = 1;
 	array_iter_init(&iter, director->monitor_arr);
@@ -284,6 +303,8 @@ b3_director_remove_win(b3_director_t *director, b3_win_t *win)
     	b3_director_arrange_wins(director);
     }
 
+	ReleaseMutex(director->director_mutex);
+
     return error;
 }
 
@@ -294,11 +315,15 @@ b3_director_arrange_wins(b3_director_t *director)
 	b3_monitor_t *monitor;
 	int ret;
 
+	WaitForSingleObject(director->director_mutex, INFINITE);
+
 	ret = 1;
 	array_iter_init(&iter, director->monitor_arr);
     while (ret && array_iter_next(&iter, (void*) &monitor) != CC_ITER_END) {
 		b3_monitor_arrange_wins(director->focused_monitor);
     }
+
+    ReleaseMutex(director->director_mutex);
 
 	return 0;
 }
@@ -309,9 +334,11 @@ b3_director_set_active_win(b3_director_t *director, b3_win_t *win)
 	ArrayIter iter;
 	b3_monitor_t *monitor;
 	char found;
-	const b3_ws_t *ws;
-	b3_ws_t *found_win;
+	b3_ws_t *ws;
+	b3_win_t *found_win;
 	int ret;
+
+	WaitForSingleObject(director->director_mutex, INFINITE);
 
 	found = 0;
 	array_iter_init(&iter, director->monitor_arr);
@@ -324,15 +351,17 @@ b3_director_set_active_win(b3_director_t *director, b3_win_t *win)
     }
 
     if (found) {
-    	b3_director_switch_to_ws(director, ws->name);
+    	wbk_logger_log(&logger, DEBUG, "Updating active window\n");
     	b3_ws_set_focused_win(ws, found_win);
-    	director->active_win = found_win;
+    	b3_director_switch_to_ws(director, ws->name);
 		b3_director_arrange_wins(director);
 		ret = 0;
     } else {
-    	wbk_logger_log(&logger, SEVERE, "Activated window is unknown\n");
+    	wbk_logger_log(&logger, SEVERE, "Failed updating active window: activated window is unknown\n");
     	ret = 1;
     }
+
+    ReleaseMutex(director->director_mutex);
 
 	return ret;
 }
@@ -340,19 +369,25 @@ b3_director_set_active_win(b3_director_t *director, b3_win_t *win)
 int
 b3_director_active_win_toggle_floating(b3_director_t *director)
 {
+	b3_win_t *active_win;
 	int toggle_failed;
 	char floating;
 
+	WaitForSingleObject(director->director_mutex, INFINITE);
+
 	toggle_failed = 1;
-	if (director->active_win) {
-		b3_win_set_floating(director->active_win,
-							!b3_win_get_floating(director->active_win));
+    active_win = b3_monitor_get_focused_win(director->focused_monitor);
+	if (active_win) {
+		b3_win_set_floating(active_win,
+							!b3_win_get_floating(active_win));
 		toggle_failed = 0;
 		if (!toggle_failed) {
 			wbk_logger_log(&logger, SEVERE, "Activated window toggled floating\n");
 			b3_monitor_arrange_wins(director->focused_monitor);
 		}
 	}
+
+	ReleaseMutex(director->director_mutex);
 
 	return toggle_failed;
 }
@@ -362,10 +397,13 @@ b3_director_move_active_win_to_ws(b3_director_t *director, const char *ws_id)
 {
 	ArrayIter iter;
 	b3_monitor_t *monitor;
-	const b3_ws_t *ws;
+	b3_ws_t *ws;
 	const b3_ws_t *ws_old;
 	char found;
 	int ret;
+	b3_win_t *active_win;
+
+	WaitForSingleObject(director->director_mutex, INFINITE);
 
 	/** Find the correct monitor to add */
 	found = 0;
@@ -383,11 +421,9 @@ b3_director_move_active_win_to_ws(b3_director_t *director, const char *ws_id)
 
     ret = 1;
     if (ws) {
-    	if (b3_director_remove_win(director, director->active_win) == 0) {
-			b3_ws_add_win(ws, director->active_win);
-
-			// TODO focus next window on the current workspace
-	//    	b3_director_set_active_win_internal(director, monitor, ws, director->focused_win.win);
+    	active_win = b3_monitor_get_focused_win(director->focused_monitor);
+    	if (b3_director_remove_win(director, active_win) == 0) {
+			b3_ws_add_win(ws, active_win);
 
 			wbk_logger_log(&logger, INFO, "Moved window to %s\n", ws_id);
 
@@ -403,6 +439,8 @@ b3_director_move_active_win_to_ws(b3_director_t *director, const char *ws_id)
 
     b3_director_repaint_all();
 
+	ReleaseMutex(director->director_mutex);
+
    	return ret;
 }
 
@@ -411,9 +449,13 @@ b3_director_move_active_win(b3_director_t *director, b3_ws_move_direction_t dire
 {
 	int error;
 
+	WaitForSingleObject(director->director_mutex, INFINITE);
+
 	error = b3_ws_move_active_win(b3_monitor_get_focused_ws(director->focused_monitor),
 			 					  direction);
     b3_director_arrange_wins(director);
+
+	ReleaseMutex(director->director_mutex);
 
 	return error;
 }
@@ -424,12 +466,19 @@ b3_director_set_active_win_by_direction(b3_director_t *director, b3_ws_move_dire
 	int error;
 	b3_win_t *win;
 
+	WaitForSingleObject(director->director_mutex, INFINITE);
+
 	error = 1;
 	win = b3_ws_get_win(b3_monitor_get_focused_ws(director->focused_monitor),
 		  			    direction);
 	if (win) {
-		b3_director_set_active_win_internal(director, win);
+		wbk_logger_log(&logger, SEVERE, "activating window: %d", win);
+    	b3_ws_set_focused_win(b3_monitor_get_focused_ws(director->focused_monitor),
+    						  win);
+		b3_director_w32_set_active_window(b3_win_get_window_handler(win));
 	}
+
+	ReleaseMutex(director->director_mutex);
 
 	return error;
 }
@@ -437,11 +486,16 @@ b3_director_set_active_win_by_direction(b3_director_t *director, b3_ws_move_dire
 int
 b3_director_toggle_active_win_fullscreen(b3_director_t *director)
 {
+	b3_win_t *active_win;
 	WINDOWPLACEMENT windowplacement;
+
+	WaitForSingleObject(director->director_mutex, INFINITE);
 
 	windowplacement.length = sizeof(WINDOWPLACEMENT);
 
-	GetWindowPlacement(b3_win_get_window_handler(director->active_win),
+    active_win = b3_monitor_get_focused_win(director->focused_monitor);
+
+	GetWindowPlacement(b3_win_get_window_handler(active_win),
 			           &windowplacement);
 
 	if (windowplacement.showCmd == SW_SHOWMAXIMIZED) {
@@ -449,6 +503,8 @@ b3_director_toggle_active_win_fullscreen(b3_director_t *director)
 	} else {
 		ShowWindow(b3_win_get_window_handler(director->active_win), SW_MAXIMIZE);
 	}
+
+	ReleaseMutex(director->director_mutex);
 
 	return 0;
 }
@@ -459,10 +515,14 @@ b3_director_show(b3_director_t *director)
 	ArrayIter monitor_iter;
 	b3_monitor_t *monitor;
 
+	WaitForSingleObject(director->director_mutex, INFINITE);
+
 	array_iter_init(&monitor_iter, director->monitor_arr);
 	while (array_iter_next(&monitor_iter, (void *) &monitor) != CC_ITER_END) {
 		b3_monitor_show(monitor);
 	}
+
+	ReleaseMutex(director->director_mutex);
 
 	return 0;
 }
@@ -473,10 +533,14 @@ b3_director_draw(b3_director_t *director, HWND window_handler)
 	ArrayIter monitor_iter;
 	b3_monitor_t *monitor;
 
+	WaitForSingleObject(director->director_mutex, INFINITE);
+
 	array_iter_init(&monitor_iter, director->monitor_arr);
 	while (array_iter_next(&monitor_iter, (void *) &monitor) != CC_ITER_END) {
 		b3_monitor_draw(monitor, window_handler);
 	}
+
+	ReleaseMutex(director->director_mutex);
 
 	return 0;
 }
@@ -513,21 +577,23 @@ b3_director_w32_set_active_window(HWND window_handler)
 	return 0;
 }
 
+DWORD WINAPI
+b3_director_repaint_all_threaded(_In_ LPVOID param)
+{
+	SendMessage(HWND_BROADCAST, WM_NCPAINT, (WPARAM) NULL, (LPARAM) NULL);
+}
+
 int
 b3_director_repaint_all(void)
 {
-	SendMessage(HWND_BROADCAST, WM_NCPAINT, (void *) NULL, (void *) NULL);
+	HANDLE thread_handler;
+
+	thread_handler = CreateThread(NULL,
+					 0,
+					 b3_director_repaint_all_threaded,
+					 NULL,
+					 0,
+					 NULL);
+
 	return 0;
 }
-
-int
-b3_director_set_active_win_internal(b3_director_t *director, b3_win_t *win)
-{
-	int error;
-
-	director->active_win = win;
-	error = b3_director_w32_set_active_window(b3_win_get_window_handler(win));
-
-	return error;
-}
-

@@ -146,7 +146,7 @@ b3_bar_create_window(b3_bar_t *bar, const char *monitor_name)
 	}
 
 	if (!error) {
-		SetWindowLongPtr(bar->window_handler, GWLP_USERDATA, bar);
+		SetWindowLongPtr(bar->window_handler, GWLP_USERDATA, (LONG_PTR) bar);
 
 		SetWindowPos(bar->window_handler,
 					 HWND_TOPMOST,

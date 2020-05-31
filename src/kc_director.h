@@ -101,6 +101,6 @@ b3_kc_director_get_binding(const b3_kc_director_t *kc);
  * @return Non-0 if the execution failed
  */
 extern int
-b3_kc_director_exec(const b3_kc_director_t *kc_director);
+b3_kc_director_exec(b3_kc_director_t *kc_director);
 
 #endif // B3_KC_DIRECTOR_H

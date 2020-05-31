@@ -116,7 +116,7 @@ b3_win_watcher_start(b3_win_watcher_t *win_watcher)
 		RegisterShellHookWindow(window_handler);
 		win_watcher->shellhookid = RegisterWindowMessageW(L"SHELLHOOK");
 
-		SetWindowLongPtr(window_handler, GWLP_USERDATA, win_watcher);
+		SetWindowLongPtr(window_handler, GWLP_USERDATA, (LONG_PTR) win_watcher);
 
 		win_watcher->window_handler = window_handler;
 	}
@@ -175,7 +175,7 @@ b3_win_watcher_wnd_proc(HWND window_handler, UINT msg, WPARAM wParam, LPARAM lPa
 				case HSHELL_WINDOWCREATED:
 					monitor = MonitorFromWindow((HWND) lParam, MONITOR_DEFAULTTONEAREST);
 					monitor_info.cbSize = sizeof(MONITORINFOEX);
-					GetMonitorInfo(monitor, &monitor_info);
+					GetMonitorInfo(monitor, (LPMONITORINFO) &monitor_info);
 
 					win = b3_win_factory_win_create(win_watcher->win_factory, (HWND) lParam);
 					if (b3_director_add_win(win_watcher->director, monitor_info.szDevice, win)) {
@@ -217,7 +217,7 @@ b3_win_watcher_enum_windows(HWND window_handler, LPARAM param)
 	if (b3_win_watcher_managable_window_handler(win_watcher, window_handler)) {
 		monitor = MonitorFromWindow(window_handler, MONITOR_DEFAULTTONEAREST);
 		monitor_info.cbSize = sizeof(MONITORINFOEX);
-		GetMonitorInfo(monitor, &monitor_info);
+		GetMonitorInfo(monitor, (LPMONITORINFO) &monitor_info);
 
 		win = b3_win_factory_win_create(win_watcher->win_factory, window_handler);
 

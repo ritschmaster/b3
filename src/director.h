@@ -39,6 +39,8 @@
 
 typedef struct b3_director_s
 {
+	HANDLE director_mutex;
+
 	b3_monitor_t *focused_monitor;
 
 	/**
@@ -107,6 +109,13 @@ extern int
 b3_director_arrange_wins(b3_director_t *director);
 
 /**
+ * Sets the active window of the director. Internally this will update the
+ * currently focused window of the currently focused workspace through the
+ * currently focused monitor.
+ *
+ * It is expected that the passed window is already the active window according
+ * through the WIN32 API.
+ *
  * @param win The object will not be stored to the director and will will not be
  * freed. Free it by yourself!
  * @return 0 if it was set. Non-0 otherwise.
