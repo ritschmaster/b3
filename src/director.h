@@ -39,7 +39,7 @@
 
 typedef struct b3_director_s
 {
-	HANDLE director_mutex;
+	HANDLE global_mutex;
 
 	b3_monitor_t *focused_monitor;
 

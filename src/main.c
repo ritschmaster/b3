@@ -76,7 +76,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 #else
 	wbk_logger_set_level(INFO);
 #endif
-	wbk_logger_set_level(DEBUG); // TODO remove me
 
 	win_factory = b3_win_factory_new();
 	ws_factory = b3_ws_factory_new();
@@ -160,13 +159,13 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		kc_director = b3_kc_director_factory_create_cm(kc_director_factory, b, g_director, "\\\\.\\DISPLAY2");
 		b3_kbman_add_kc_director(g_kbman, kc_director);
 
-//		b = wbk_b_new();
-//		be = wbk_be_new(ALT, 0); wbk_b_add(b, be); wbk_be_free(be);
-//		be = wbk_be_new(SHIFT, 0); wbk_b_add(b, be); wbk_be_free(be);
-//		be = wbk_be_new(SPACE, 0); wbk_b_add(b, be); wbk_be_free(be);
-//		kc_director = b3_kc_director_factory_create_awtf(kc_director_factory, b, g_director);
-//		b3_kbman_add_kc_director(g_kbman, kc_director);
-//
+		b = wbk_b_new();
+		be = wbk_be_new(ALT, 0); wbk_b_add(b, be); wbk_be_free(be);
+		be = wbk_be_new(SHIFT, 0); wbk_b_add(b, be); wbk_be_free(be);
+		be = wbk_be_new(SPACE, 0); wbk_b_add(b, be); wbk_be_free(be);
+		kc_director = b3_kc_director_factory_create_awtf(kc_director_factory, b, g_director);
+		b3_kbman_add_kc_director(g_kbman, kc_director);
+
 //		b = wbk_b_new();
 //		be = wbk_be_new(ALT, 0); wbk_b_add(b, be); wbk_be_free(be);
 //		be = wbk_be_new(NOT_A_MODIFIER, 'f'); wbk_b_add(b, be); wbk_be_free(be);

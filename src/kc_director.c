@@ -35,8 +35,6 @@
 
 static wbk_logger_t logger =  { "kc_director" };
 
-pthread_mutex_t g_exec_mutex = PTHREAD_MUTEX_INITIALIZER;
-
 static int
 b3_kc_director_exec_cw(b3_kc_director_t *kc_director);
 
@@ -89,6 +87,8 @@ b3_kc_director_new(wbk_b_t *comb, b3_director_t *director, b3_kc_director_kind_t
 	if (kc_director != NULL) {
 		kc_director->kc = wbk_kc_new(comb);
 
+		kc_director->global_mutex = CreateMutex(NULL, FALSE, NULL);
+
 		kc_director->director = director;
 
 		kc_director->kind = kind;
@@ -104,6 +104,9 @@ b3_kc_director_free(b3_kc_director_t *kc_director)
 {
 	wbk_kc_free(kc_director->kc);
 	kc_director->kc = NULL;
+
+	ReleaseMutex(kc_director->global_mutex);
+	CloseHandle(kc_director->global_mutex);
 
 	kc_director->director = NULL;
 
@@ -148,7 +151,16 @@ b3_kc_director_exec(b3_kc_director_t *kc_director)
 {
 	int ret;
 
-	pthread_mutex_lock(&g_exec_mutex);
+	WaitForSingleObject(kc_director->global_mutex, INFINITE);
+
+#ifdef DEBUG_ENABLED
+	char *binding;
+
+	binding = wbk_b_to_str(b3_kc_director_get_binding(kc_director));
+	wbk_logger_log(&logger, DEBUG, "Exec binding: %s\n", binding);
+	free(binding);
+	binding = NULL;
+#endif
 
 	switch(kc_director->kind) {
 	case CHANGE_WORKSPACE:
@@ -208,7 +220,7 @@ b3_kc_director_exec(b3_kc_director_t *kc_director)
 		// TODO
 	}
 
-	pthread_mutex_unlock(&g_exec_mutex);
+	ReleaseMutex(kc_director->global_mutex);
 
 	return ret;
 }

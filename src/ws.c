@@ -425,10 +425,10 @@ b3_ws_winman_arrange_visitor(b3_winman_t *winman)
 			array_iter_init(&iter, b3_winman_get_win_arr(winman));
 			while (array_iter_next(&iter, (void*) &win_iter) != CC_ITER_END) {
 				if (!b3_win_get_floating(win_iter)) {
-					SetWindowPos(win_iter->window_handler, NULL,
+					ShowWindow(win_iter->window_handler, SW_SHOWNOACTIVATE);
+					SetWindowPos(win_iter->window_handler, HWND_TOP,
 								 width, g_arrange_wins_monitor_area.top,
-								 split_size, height, 0);
-					ShowWindow(win_iter->window_handler, SW_RESTORE);
+								 split_size, height, SWP_NOACTIVATE);
 					width += split_size;
 				}
 			}

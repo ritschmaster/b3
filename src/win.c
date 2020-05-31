@@ -107,15 +107,14 @@ b3_win_show(b3_win_t *win)
 	if (!error) {
 		if (b3_win_get_floating(win)) {
 			GetWindowRect(win->window_handler, &win_rect);
-//			ShowWindow(win->window_handler, SW_RESTORE);
-			ShowWindow(win->window_handler, SW_SHOWDEFAULT);
+			ShowWindow(win->window_handler, SW_SHOWNOACTIVATE);
 			SetWindowPos(win->window_handler,
-						 HWND_TOPMOST,
+						 HWND_TOP,
 						 win_rect.left, win_rect.top,
 						 win_rect.right, win_rect.bottom,
-						 0);
+						 SWP_NOACTIVATE);
 		} else {
-			ShowWindow(win->window_handler, SW_RESTORE);
+			ShowWindow(win->window_handler, SW_SHOWNOACTIVATE);
 		}
 	}
 
@@ -125,7 +124,7 @@ b3_win_show(b3_win_t *win)
 int
 b3_win_minimize(b3_win_t *win)
 {
-   	ShowWindow(win->window_handler, SW_MINIMIZE);
+   	ShowWindow(win->window_handler, SW_SHOWMINNOACTIVE);
 	return 0;
 }
 

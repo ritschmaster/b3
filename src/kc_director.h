@@ -56,6 +56,8 @@ typedef struct b3_kc_director_s
 {
 	wbk_kc_t *kc;
 
+	HANDLE global_mutex;
+
 	b3_kc_director_kind_t kind;
 
 	b3_director_t *director;

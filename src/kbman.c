@@ -151,9 +151,9 @@ b3_kbman_kc_director_exec_threaded(LPVOID param)
 {
 	b3_kc_director_t *kc_director;
 
-	wbk_logger_log(&logger, DEBUG, "Executing key binding\n");
-
 	kc_director = (b3_kc_director_t *) param;
+
+	wbk_logger_log(&logger, DEBUG, "Executing key binding\n");
 
 	return b3_kc_director_exec(kc_director);
 }
