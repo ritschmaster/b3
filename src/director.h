@@ -49,8 +49,6 @@ typedef struct b3_director_s
 	Array *monitor_arr;
 
 	b3_monitor_factory_t *monitor_factory;
-
-	b3_win_t *active_win;
 } b3_director_t;
 
 /**

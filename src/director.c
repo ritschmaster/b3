@@ -511,18 +511,18 @@ b3_director_toggle_active_win_fullscreen(b3_director_t *director)
 
 	WaitForSingleObject(director->global_mutex, INFINITE);
 
-	windowplacement.length = sizeof(WINDOWPLACEMENT);
-
     active_win = b3_monitor_get_focused_win(director->focused_monitor);
+    if (active_win) {
+    	windowplacement.length = sizeof(WINDOWPLACEMENT);
+		GetWindowPlacement(b3_win_get_window_handler(active_win),
+						   &windowplacement);
 
-	GetWindowPlacement(b3_win_get_window_handler(active_win),
-			           &windowplacement);
-
-	if (windowplacement.showCmd == SW_SHOWMAXIMIZED) {
-		b3_director_arrange_wins(director);
-	} else {
-		ShowWindow(b3_win_get_window_handler(director->active_win), SW_MAXIMIZE);
-	}
+		if (windowplacement.showCmd == SW_SHOWMAXIMIZED) {
+			b3_director_arrange_wins(director);
+		} else {
+			ShowWindow(b3_win_get_window_handler(active_win), SW_MAXIMIZE);
+		}
+    }
 
 	ReleaseMutex(director->global_mutex);
 

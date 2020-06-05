@@ -80,6 +80,10 @@ b3_wsman_remove(b3_wsman_t *wsman, const char *ws_id);
 extern b3_ws_t *
 b3_wsman_contains_ws(b3_wsman_t *wsman, const char *ws_id);
 
+/**
+ * @return The currently focused workspace of the workspace maanger. If no
+ * workspace is focused, then NULL is returned. Do not free it!
+ */
 extern b3_ws_t *
 b3_wsman_get_focused_ws(b3_wsman_t *wsman);
 

@@ -141,7 +141,8 @@ extern const char*
 b3_ws_get_name(b3_ws_t *ws);
 
 /**
- * @return NULL if the workspace does not contain any windows.
+ * @return The currently focused window of the monitor. If no window is focused,
+ * then NULL is returned. Do not free it!
  */
 extern b3_win_t *
 b3_ws_get_focused_win(b3_ws_t *win);
