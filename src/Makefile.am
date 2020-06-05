@@ -39,7 +39,6 @@ libb3parser_la_SOURCES = win.c win.h # todo
 libb3parser_la_CFLAGS = $(AM_CFLAGS)
 libb3parser_la_CFLAGS += @collectionc_CFLAGS@
 libb3parser_la_LDFLAGS = $(AM_LDFLAGS) 
-libb3parser_la_LDFLAGS += -pthread 
 libb3parser_la_LDFLAGS += -mwindows 
 libb3parser_la_LDFLAGS += -static
 libb3parser_la_LIBADD = @collectionc_LIBS@
@@ -68,7 +67,6 @@ libb3interpreter_la_CFLAGS = $(AM_CFLAGS)
 libb3interpreter_la_CFLAGS += @collectionc_CFLAGS@ 
 libb3interpreter_la_CFLAGS += @libwbkbase_CFLAGS@
 libb3interpreter_la_LDFLAGS = $(AM_LDFLAGS)
-libb3interpreter_la_LDFLAGS += -pthread
 libb3interpreter_la_LDFLAGS += -mwindows
 libb3interpreter_la_LDFLAGS += -static
 libb3interpreter_la_LIBADD = @collectionc_LIBS@
@@ -79,7 +77,9 @@ b3_SOURCES = main.c
 
 b3_CFLAGS = $(AM_CFLAGS)
 b3_CFLAGS += @libwbkbase_CFLAGS@
-b3_LDFLAGS =  -pthread -mwindows -static
+b3_LDFLAGS = $(AM_LDFLAGS)
+b3_LDFLAGS += -mwindows 
+b3_LDFLAGS += -static
 b3_LDADD = libb3interpreter.la
 b3_LDADD += @libwbkbase_LIBS@
 

@@ -25,7 +25,6 @@
 #include "kbman.h"
 
 #include <wbkbase/logger.h>
-#include <collectc/array.h>
 #include <sys/types.h>
 #include <unistd.h>
 #include <windows.h>
@@ -49,7 +48,8 @@ b3_kbman_new()
 
 	kbman->kbman = wbk_kbman_new();
 
-	array_new(&(kbman->kc_director_arr));
+	kbman->kc_director_arr_len = 0;
+	kbman->kc_director_arr = NULL;
 
 	return kbman;
 }
@@ -57,30 +57,19 @@ b3_kbman_new()
 b3_kbman_t *
 b3_kbman_free(b3_kbman_t *kbman)
 {
-	ArrayIter kb_iter;
-	b3_kc_director_t *kc_director;
-
-	//b3_kbman_main_stop(kbman);
+	int i;
 
 	wbk_kbman_free(kbman->kbman);
 	kbman->kbman= NULL;
 
-	array_iter_init(&kb_iter, kbman->kc_director_arr);
-	while (array_iter_next(&kb_iter, (void *) &kc_director) != CC_ITER_END) {
-		array_iter_remove(&kb_iter, NULL);
-		b3_kc_director_free(kc_director);
+	for (i = 0; i < kbman->kc_director_arr_len; i++) {
+		b3_kc_director_free(kbman->kc_director_arr[i]);
+		kbman->kc_director_arr[i] = NULL;
 	}
-	array_destroy(kbman->kc_director_arr);
+	free(kbman->kc_director_arr);
 	kbman->kc_director_arr = NULL;
 
-
 	free(kbman);
-}
-
-Array *
-b3_kbman_get_kb(b3_kbman_t* kbman)
-{
-	return kbman->kc_director_arr;
 }
 
 int
@@ -92,58 +81,59 @@ b3_kbman_add_kc_sys(b3_kbman_t *kbman, wbk_kc_sys_t *kc_sys)
 int
 b3_kbman_add_kc_director(b3_kbman_t *kbman, b3_kc_director_t *kc_director)
 {
-	array_add(kbman->kc_director_arr, kc_director);
+	kbman->kc_director_arr_len++;
+	kbman->kc_director_arr = realloc(kbman->kc_director_arr,
+									 sizeof(b3_kc_director_t **) * kbman->kc_director_arr_len);
+	kbman->kc_director_arr[kbman->kc_director_arr_len - 1] = kc_director;
 	return 0;
 }
 
 int
 b3_kbman_exec(b3_kbman_t *kbman, wbk_b_t *b)
 {
-	int ret;
+	int error;
 
-	ret = -1;
+	error = -1;
 
-//	if (ret) {
-//		ret = wbk_kbman_exec(kbman->kbman, b);
-//	}
-
-	if (ret) {
-		ret = b3_kbman_exec_kc_director(kbman, b);
+	if (error) {
+		error = b3_kbman_exec_kc_director(kbman, b);
 	}
 
-	return ret;
+	if (error) {
+		error = wbk_kbman_exec(kbman->kbman, b);
+	}
+
+	return error;
 }
 
 int
 b3_kbman_exec_kc_director(b3_kbman_t *kbman, wbk_b_t *b)
 {
-	int ret;
-	char found;
-	ArrayIter kb_iter;
-	b3_kc_director_t *kc_director;
+	int error;
+	int i;
+	int found_at;
 	HANDLE thread_handler;
 
-	ret = -1;
+	error = -1;
 
-	found = 0;
-	array_iter_init(&kb_iter, b3_kbman_get_kb(kbman));
-	while (!found && array_iter_next(&kb_iter, (void *) &kc_director) != CC_ITER_END) {
-		if (wbk_b_compare(b3_kc_director_get_binding(kc_director), b) == 0) {
-			found = 1;
+	found_at = -1;
+	for (i = 0; found_at < 0 && i < kbman->kc_director_arr_len; i++) {
+		if (wbk_b_compare(b3_kc_director_get_binding(kbman->kc_director_arr[i]), b) == 0) {
+			found_at = i;
 		}
 	}
 
-	if (found) {
+	if (found_at >= 0) {
 		thread_handler = CreateThread(NULL,
 						 0,
 						 b3_kbman_kc_director_exec_threaded,
-						 kc_director,
+						 kbman->kc_director_arr[found_at],
 						 0,
 						 NULL);
-		ret = 0;
+		error = 0;
 	}
 
-	return ret;
+	return error;
 }
 
 DWORD WINAPI

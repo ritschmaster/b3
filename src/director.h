@@ -77,10 +77,16 @@ b3_director_refresh(b3_director_t *director);
 
 /**
   * @brief Gets the monitors of the director
-  * @return The monitors of the director, as array of b3_monitor_t *.
+  * @return The monitors of the director, as array of b3_monitor_t *.  Do not free it!
   */
 extern Array *
 b3_director_get_monitor_arr(b3_director_t *director);
+
+/**
+ * @return The focused monitor. Do not free it!
+ */
+extern b3_monitor_t *
+b3_director_get_focused_monitor(b3_director_t *director);
 
 extern int
 b3_director_set_focused_monitor(b3_director_t *director, const char *monitor_name);
@@ -169,6 +175,6 @@ b3_director_draw(b3_director_t *director, HWND window_handler);
  * @brief Set the foreground window
  */
 extern int
-b3_director_w32_set_active_window(HWND window_handler);
+b3_director_w32_set_active_window(HWND window_handler, char generate_lag);
 
 #endif // B3_DIRECTOR_H

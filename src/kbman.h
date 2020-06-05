@@ -33,9 +33,7 @@
 
 #include <wbkbase/ikbman.h>
 #include <wbkbase/kc_sys.h>
-#include <collectc/array.h>
 #include <windows.h>
-#include <pthread.h>
 
 #include "kc_director.h"
 
@@ -43,12 +41,9 @@ typedef struct b3_kbman_s
 {
 	wbk_kbman_t *kbman;
 
-	/**
-	 * Array of b3_kc_director_t *
-	 */
-	Array *kc_director_arr;
+	int kc_director_arr_len;
 
-	pthread_t thread;
+	b3_kc_director_t **kc_director_arr;
 
 	char stop;
 } b3_kbman_t;
@@ -60,13 +55,6 @@ b3_kbman_new();
 
 extern b3_kbman_t *
 b3_kbman_free(b3_kbman_t *kbman);
-
-/**
- * @brief Gets the key bindings of a key binding manager
- * @return Array of wbk_kc_sys *
- */
-extern Array *
-b3_kbman_get_kb(b3_kbman_t* kbman);
 
 /**
  * @param kb The key binding to add. The added key binding will be freed by the key binding manager

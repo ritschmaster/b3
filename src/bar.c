@@ -29,7 +29,6 @@
 #include <collectc/hashtable.h>
 #include <collectc/array.h>
 #include <windows.h>
-#include <pthread.h>
 #include <wbkbase/logger.h>
 
 #include "ws.h"

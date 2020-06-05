@@ -30,7 +30,6 @@
 #include <wbkbase/logger.h>
 #include <windows.h>
 #include <collectc/hashtable.h>
-#include <pthread.h>
 
 static wbk_logger_t logger =  { "win_watcher" };
 
@@ -130,13 +129,12 @@ b3_win_watcher_start(b3_win_watcher_t *win_watcher)
 	}
 
 	if (!error) {
-				/**
+		/**
 		 * Hack to automatically retrieve the currently active window
 		 */
 		HWND foreground_window = GetForegroundWindow();
 		ShowWindow(foreground_window, SW_MINIMIZE);
-		b3_director_w32_set_active_window(foreground_window);
-
+		b3_director_w32_set_active_window(foreground_window, 1);
 	}
 
 	return 0;

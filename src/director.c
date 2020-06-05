@@ -184,6 +184,12 @@ b3_director_get_monitor_by_monitor_name(b3_director_t *director, const char *mon
 	return monitor;
 }
 
+b3_monitor_t *
+b3_director_get_focused_monitor(b3_director_t *director)
+{
+	return director->focused_monitor;
+}
+
 int
 b3_director_set_focused_monitor(b3_director_t *director, const char *monitor_name)
 {
@@ -248,7 +254,7 @@ b3_director_switch_to_ws(b3_director_t *director, const char *ws_id)
     wbk_logger_log(&logger, INFO, "Switching to workspace %s.\n", ws_id);
     if (focused_win) {
     	wbk_logger_log(&logger, DEBUG, "Restoring focused window\n");
-    	b3_director_w32_set_active_window(b3_win_get_window_handler(focused_win));
+    	b3_director_w32_set_active_window(b3_win_get_window_handler(focused_win), 0);
     }
 
     b3_director_repaint_all();
@@ -428,18 +434,28 @@ b3_director_move_active_win_to_ws(b3_director_t *director, const char *ws_id)
     if (ws) {
     	active_win = b3_monitor_get_focused_win(director->focused_monitor);
     	if (b3_director_remove_win(director, active_win) == 0) {
+			wbk_logger_log(&logger, INFO, "Moving window to workspace %s\n", ws_id);
+
 			b3_ws_add_win(ws, active_win);
 
-			wbk_logger_log(&logger, INFO, "Moved window to %s\n", ws_id);
+			active_win = b3_monitor_get_focused_win(b3_director_get_focused_monitor(director));
 
 			b3_director_arrange_wins(director);
+
+			if (active_win) {
+				/**
+				 * active_win might be NULL if the last window was moved from
+				 * the current workspace.
+				 */
+				b3_director_w32_set_active_window(b3_win_get_window_handler(active_win), 1);
+			}
 
 			ret = 0;
     	}
     }
 
     if (ret) {
-    	wbk_logger_log(&logger, INFO, "Unable to move window to %s\n", ws_id);
+    	wbk_logger_log(&logger, WARNING, "Moving window to workspace %s - failed\n", ws_id);
     }
 
     b3_director_repaint_all();
@@ -477,10 +493,9 @@ b3_director_set_active_win_by_direction(b3_director_t *director, b3_ws_move_dire
 	win = b3_ws_get_win(b3_monitor_get_focused_ws(director->focused_monitor),
 		  			    direction);
 	if (win) {
-		wbk_logger_log(&logger, SEVERE, "activating window: %d", win);
     	b3_ws_set_focused_win(b3_monitor_get_focused_ws(director->focused_monitor),
     						  win);
-		b3_director_w32_set_active_window(b3_win_get_window_handler(win));
+		b3_director_w32_set_active_window(b3_win_get_window_handler(win), 1);
 	}
 
 	ReleaseMutex(director->global_mutex);
@@ -551,9 +566,8 @@ b3_director_draw(b3_director_t *director, HWND window_handler)
 }
 
 int
-b3_director_w32_set_active_window(HWND window_handler)
+b3_director_w32_set_active_window(HWND window_handler, char generate_lag)
 {
-	HWND current_active;
 	int error;
 	int i;
 	DWORD this_tid;
@@ -569,8 +583,21 @@ b3_director_w32_set_active_window(HWND window_handler)
 		AllowSetForegroundWindow(ASFW_ANY);
 	}
 
-	SetActiveWindow(window_handler);
-	SetFocus(window_handler);
+	/**
+	 * For some reason the WIN32 API needs to be spammed to actually update
+	 * the focus.
+	 */
+	int upper;
+	upper = 10;
+	if (generate_lag) {
+		upper = 10000;
+	}
+	for (i = 0; i < upper; i++) {
+		SetForegroundWindow(window_handler);
+		SetActiveWindow(window_handler);
+		SetFocus(window_handler);
+		Sleep(0.5);
+	}
 
 	if(this_tid != foreground_tid) {
 		AttachThreadInput(this_tid, foreground_tid, FALSE);

@@ -31,7 +31,6 @@
 #include "kc_director.h"
 
 #include <wbkbase/logger.h>
-#include <pthread.h>
 
 static wbk_logger_t logger =  { "kc_director" };
 

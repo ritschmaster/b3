@@ -104,7 +104,7 @@ b3_winman_get_next_window(b3_winman_t *winman) {
 		win_arr = b3_winman_get_win_arr(winman);
 
 		if (array_size(win_arr) >= 1) {
-			array_get_at(win_arr, 1, (void *) &next);
+			array_get_at(win_arr, 0, (void *) &next);
 		}
 	} else {
 		next = b3_winman_get_next_window(winman);
