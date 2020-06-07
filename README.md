@@ -1,14 +1,19 @@
+# b3
+
+[![Join the chat at https://gitter.im/b3wm/community](https://badges.gitter.im/b3wm/community.svg)](https://gitter.im/b3wm/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 __b__(aeck's implementation of i) __3__ (for windows)
 
-# Dependencies
+
+## Compiling
+
+### Dependencies
 
 * [MinGW](http://mingw.org/)
 * [Collections-C](https://github.com/srdja/Collections-C)
 * [w32bindkeys](https://github.com/ritschmaster/w32bindkeys)
 
-# Compiling
-
-# On Windows using Msys2
+### On Windows using Msys2
 
 You will need a functioning MinGW environment. This sections describes the compilation using [Msys2](https://www.msys2.org/).
 
@@ -37,7 +42,7 @@ Afterwards you may install b3 - depending on your MinGW environment - by perform
 
     make install
 
-## On Fedora Linux (64 bit)
+### On Fedora Linux (64 bit)
 
 First install MinGW:
 
@@ -62,5 +67,29 @@ Then compile b3:
     mingw64-configure
     make
 
+## Using b3
 
+### Using precompiled releases
 
+1. Head over to the [Release](https://github.com/ritschmaster/b3/releases) page and download the latest zip file.
+2. Decompress it somwhere
+3. Execute `b3.exe`
+
+## Version scheme
+
+The version scheme of w32bindkeys is as follows: 1.2.3
+
+1. Stages:
+ 0. Alpha
+ 1. Beta
+ 2. For Production use
+2. Releases breaking compatibility of its API or the configuration file.
+3. Collection of changes not breaking any compatibility.
+
+## Author
+
+Richard Bäck <richard.baeck@mailbox.org>
+
+## License
+
+MIT License
