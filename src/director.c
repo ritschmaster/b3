@@ -325,19 +325,19 @@ b3_director_arrange_wins(b3_director_t *director)
 {
 	ArrayIter iter;
 	b3_monitor_t *monitor;
-	int ret;
+	int error;
 
 	WaitForSingleObject(director->global_mutex, INFINITE);
 
-	ret = 1;
+	error = 0;
 	array_iter_init(&iter, director->monitor_arr);
-    while (ret && array_iter_next(&iter, (void*) &monitor) != CC_ITER_END) {
-		b3_monitor_arrange_wins(director->focused_monitor);
+    while (!error && array_iter_next(&iter, (void*) &monitor) != CC_ITER_END) {
+		error = b3_monitor_arrange_wins(monitor);
     }
 
     ReleaseMutex(director->global_mutex);
 
-	return 0;
+	return error;
 }
 
 int
