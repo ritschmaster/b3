@@ -592,7 +592,7 @@ b3_director_w32_set_active_window(HWND window_handler, char generate_lag)
 	if (generate_lag) {
 		upper = 10000;
 	}
-	for (i = 0; i < upper; i++) {
+	for (i = 0; i < upper && GetActiveWindow() != window_handler; i++) {
 		SetForegroundWindow(window_handler);
 		SetActiveWindow(window_handler);
 		SetFocus(window_handler);
