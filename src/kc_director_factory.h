@@ -176,4 +176,14 @@ b3_kc_director_factory_create_tawf(b3_kc_director_factory_t *kc_director_factory
 								   wbk_b_t *comb,
 								   b3_director_t *director);
 
+/**
+ * @return A new key binding director command of the type CLOSE_ACTIVE_WINDOW.
+ * Free it by yourself!
+ */
+extern b3_kc_director_t *
+b3_kc_director_factory_create_caw(b3_kc_director_factory_t *kc_director_factory,
+								  wbk_b_t *comb,
+								  b3_director_t *director);
+
+
 #endif // B3_KC_DIRECTOR_FACTORY_H

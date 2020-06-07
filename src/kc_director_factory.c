@@ -238,3 +238,15 @@ b3_kc_director_factory_create_tawf(b3_kc_director_factory_t *kc_director_factory
 
 }
 
+b3_kc_director_t *
+b3_kc_director_factory_create_caw(b3_kc_director_factory_t *kc_director_factory,
+								  wbk_b_t *comb,
+								  b3_director_t *director)
+{
+	b3_kc_director_t *caw;
+
+	caw = b3_kc_director_new(comb, director, CLOSE_ACTIVE_WINDOW, NULL);
+
+	return caw;
+
+}

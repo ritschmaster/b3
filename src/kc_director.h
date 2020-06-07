@@ -49,7 +49,8 @@ typedef enum b3_kc_director_kind_e
 	SET_ACTIVE_WINDOW_DOWN,
 	SET_ACTIVE_WINDOW_LEFT,
 	SET_ACTIVE_WINDOW_RIGHT,
-	TOGGLE_ACTIVE_WINDOW_FULLSCREEN
+	TOGGLE_ACTIVE_WINDOW_FULLSCREEN,
+	CLOSE_ACTIVE_WINDOW
 } b3_kc_director_kind_t;
 
 typedef struct b3_kc_director_s

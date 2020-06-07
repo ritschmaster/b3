@@ -247,7 +247,7 @@ b3_director_switch_to_ws(b3_director_t *director, const char *ws_id)
     	wbk_logger_log(&logger, INFO, "Switching to monitor %s.\n", b3_monitor_get_monitor_name(monitor));
     }
 	b3_monitor_set_focused_ws(director->focused_monitor, ws_id);
-	focused_win = b3_ws_get_focused_win(b3_monitor_get_focused_ws(director->focused_monitor));
+	focused_win = b3_ws_get_focused_win(b3_monitor_get_focused_ws(b3_director_get_focused_monitor(director)));
 
     b3_director_arrange_wins(director);
 
@@ -562,6 +562,14 @@ b3_director_draw(b3_director_t *director, HWND window_handler)
 
 	ReleaseMutex(director->global_mutex);
 
+	return 0;
+}
+
+int
+b3_director_close_active_win(b3_director_t *director)
+{
+	SendMessage(b3_win_get_window_handler(b3_ws_get_focused_win(b3_monitor_get_focused_ws(b3_director_get_focused_monitor(director)))),
+				WM_CLOSE, (WPARAM) NULL, (LPARAM) NULL);
 	return 0;
 }
 

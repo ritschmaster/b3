@@ -169,6 +169,9 @@ b3_director_show(b3_director_t *director);
 extern int
 b3_director_draw(b3_director_t *director, HWND window_handler);
 
+extern int
+b3_director_close_active_win(b3_director_t *director);
+
 /**
  * @brief Set the foreground window
  */
