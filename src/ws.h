@@ -155,7 +155,9 @@ extern int
 b3_ws_set_focused_win(b3_ws_t *ws, const b3_win_t *win);
 
 /**
- * @return 0 if the moving was successful. Non-0 otherwise.
+ * @return 0 if the moving was successful. Non-0 otherwise:
+ * - 1 - Critical error indicating that the workspace is corrupted
+ * - 2 - End of workspace in the selected direction was reached
  */
 extern int
 b3_ws_move_active_win(b3_ws_t *ws, b3_ws_move_direction_t direction);

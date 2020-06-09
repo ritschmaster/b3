@@ -27,6 +27,7 @@
 #include <string.h>
 #include <wbkbase/logger.h>
 #include <windows.h>
+#include <collectc/stack.h>
 
 #include "win.h"
 
@@ -47,6 +48,11 @@ static const b3_win_t *g_set_focused_win_win;
 static b3_win_t *g_set_focused_win_found;
 
 static HANDLE g_arrange_wins_mutex = NULL;
+
+/**
+ * Stack of RECT
+ */
+static Stack *g_arrange_wins_stack;
 static RECT g_arrange_wins_monitor_area;
 
 static void
@@ -58,14 +64,30 @@ b3_ws_winman_first_leaf(b3_winman_t *winman);
 static void
 b3_ws_winman_active_win_toggle_floating_visitor(b3_winman_t *winman);
 
+/**
+ * @param area_ stack Stack of RECT *
+ */
 static void
-b3_ws_winman_arrange_visitor(b3_winman_t *winman);
+b3_ws_winman_arrange(b3_ws_t *ws, b3_winman_t *winman, Stack *area_stack);
 
 static void
 b3_ws_winman_minimize_visitor(b3_winman_t *winman);
 
 static void
 b3_ws_winman_set_focused_win_visitor(b3_winman_t *winman);
+
+
+static int
+b3_ws_move_active_win_up_down(b3_winman_t *start,
+							  b3_winman_t *winman_of_focused_win,
+							  b3_win_t *focused_win,
+							  b3_ws_move_direction_t direction);
+
+static int
+b3_ws_move_active_win_left_right(b3_winman_t *start,
+						 	     b3_winman_t *winman_of_focused_win,
+					             b3_win_t *focused_win,
+						         b3_ws_move_direction_t direction);
 
 b3_ws_t *
 b3_ws_new(const char *name)
@@ -185,7 +207,7 @@ b3_ws_contains_win(b3_ws_t *ws, const b3_win_t *win)
 	found_win = NULL;
 	winman = b3_winman_contains_win(ws->winman, win);
 	if (winman) {
-		found_win = b3_winman_contains_win_leaf(ws->winman, win);
+		found_win = b3_winman_contains_win_leaf(winman, win);
 	}
 
 	return found_win;
@@ -211,11 +233,20 @@ b3_ws_active_win_toggle_floating(b3_ws_t *ws, const b3_win_t *win)
 int
 b3_ws_arrange_wins(b3_ws_t *ws, RECT monitor_area)
 {
+	/**
+	 * Stack of RECT *
+	 */
+	Stack *area_stack;
 
 	WaitForSingleObject(g_arrange_wins_mutex, INFINITE);
 
-	g_arrange_wins_monitor_area = monitor_area;
-	b3_winman_traverse(ws->winman, b3_ws_winman_arrange_visitor);
+	stack_new(&area_stack);
+	stack_push(area_stack, (void *) &monitor_area);
+
+	b3_ws_winman_arrange(ws, ws->winman, area_stack);
+
+	stack_pop(area_stack, (void *) NULL);
+	stack_destroy(area_stack);
 
 	ReleaseMutex(g_arrange_wins_mutex);
 
@@ -296,39 +327,46 @@ int
 b3_ws_move_active_win(b3_ws_t *ws, b3_ws_move_direction_t direction)
 {
 	int error;
-	b3_winman_t *winman;
-	b3_win_t *win;
-	int i;
-	int length;
-	int pos;
+	b3_winman_t *winman_of_focused_win;
 
 	error = 1;
-	winman = b3_winman_contains_win(ws->winman, ws->focused_win);
-	if (winman) {
-		if ((ws->mode == DEFAULT || ws->mode == TABBED)
-			 && (direction == LEFT || direction == RIGHT)) {
-			pos = -1;
-			length = array_size(b3_winman_get_win_arr(winman));
-			for (i = 0; pos < 0 && i < length; i++) {
-				array_get_at(b3_winman_get_win_arr(winman), i, (void *) &win);
-				if (b3_win_compare(win, ws->focused_win) == 0) {
-					pos = i;
-				}
+	winman_of_focused_win = b3_winman_contains_win(ws->winman, b3_ws_get_focused_win(ws));
+	if (winman_of_focused_win) {
+		error = 2;
+		switch (b3_ws_get_mode(ws)) {
+		case DEFAULT:
+		case TABBED:
+			error = b3_ws_move_active_win_up_down(ws->winman,
+												  winman_of_focused_win,
+												  b3_ws_get_focused_win(ws),
+												  direction);
+			if (error) {
+				error = b3_ws_move_active_win_left_right(ws->winman,
+														 winman_of_focused_win,
+														 b3_ws_get_focused_win(ws),
+														 direction);
 			}
+			break;
 
-			if ((direction == LEFT && pos > 0)
-				|| (direction == RIGHT && pos < length - 1)) {
-				array_remove_at(b3_winman_get_win_arr(winman), pos, NULL);
-				if (direction == LEFT) {
-					pos--;
-					wbk_logger_log(&logger, INFO, "Moved window left\n");
-				} else {
-					pos++;
-					wbk_logger_log(&logger, INFO, "Moved window right\n");
-				}
-				array_add_at(b3_winman_get_win_arr(winman), win, pos);
-			}
+		default:
+			wbk_logger_log(&logger, WARNING, "Mode of workspace does not support moving the focused window\n");
 		}
+	} else {
+		wbk_logger_log(&logger, SEVERE, "Could not find focused window\n");
+	}
+
+	if (!error) {
+		if (direction == LEFT) {
+			wbk_logger_log(&logger, INFO, "Moved window left\n");
+		} else if (direction == UP) {
+			wbk_logger_log(&logger, INFO, "Moved window up\n");
+		} else if (direction == RIGHT) {
+			wbk_logger_log(&logger, INFO, "Moved window right\n");
+		} else if (direction == DOWN) {
+			wbk_logger_log(&logger, INFO, "Moved window down\n");
+		}
+	} else {
+		wbk_logger_log(&logger, INFO, "Moving window failed\n");
 	}
 
 	return error;
@@ -413,16 +451,27 @@ b3_ws_winman_active_win_toggle_floating_visitor(b3_winman_t *winman)
 }
 
 void
-b3_ws_winman_arrange_visitor(b3_winman_t *winman)
+b3_ws_winman_arrange(b3_ws_t *ws, b3_winman_t *winman, Stack *area_stack)
 {
-	ArrayIter iter;
-	b3_win_t *win_iter;
+	RECT *my_area;
+	RECT *next_area;
 	int length;
-	int split_size;
-	int width;
-	int height;
+	int increment;
+	ArrayIter iter;
+	b3_winman_t *winman_iter;
+	b3_win_t *win_iter;
 
-	if (winman->type == LEAF) {
+	stack_peek(area_stack, (void *) &my_area);
+	next_area = malloc(sizeof(RECT));
+	next_area->top = my_area->top;
+	next_area->left = my_area->left;
+	next_area->bottom = my_area->bottom;
+	next_area->right = my_area->right;
+	stack_push(area_stack, (void *) next_area);
+
+	if (b3_winman_get_type(winman) == INNER_NODE) {
+		length = array_size(b3_winman_get_winman_arr(winman));
+	} else if (b3_winman_get_type(winman) == LEAF) {
 		length = 0;
 		array_iter_init(&iter, b3_winman_get_win_arr(winman));
 		while (array_iter_next(&iter, (void*) &win_iter) != CC_ITER_END) {
@@ -430,32 +479,87 @@ b3_ws_winman_arrange_visitor(b3_winman_t *winman)
 				length++;
 			}
 		}
-		if (length) {
-			split_size =  g_arrange_wins_monitor_area.right - g_arrange_wins_monitor_area.left;
-			split_size /= length;
+	}
 
-			width = g_arrange_wins_monitor_area.left;
-			height = g_arrange_wins_monitor_area.bottom - g_arrange_wins_monitor_area.top;
+	if (length > 0) {
+		if (b3_winman_get_mode(winman) == HORIZONTAL) {
+			increment = (my_area->right - my_area->left) / length;
+		} else if (b3_winman_get_mode(winman) == VERTICAL) {
+			increment = (my_area->bottom - my_area->top) / length;
+		} else {
+			wbk_logger_log(&logger, SEVERE, "Workspace %s - Unsupported window manager mode: %d",
+						   b3_ws_get_name(ws),
+						   b3_winman_get_mode(winman));
+		}
 
-			array_iter_init(&iter, b3_winman_get_win_arr(winman));
-			while (array_iter_next(&iter, (void*) &win_iter) != CC_ITER_END) {
-				if (!b3_win_get_floating(win_iter)) {
-					ShowWindow(win_iter->window_handler, SW_SHOWNOACTIVATE);
-					SetWindowPos(win_iter->window_handler, HWND_TOP,
-								 width, g_arrange_wins_monitor_area.top,
-								 split_size, height, SWP_NOACTIVATE);
-					width += split_size;
-				}
+		wbk_logger_log(&logger, DEBUG, "Workspace %s - Arranging %d wins/winmans as type %d and with mode %d\n",
+					   b3_ws_get_name(ws),
+					   length,
+					   b3_winman_get_type(winman),
+					   b3_winman_get_mode(winman));
+
+		array_iter_init(&iter, b3_winman_get_winman_arr(winman));
+		while (array_iter_next(&iter, (void*) &winman_iter) != CC_ITER_END) {
+			if (b3_winman_get_mode(winman) == HORIZONTAL) {
+				next_area->right = next_area->left + increment;
+				b3_ws_winman_arrange(ws, winman_iter, area_stack);
+				next_area->left += increment;
+			} else if (b3_winman_get_mode(winman) == VERTICAL) {
+				next_area->bottom = next_area->top + increment;
+				b3_ws_winman_arrange(ws, winman_iter, area_stack);
+				next_area->top += increment;
 			}
+		}
 
-			array_iter_init(&iter, b3_winman_get_win_arr(winman));
-			while (array_iter_next(&iter, (void*) &win_iter) != CC_ITER_END) {
-				if (b3_win_get_floating(win_iter)) {
-					b3_win_show(win_iter);
+		array_iter_init(&iter, b3_winman_get_win_arr(winman));
+		while (array_iter_next(&iter, (void*) &win_iter) != CC_ITER_END) {
+			if (!b3_win_get_floating(win_iter)) {
+				if (b3_winman_get_mode(winman) == HORIZONTAL) {
+					wbk_logger_log(&logger, DEBUG,
+								   "Workspace %s - Window placing - X: %d -> %d, Y: %d -> %d\n",
+								   b3_ws_get_name(ws),
+								   next_area->left, increment,
+								   next_area->top, next_area->bottom - next_area->top);
+
+					ShowWindow(b3_win_get_window_handler(win_iter), SW_SHOWNOACTIVATE);
+					SetWindowPos(b3_win_get_window_handler(win_iter),
+								 HWND_TOP,
+								 next_area->left,
+								 next_area->top,
+								 increment,
+								 next_area->bottom - next_area->top,
+								 SWP_NOACTIVATE);
+
+					next_area->left += increment;
+				} else if (b3_winman_get_mode(winman) == VERTICAL) {
+					wbk_logger_log(&logger, DEBUG,
+								   "Workspace %s - Placing Window - X: %d -> %d, Y: %d -> %d\n",
+								   b3_ws_get_name(ws),
+								   next_area->left, next_area->right - next_area->left,
+								   next_area->top, increment);
+
+					ShowWindow(b3_win_get_window_handler(win_iter), SW_SHOWNOACTIVATE);
+					SetWindowPos(b3_win_get_window_handler(win_iter),
+								 HWND_TOP,
+								 next_area->left,
+								 next_area->top,
+								 next_area->right - next_area->left,
+								 increment,
+								 SWP_NOACTIVATE);
+					next_area->top += increment;
 				}
 			}
 		}
+
+		while (array_iter_next(&iter, (void*) &win_iter) != CC_ITER_END) {
+			if (b3_win_get_floating(win_iter)) {
+				b3_win_show(win_iter);
+			}
+		}
 	}
+
+	stack_pop(area_stack, (void *) NULL);
+	free(next_area);
 }
 
 void
@@ -488,3 +592,101 @@ b3_ws_winman_set_focused_win_visitor(b3_winman_t *winman)
 	}
 }
 
+int
+b3_ws_move_active_win_up_down(b3_winman_t *start,
+							  b3_winman_t *winman_of_focused_win,
+							  b3_win_t *focused_win,
+							  b3_ws_move_direction_t direction)
+{
+	int error;
+
+	b3_winman_t *inner_winman;
+	b3_winman_t *leaf_winman;
+	b3_winman_t *new_winman;
+	int i;
+	int length;
+	int delpos;
+	int inspos;
+
+	error = 1;
+	inner_winman = NULL;
+	leaf_winman = NULL;
+	new_winman = NULL;
+
+	if (direction == UP || direction == DOWN) {
+		inner_winman = b3_winman_find_parent_of_winman(start, winman_of_focused_win);
+		if (inner_winman) {
+			inspos = b3_winman_find_parent_of_winman_at(inner_winman, winman_of_focused_win);
+			if (direction == UP) inspos--;
+			if (direction == DOWN) inspos += 2;
+
+			if (inspos >= 0 && inspos <= array_size(b3_winman_get_winman_arr(inner_winman))) {
+				b3_winman_remove_win(start, focused_win);
+				leaf_winman = winman_of_focused_win;
+				new_winman = b3_winman_new(b3_winman_get_mode(leaf_winman));
+				array_add_at(b3_winman_get_winman_arr(inner_winman), new_winman, inspos);
+			}
+		} else {
+			b3_winman_remove_win(start, focused_win);
+			leaf_winman = b3_winman_to_inner_node(winman_of_focused_win);
+			inner_winman = winman_of_focused_win;
+			b3_winman_set_mode(inner_winman, VERTICAL);
+			new_winman = b3_winman_new(HORIZONTAL);
+			b3_winman_add_winman(inner_winman, new_winman);
+		}
+	}
+
+	if (leaf_winman) {
+		array_add(b3_winman_get_win_arr(new_winman), focused_win);
+		b3_winman_reorg(start);
+		error = 0;
+	}
+
+	return error;
+}
+
+int
+b3_ws_move_active_win_left_right(b3_winman_t *start,
+								 b3_winman_t *winman_of_focused_win,
+								 b3_win_t *focused_win,
+								 b3_ws_move_direction_t direction)
+{
+	int error;
+	int i;
+	int length;
+	int delpos;
+	int inspos;
+	b3_win_t *win;
+
+	error = 1;
+
+	if (direction == LEFT || direction == RIGHT) {
+		delpos = -1;
+		length = array_size(b3_winman_get_win_arr(winman_of_focused_win));
+		for (i = 0; delpos < 0 && i < length; i++) {
+			array_get_at(b3_winman_get_win_arr(winman_of_focused_win), i, (void *) &win);
+			if (b3_win_compare(win, focused_win) == 0) {
+				delpos = i;
+			}
+		}
+
+		error = 2;
+		if ((direction == LEFT && delpos > 0)
+			|| (direction == RIGHT && delpos < length - 1)) {
+			array_remove_at(b3_winman_get_win_arr(winman_of_focused_win), delpos, NULL);
+
+			if (direction == LEFT) inspos = delpos - 1;
+			if (direction == RIGHT) inspos = delpos + 1;
+
+			array_add_at(b3_winman_get_win_arr(winman_of_focused_win), win, inspos);
+
+			error = 0;
+		}
+	}
+
+	if (!error) {
+		b3_winman_reorg(start);
+	}
+
+	return error;
+}
