@@ -110,16 +110,11 @@ b3_winman_get_winman_arr(b3_winman_t *winman);
 extern int
 b3_winman_add_winman(b3_winman_t *winman, b3_winman_t *other);
 
+/**
+ * Returns the first window found.
+ */
 extern b3_win_t *
 b3_winman_get_next_window(b3_winman_t *winman);
-
-/**
- * @brief Remove empty window managers within the window manager
- * @return 0 if no node was removed. Otherwise the number of nodes deleted is
- * returned.
- */
-extern int
-b3_winman_remove_empty_nodes(b3_winman_t *winman);
 
 /**
   * @brief Get the windows of the window manager
@@ -200,7 +195,7 @@ b3_winman_find_parent_of_winman(b3_winman_t *winman, const b3_winman_t *other);
  * window manager - if found. -1 otherwise.
  */
 extern int
-b3_winman_find_parent_of_winman_at(b3_winman_t *winman, const b3_winman_t *other);
+b3_winman_find_winman_at(b3_winman_t *winman, const b3_winman_t *other);
 
 /**
  * @brief Traverses a window manager in pre-order.

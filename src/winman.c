@@ -131,38 +131,29 @@ b3_winman_add_winman(b3_winman_t *winman, b3_winman_t *other)
 b3_win_t *
 b3_winman_get_next_window(b3_winman_t *winman) {
 	b3_win_t *next;
-	Array *win_arr;
-
-	next = NULL;
-	if (winman->type == LEAF) {
-		win_arr = b3_winman_get_win_arr(winman);
-
-		if (array_size(win_arr) >= 1) {
-			array_get_at(win_arr, 0, (void *) &next);
-		}
-	} else {
-		next = b3_winman_get_next_window(winman);
-	}
-
-	return next;
-}
-
-int
-b3_winman_remove_empty_nodes(b3_winman_t *winman)
-{
-	int removed;
 	ArrayIter iter;
 	b3_winman_t *winman_iter;
 
-	removed = 0;
-	if (array_size(winman->winman_arr)) {
-		array_iter_init(&iter, winman->win_arr);
-		while (array_iter_next(&iter, (void*) &winman_iter) != CC_ITER_END) {
-			removed += b3_winman_remove_empty_nodes(winman_iter);
+	next = NULL;
+	switch(b3_winman_get_type(winman)) {
+	case LEAF:
+		if (array_size(b3_winman_get_win_arr(winman)) >= 1) {
+			array_get_at(b3_winman_get_win_arr(winman), 0, (void *) &next);
 		}
+		break;
+
+	case INNER_NODE:
+		array_iter_init(&iter, b3_winman_get_winman_arr(winman));
+		while (next == NULL && array_iter_next(&iter, (void*) &winman_iter) != CC_ITER_END) {
+			next = b3_winman_get_next_window(winman_iter);
+		}
+		break;
+
+	default:
+		wbk_logger_log(&logger, SEVERE, "Unsupported window manager type %d\n", b3_winman_get_type(winman));
 	}
 
-	return removed;
+	return next;
 }
 
 Array *
@@ -260,7 +251,7 @@ b3_winman_contains_win(b3_winman_t *winman, const b3_win_t *win)
 		break;
 
 	default:
-		wbk_logger_log(&logger, SEVERE, "Unsupported window manager type\n");
+		wbk_logger_log(&logger, SEVERE, "Unsupported window manager type %d\n", b3_winman_get_type(winman));
 	}
 
 	return container;
@@ -312,7 +303,7 @@ b3_winman_find_parent_of_winman(b3_winman_t *winman, const b3_winman_t *other)
 }
 
 int
-b3_winman_find_parent_of_winman_at(b3_winman_t *winman, const b3_winman_t *other)
+b3_winman_find_winman_at(b3_winman_t *winman, const b3_winman_t *other)
 {
 	ArrayIter iter;
 	b3_winman_t *winman_iter;

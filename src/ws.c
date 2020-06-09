@@ -193,6 +193,8 @@ b3_ws_remove_win(b3_ws_t *ws, const b3_win_t *win)
 		} else {
 			wbk_logger_log(&logger, DEBUG, "Removing window from workspace %s\n", b3_ws_get_name(ws));
 		}
+
+		b3_winman_reorg(ws->winman);
 	}
 
 	return remove_failed;
@@ -375,39 +377,68 @@ b3_ws_move_active_win(b3_ws_t *ws, b3_ws_move_direction_t direction)
 b3_win_t *
 b3_ws_get_win(b3_ws_t *ws, b3_ws_move_direction_t direction)
 {
-	b3_winman_t *winman;
+	b3_winman_t *winman_of_focused_win;
 	ArrayIter iter;
 	b3_win_t *win;
 	int length;
 	int i;
 	int pos;
+	b3_winman_t *parent_winman_of_focused_win;
+	b3_winman_t *neighbour_winman;
 
 	win = NULL;
-	winman = b3_winman_contains_win(ws->winman, ws->focused_win);
-	if (winman) {
-		if ((ws->mode == DEFAULT || ws->mode == TABBED)
-			 && (direction == LEFT || direction == RIGHT)) {
-			pos = -1;
-			length = array_size(b3_winman_get_win_arr(winman));
-			for (i = 0; pos < 0 && i < length; i++) {
-				array_get_at(b3_winman_get_win_arr(winman), i, (void *) &win);
-				if (b3_win_compare(win, ws->focused_win) == 0) {
-					pos = i;
+	winman_of_focused_win = b3_winman_contains_win(ws->winman, b3_ws_get_focused_win(ws));
+	if (winman_of_focused_win) {
+		if (ws->mode == DEFAULT || ws->mode == TABBED) {
+			if (direction == LEFT || direction == RIGHT) {
+				pos = -1;
+				length = array_size(b3_winman_get_win_arr(winman_of_focused_win));
+				for (i = 0; pos < 0 && i < length; i++) {
+					array_get_at(b3_winman_get_win_arr(winman_of_focused_win), i, (void *) &win);
+					if (b3_win_compare(win, b3_ws_get_focused_win(ws)) == 0) {
+						pos = i;
+					}
 				}
-			}
 
-			win = NULL;
+				win = NULL;
 
-			if ((direction == LEFT && pos > 0)
-				|| (direction == RIGHT && pos < length - 1)) {
 				if (direction == LEFT) {
 					pos--;
-					wbk_logger_log(&logger, INFO, "Got window left\n");
-				} else {
+				} else if (direction == RIGHT) {
 					pos++;
-					wbk_logger_log(&logger, INFO, "Got window right\n");
 				}
-				array_get_at(b3_winman_get_win_arr(winman), pos, (void *) &win);
+
+				if (array_get_at(b3_winman_get_win_arr(winman_of_focused_win), pos, (void *) &win) == CC_OK) {
+					if (direction == LEFT) {
+						wbk_logger_log(&logger, INFO, "Focusing window to the left\n");
+					} else if (direction == RIGHT) {
+						wbk_logger_log(&logger, INFO, "Focusing window to the right\n");
+					}
+				}
+			} else if (direction == UP || direction == DOWN) {
+				parent_winman_of_focused_win = b3_winman_find_parent_of_winman(ws->winman, winman_of_focused_win);
+				if (parent_winman_of_focused_win) {
+					pos = b3_winman_find_winman_at(parent_winman_of_focused_win, winman_of_focused_win);
+
+					if (direction == UP) {
+						pos--;
+					} else if (direction == DOWN) {
+						pos++;
+					}
+					if (array_get_at(b3_winman_get_winman_arr(parent_winman_of_focused_win),
+									 pos,
+									 (void *) &neighbour_winman) == CC_OK) {
+						win = b3_winman_get_next_window(neighbour_winman);
+
+						if (direction == UP) {
+							wbk_logger_log(&logger, INFO, "Focusing window to the top\n");
+						} else if (direction == DOWN) {
+							wbk_logger_log(&logger, INFO, "Focusing window to the bottom\n");
+						}
+					}
+				}
+			} else {
+				wbk_logger_log(&logger, SEVERE, "Focusing window failed - unsupported direction %d\n", direction);
 			}
 		}
 	}
@@ -616,7 +647,7 @@ b3_ws_move_active_win_up_down(b3_winman_t *start,
 	if (direction == UP || direction == DOWN) {
 		inner_winman = b3_winman_find_parent_of_winman(start, winman_of_focused_win);
 		if (inner_winman) {
-			inspos = b3_winman_find_parent_of_winman_at(inner_winman, winman_of_focused_win);
+			inspos = b3_winman_find_winman_at(inner_winman, winman_of_focused_win);
 			if (direction == UP) inspos--;
 			if (direction == DOWN) inspos += 2;
 

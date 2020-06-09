@@ -23,7 +23,7 @@
 *******************************************************************************/
 
 /**
- * @author Richard Bï¿½ck
+ * @author Richard Bäck
  * @date 2020-02-16
  * @brief File contains the workspace definition
  */
