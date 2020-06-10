@@ -648,10 +648,27 @@ b3_ws_move_active_win_up_down(b3_winman_t *start,
 		inner_winman = b3_winman_find_parent_of_winman(start, winman_of_focused_win);
 		if (inner_winman) {
 			inspos = b3_winman_find_winman_at(inner_winman, winman_of_focused_win);
-			if (direction == UP) inspos--;
-			if (direction == DOWN) inspos += 2;
+			if (direction == UP) {
+				inspos--;
+			} else if (direction == DOWN) {
+				if (array_size(b3_winman_get_winman_arr(inner_winman)) > 1) {
+					inspos += 2;
+				} else {
+					inspos++;
+				}
+			}
 
-			if (inspos >= 0 && inspos <= array_size(b3_winman_get_winman_arr(inner_winman))) {
+			wbk_logger_log(&logger, DEBUG, ">>inspos %d\n", inspos);
+			if (inspos == 0) {
+				b3_winman_remove_win(start, focused_win);
+				array_get_at(b3_winman_get_winman_arr(inner_winman), inspos, (void *) &leaf_winman);
+				new_winman = leaf_winman;
+			} else if ((inspos > 0 && inspos <= array_size(b3_winman_get_winman_arr(inner_winman)))
+					   || (inspos < 0)) {
+				if (inspos < 0) {
+					inspos = 0;
+				}
+
 				b3_winman_remove_win(start, focused_win);
 				leaf_winman = winman_of_focused_win;
 				new_winman = b3_winman_new(b3_winman_get_mode(leaf_winman));
