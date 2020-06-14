@@ -365,7 +365,11 @@ b3_director_set_active_win(b3_director_t *director, b3_win_t *win)
     if (found) {
     	wbk_logger_log(&logger, DEBUG, "Updating active window\n");
     	b3_ws_set_focused_win(ws, found_win);
-    	b3_director_switch_to_ws(director, ws->name);
+
+    	if (strcmp(b3_ws_get_name(b3_monitor_get_focused_ws(monitor)),
+    			   b3_ws_get_name(ws))) {
+    		b3_director_switch_to_ws(director, ws->name);
+    	}
 		ret = 0;
     } else {
     	wbk_logger_log(&logger, SEVERE, "Failed updating active window: activated window is unknown\n");

@@ -371,6 +371,8 @@ main_loop(HINSTANCE hInstance, int nCmdShow)
 	MSG Msg;
 
 	b3_director_show(g_director);
+	b3_director_switch_to_ws(g_director,
+						     b3_ws_get_name(b3_monitor_get_focused_ws(b3_director_get_focused_monitor(g_director))));
 
 	while(GetMessage(&Msg, NULL, 0, 0) > 0) {
 		TranslateMessage(&Msg);

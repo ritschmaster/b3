@@ -171,15 +171,17 @@ b3_win_watcher_wnd_proc(HWND window_handler, UINT msg, WPARAM wParam, LPARAM lPa
 		    && msg == win_watcher->shellhookid) {
 			switch (wParam & 0x7fff) {
 				case HSHELL_WINDOWCREATED:
-					monitor = MonitorFromWindow((HWND) lParam, MONITOR_DEFAULTTONEAREST);
-					monitor_info.cbSize = sizeof(MONITORINFOEX);
-					GetMonitorInfo(monitor, (LPMONITORINFO) &monitor_info);
+					if (b3_win_watcher_managable_window_handler(win_watcher, (HWND) lParam)) {
+						monitor = MonitorFromWindow((HWND) lParam, MONITOR_DEFAULTTONEAREST);
+						monitor_info.cbSize = sizeof(MONITORINFOEX);
+						GetMonitorInfo(monitor, (LPMONITORINFO) &monitor_info);
 
-					win = b3_win_factory_win_create(win_watcher->win_factory, (HWND) lParam);
-					if (b3_director_add_win(win_watcher->director, monitor_info.szDevice, win)) {
+						win = b3_win_factory_win_create(win_watcher->win_factory, (HWND) lParam);
+						if (b3_director_add_win(win_watcher->director, monitor_info.szDevice, win)) {
+						}
+
+						DeleteObject(monitor);
 					}
-
-					DeleteObject(monitor);
 					break;
 
 				case HSHELL_WINDOWDESTROYED:
@@ -190,8 +192,10 @@ b3_win_watcher_wnd_proc(HWND window_handler, UINT msg, WPARAM wParam, LPARAM lPa
 					break;
 
 				case HSHELL_WINDOWACTIVATED:
-					win = b3_win_factory_win_create(win_watcher->win_factory, (HWND) lParam);
-					if (b3_director_set_active_win(win_watcher->director, win) == 0) {
+					if (b3_win_watcher_managable_window_handler(win_watcher, (HWND) lParam)) {
+						win = b3_win_factory_win_create(win_watcher->win_factory, (HWND) lParam);
+						if (b3_director_set_active_win(win_watcher->director, win) == 0) {
+						}
 					}
 					break;
 			}
@@ -264,7 +268,14 @@ b3_win_watcher_managable_window_handler(b3_win_watcher_t *win_watcher, HWND wind
 		GetWindowText(win_watcher->window_handler, iter_title, B3_WIN_WATCHER_BUFFER_LENGTH);
 
 	    if (ret
+			/**
+			 * Not the win_watcher himself!
+			 */
 	    	&& strcmp(title, iter_title)
+
+	    	/**
+	    	 * All Windows related
+	    	 */
 	    	&& strcmp(classname, "Windows.UI.Core.CoreWindow")
 	        && strcmp(title, "Windows Shell Experience Host")
 	        && strcmp(title, "Microsoft Text Input Application")
@@ -285,7 +296,11 @@ b3_win_watcher_managable_window_handler(b3_win_watcher_t *win_watcher, HWND wind
 	        && strcmp(classname, "Scrollbar")
 	        && strcmp(classname, "Progman")
 	        && strcmp(classname, "TaskManagerWindow")
-	        && strcmp(classname, "ApplicationFrameWindow") // TODO correct?
+	        && strcmp(classname, "ApplicationFrameWindow")
+
+			/**
+			 * General window stuff
+			 */
 		    && IsWindow(window_handler)
 			&& IsWindowVisible(window_handler)
 			&& (!parent || parent_managable)
@@ -295,11 +310,16 @@ b3_win_watcher_managable_window_handler(b3_win_watcher_t *win_watcher, HWND wind
 
 			GetWindowRect(window_handler, &rect);
 
-			if ( (((exstyle & WS_EX_TOOLWINDOW) == 0) && (window_owner == 0))
-					 || ((exstyle & WS_EX_APPWINDOW) && (window_owner != 0))) {
+
+			if (((((exstyle & WS_EX_TOOLWINDOW) == 0) && window_owner == 0)
+				  || ((exstyle & WS_EX_APPWINDOW) && window_owner != 0))
+				&& (((exstyle & WS_EX_NOACTIVATE) == 0) && window_owner == 0)) {
+				wbk_logger_log(&logger, DEBUG, "Managable - title: %s, classname: %s\n", title, classname);
 				return 1;
 			}
 		}
+
+		wbk_logger_log(&logger, DEBUG, "Not managable - title: %s, classname: %s\n", title, classname);
 	}
 
 	return 0;
