@@ -1,9 +1,34 @@
 # b3
 
+![GitHub](https://img.shields.io/github/license/ritschmaster/b3)
 [![Join the chat at https://gitter.im/b3wm/community](https://badges.gitter.im/b3wm/community.svg)](https://gitter.im/b3wm/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+![GitHub All Releases](https://img.shields.io/github/downloads/ritschmaster/b3/total)
 
-__b__(aeck's implementation of i) __3__ (for windows)
+__b__(aeck's implementation of i) __3__ (for Windows)
 
+## Using b3
+
+### Using binary releases
+
+1. Head over to the [Release](https://github.com/ritschmaster/b3/releases) page and download the latest binary zip file.
+2. Decompress it somwhere
+3. Execute `b3.exe`
+
+### Using source code releases
+
+1. Head over to the [Release](https://github.com/ritschmaster/b3/releases) page and download the latest source zip file.
+2. Decompress it somwhere
+3. See [Compiling](#Compiling)
+4. Execute `b3.exe`
+
+## Remarks on Windows integration
+
+* Your default Windows expierence stays the same. b3 lives within the Microsoft
+  default Explorer shell and just adds functionalities you know and love of i3.
+* <kbd>Alt</kbd> + <kbd>Tab</kbd> is still avialable
+* Switching between windows in the plain Windows way will be automatically
+  recognized by b3 (e.g. switch to workspace of that window).
+* The Windows 10 desktop are still available but useless when b3 is running.
 
 ## Compiling
 
@@ -66,14 +91,6 @@ Then compile b3:
 
     mingw64-configure
     make
-
-## Using b3
-
-### Using precompiled releases
-
-1. Head over to the [Release](https://github.com/ritschmaster/b3/releases) page and download the latest zip file.
-2. Decompress it somwhere
-3. Execute `b3.exe`
 
 ## Version scheme
 
