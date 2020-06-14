@@ -40,6 +40,9 @@
 
 static wbk_logger_t logger = { "wsman" };
 
+static int
+b3_wsman_ws_comparator(void const *e1, void const *e2);
+
 b3_wsman_t *
 b3_wsman_new(b3_ws_factory_t *ws_factory)
 {
@@ -89,6 +92,7 @@ b3_wsman_add(b3_wsman_t *wsman, const char *ws_id)
     if (!found) {
     	ws = b3_ws_factory_create(wsman->ws_factory, ws_id);
     	array_add(b3_wsman_get_ws_arr(wsman), ws);
+    	array_sort(b3_wsman_get_ws_arr(wsman), b3_wsman_ws_comparator);
     }
 
 	return ws;
@@ -219,4 +223,13 @@ Array *
 b3_wsman_get_ws_arr(b3_wsman_t *wsman)
 {
 	return wsman->ws_arr;
+}
+
+int
+b3_wsman_ws_comparator(void const *e1, void const *e2)
+{
+    b3_ws_t *a = *((b3_ws_t **) e1);
+    b3_ws_t *b = *((b3_ws_t **) e2);
+
+    return strcmp(b3_ws_get_name(a), b3_ws_get_name(b));
 }
