@@ -422,42 +422,46 @@ b3_director_move_active_win_to_ws(b3_director_t *director, const char *ws_id)
 
 	WaitForSingleObject(director->global_mutex, INFINITE);
 
-	/** Find the correct monitor to add */
-	found = 0;
-	array_iter_init(&iter, director->monitor_arr);
-    while (!found && array_iter_next(&iter, (void*) &monitor) != CC_ITER_END) {
-    	ws = b3_monitor_contains_ws(monitor, ws_id);
-		if (ws) {
-			found = 1;
-		}
-    }
-
-    if (!found) {
-    	ws = b3_wsman_add(b3_monitor_get_wsman(director->focused_monitor), ws_id);
-    }
-
-    ret = 1;
-    if (ws) {
-    	active_win = b3_monitor_get_focused_win(director->focused_monitor);
-    	if (b3_director_remove_win(director, active_win) == 0) {
-			wbk_logger_log(&logger, INFO, "Moving window to workspace %s\n", ws_id);
-
-			b3_ws_add_win(ws, active_win);
-
-			active_win = b3_monitor_get_focused_win(b3_director_get_focused_monitor(director));
-
-			b3_director_arrange_wins(director);
-
-			if (active_win) {
-				/**
-				 * active_win might be NULL if the last window was moved from
-				 * the current workspace.
-				 */
-				b3_director_w32_set_active_window(b3_win_get_window_handler(active_win), 1);
+	active_win = b3_monitor_get_focused_win(director->focused_monitor);
+    if (active_win) {
+		/** Find the correct monitor to add */
+		found = 0;
+		array_iter_init(&iter, director->monitor_arr);
+		while (!found && array_iter_next(&iter, (void*) &monitor) != CC_ITER_END) {
+			ws = b3_monitor_contains_ws(monitor, ws_id);
+			if (ws) {
+				found = 1;
 			}
+		}
 
-			ret = 0;
+		if (!found) {
+			ws = b3_wsman_add(b3_monitor_get_wsman(director->focused_monitor), ws_id);
+		}
+
+		ret = 1;
+		if (ws) {
+			if (b3_director_remove_win(director, active_win) == 0) {
+				wbk_logger_log(&logger, INFO, "Moving window to workspace %s\n", ws_id);
+
+				b3_ws_add_win(ws, active_win);
+
+				active_win = b3_monitor_get_focused_win(b3_director_get_focused_monitor(director));
+
+				b3_director_arrange_wins(director);
+
+				if (active_win) {
+					/**
+					 * active_win might be NULL if the last window was moved from
+					 * the current workspace.
+					 */
+					b3_director_w32_set_active_window(b3_win_get_window_handler(active_win), 1);
+				}
+
+				ret = 0;
+			}
     	}
+    } else {
+    	ret = 0;
     }
 
     if (ret) {
