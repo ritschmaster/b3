@@ -137,14 +137,16 @@ b3_director_enum_monitors(HMONITOR wmonitor, HDC hdc, LPRECT rect, LPARAM data)
     monitor_info.cbSize = sizeof(MONITORINFOEX);
     GetMonitorInfo(wmonitor, (LPMONITORINFO) &monitor_info);
 
-    wbk_logger_log(&logger, INFO, "Found monitor: %s - %dx%d\n",
+    wbk_logger_log(&logger, INFO, "Found monitor: %s - X: %d - %d, Y: %d - %d (%dx%d)\n",
     			   monitor_info.szDevice,
-    			   monitor_info.rcMonitor.right - monitor_info.rcMonitor.left,
+    			   monitor_info.rcMonitor.left, monitor_info.rcMonitor.right, 
+				   monitor_info.rcMonitor.top, monitor_info.rcMonitor.bottom,
+    			   monitor_info.rcMonitor.right - monitor_info.rcMonitor.left,  
 				   monitor_info.rcMonitor.bottom - monitor_info.rcMonitor.top);
 
     monitor = b3_monitor_factory_create(director->monitor_factory,
 		    		 	 	 	 	   	monitor_info.szDevice,
-									    monitor_info.rcMonitor);
+									    monitor_info.rcWork);
     array_add(director->monitor_arr,
 	 	      monitor);
     if (director->focused_monitor == NULL) {
