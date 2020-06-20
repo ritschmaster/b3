@@ -249,6 +249,9 @@ b3_ws_arrange_wins(b3_ws_t *ws, RECT monitor_area)
 
 	WaitForSingleObject(g_arrange_wins_mutex, INFINITE);
 
+
+	// TODO verify that monitor_area does not start at where the bar ends
+
 	stack_new(&area_stack);
 	stack_push(area_stack, (void *) &monitor_area);
 
@@ -454,6 +457,7 @@ b3_ws_winman_arrange(b3_ws_t *ws, b3_winman_t *winman, Stack *area_stack)
 {
 	RECT *my_area;
 	RECT *next_area;
+	RECT set_rect;
 	int length;
 	int increment;
 	ArrayIter iter;
@@ -514,45 +518,36 @@ b3_ws_winman_arrange(b3_ws_t *ws, b3_winman_t *winman, Stack *area_stack)
 		while (array_iter_next(&iter, (void*) &win_iter) != CC_ITER_END) {
 			if (!b3_win_get_floating(win_iter)) {
 				if (b3_winman_get_mode(winman) == HORIZONTAL) {
-					wbk_logger_log(&logger, DEBUG,
-								   "Workspace %s - Window placing - X: %d -> %d, Y: %d -> %d\n",
-								   b3_ws_get_name(ws),
-								   next_area->left, increment,
-								   next_area->top, next_area->bottom - next_area->top);
-
-					ShowWindow(b3_win_get_window_handler(win_iter), SW_SHOWNOACTIVATE);
-					SetWindowPos(b3_win_get_window_handler(win_iter),
-								 HWND_TOP,
-								 next_area->left,
-								 next_area->top,
-								 increment,
-								 next_area->bottom - next_area->top,
-								 SWP_NOACTIVATE);
+					set_rect.left = next_area->left;
+					set_rect.top = next_area->top;
+					set_rect.right = set_rect.left + increment;
+					set_rect.bottom = next_area->bottom;
 
 					next_area->left += increment;
 				} else if (b3_winman_get_mode(winman) == VERTICAL) {
-					wbk_logger_log(&logger, DEBUG,
-								   "Workspace %s - Placing Window - X: %d -> %d, Y: %d -> %d\n",
-								   b3_ws_get_name(ws),
-								   next_area->left, next_area->right - next_area->left,
-								   next_area->top, increment);
+					set_rect.left = next_area->left;
+					set_rect.top = next_area->top;
+					set_rect.right = next_area->right;
+					set_rect.bottom = next_area->top + increment;
 
-					ShowWindow(b3_win_get_window_handler(win_iter), SW_SHOWNOACTIVATE);
-					SetWindowPos(b3_win_get_window_handler(win_iter),
-								 HWND_TOP,
-								 next_area->left,
-								 next_area->top,
-								 next_area->right - next_area->left,
-								 increment,
-								 SWP_NOACTIVATE);
 					next_area->top += increment;
 				}
+
+				wbk_logger_log(&logger, DEBUG,
+							   "Workspace %s - Window placing - X: %d -> %d, Y: %d -> %d\n",
+							   b3_ws_get_name(ws),
+							   set_rect.left, set_rect.right - set_rect.left,
+							   set_rect.top, set_rect.bottom - set_rect.top);
+				b3_win_set_rect(win_iter, set_rect);
+				b3_win_show(win_iter, 0);
 			}
 		}
 
 		while (array_iter_next(&iter, (void*) &win_iter) != CC_ITER_END) {
 			if (b3_win_get_floating(win_iter)) {
-				b3_win_show(win_iter);
+				GetWindowRect(b3_win_get_window_handler(win_iter), &set_rect);
+				b3_win_set_rect(win_iter, set_rect);
+				b3_win_show(win_iter, 1);
 			}
 		}
 	}

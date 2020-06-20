@@ -37,6 +37,7 @@ typedef struct b3_win_s
 {
 	HWND window_handler;
 	char floating;
+	RECT rect;
 } b3_win_t;
 
 /**
@@ -78,11 +79,20 @@ b3_win_set_floating(b3_win_t *win, char floating);
 extern HWND
 b3_win_get_window_handler(b3_win_t *win);
 
+/**
+ * @param topmost Either 1 or 0.
+ */
 extern int
-b3_win_show(b3_win_t *win);
+b3_win_show(b3_win_t *win, char topmost);
 
 extern int
 b3_win_minimize(b3_win_t *win);
+
+extern RECT
+b3_win_get_rect(b3_win_t *win);
+
+extern int
+b3_win_set_rect(b3_win_t *win, RECT rect);
 
 /**
  * @brief Compares two windows

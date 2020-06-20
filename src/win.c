@@ -32,6 +32,9 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <wbkbase/logger.h>
+
+static wbk_logger_t logger = { "win" };
 
 b3_win_t *
 b3_win_new(HWND window_handler, char floating)
@@ -44,6 +47,8 @@ b3_win_new(HWND window_handler, char floating)
 	win->window_handler = window_handler;
 
 	win->floating = floating;
+
+	GetWindowRect(window_handler, &(win->rect));
 
 	return win;
 }
@@ -95,27 +100,31 @@ b3_win_get_window_handler(b3_win_t *win)
 }
 
 int
-b3_win_show(b3_win_t *win)
+b3_win_show(b3_win_t *win, char topmost)
 {
 	int error;
-	RECT win_rect;
+	HWND insert_after;
 
-	if (!win->window_handler) {
+	error = 0;
+
+	if (b3_win_get_window_handler(win) == NULL) {
 		error = 1;
 	}
 
+	insert_after = HWND_TOP;
+	if (topmost) {
+		insert_after = HWND_TOPMOST;
+	}
+
 	if (!error) {
-		if (b3_win_get_floating(win)) {
-			GetWindowRect(win->window_handler, &win_rect);
-			ShowWindow(win->window_handler, SW_SHOWNOACTIVATE);
-			SetWindowPos(win->window_handler,
-						 HWND_TOP,
-						 win_rect.left, win_rect.top,
-						 win_rect.right, win_rect.bottom,
-						 SWP_NOACTIVATE);
-		} else {
-			ShowWindow(win->window_handler, SW_SHOWNOACTIVATE);
-		}
+		ShowWindow(b3_win_get_window_handler(win), SW_SHOWNOACTIVATE);
+		SetWindowPos(b3_win_get_window_handler(win),
+					 insert_after,
+					 win->rect.left,
+					 win->rect.top,
+					 win->rect.right - win->rect.left,
+					 win->rect.bottom - win->rect.top,
+					 SWP_NOACTIVATE);
 	}
 
 	return error;
@@ -127,6 +136,21 @@ b3_win_minimize(b3_win_t *win)
    	ShowWindow(win->window_handler, SW_SHOWMINNOACTIVE);
 	return 0;
 }
+
+RECT
+b3_win_get_rect(b3_win_t *win)
+{
+	return win->rect;
+}
+
+int
+b3_win_set_rect(b3_win_t *win, RECT rect)
+{
+	win->rect = rect;
+
+	return 0;
+}
+
 
 int
 b3_win_compare(const b3_win_t *win, const b3_win_t *other)
