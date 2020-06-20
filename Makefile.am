@@ -25,6 +25,9 @@
 if DEBUG
 AM_CFLAGS = -g -O0
 AM_LDFLAGS = -g -O0
+else
+AM_CFLAGS = -O2
+AM_LDFLAGS = -O2
 endif
 
 SUBDIRS = src tests

@@ -23,9 +23,35 @@
 # SOFTWARE.
 ################################################################################
 
-function all
+function clean
 {
-    autoreconf -im && ./configure --enable-debug && make
+    make distclean
+    rm -rf configure
+    rm -rf m4
+    rm -rf autom4te.cache
+    rm -rf aclocal.m4
+    rm -rf Makefile.in
+    rm -rf src/Makefile.in
+    rm -rf tests/Makefile.in
+    rm -rf data/Makefile.in
+}
+
+function debug
+{
+    clean
+    
+    autoreconf -im 
+    ./configure --enable-debug --enable-install-base 
+    make
+}
+
+function release
+{
+    clean
+
+    autoreconf -im 
+    ./configure --enable-install-base 
+    make
 }
 
 while getopts ":v" opt; do
@@ -39,7 +65,13 @@ done
 args=( $@ )
 
 case "${args[$OPTIND - 1]}" in
+    clean)
+        clean
+        ;;
+    debug)
+        debug
+        ;;
     * )
-        all
+        release
         ;;
 esac
