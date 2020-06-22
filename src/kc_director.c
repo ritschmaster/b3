@@ -252,7 +252,7 @@ b3_kc_director_exec_cm(b3_kc_director_t *kc_director)
 
 	monitor_name = kc_director->data;
 
-	ret = b3_director_set_focused_monitor(kc_director->director, monitor_name);
+	ret = b3_director_set_focused_monitor_by_name(kc_director->director, monitor_name);
 
 	return ret;
 }

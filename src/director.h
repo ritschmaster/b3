@@ -86,8 +86,16 @@ b3_director_get_monitor_arr(b3_director_t *director);
 extern b3_monitor_t *
 b3_director_get_focused_monitor(b3_director_t *director);
 
+/**
+ * It is only possible to set a monitor as focused, that is already available in the director.
+ *
+ * @return 0 if the focusing was successful. Non-0 otherwise.
+ */
+int
+b3_director_set_focused_monitor(b3_director_t *director, b3_monitor_t *monitor);
+
 extern int
-b3_director_set_focused_monitor(b3_director_t *director, const char *monitor_name);
+b3_director_set_focused_monitor_by_name(b3_director_t *director, const char *monitor_name);
 
 /**
  * @return Non-0 if the monitor was not found.

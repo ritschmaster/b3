@@ -85,7 +85,20 @@ b3_bar_get_position(b3_bar_t *bar)
 {
 	return bar->position;
 }
-#include <stdio.h>
+
+char
+b3_bar_is_focused(b3_bar_t *bar)
+{
+	return bar->focused;
+}
+
+int
+b3_bar_set_focused(b3_bar_t *bar, char focused)
+{
+	bar->focused = focused;
+	return 0;
+}
+
 int
 b3_bar_create_window(b3_bar_t *bar, const char *monitor_name)
 {
@@ -174,7 +187,9 @@ b3_bar_draw(b3_bar_t *bar, HWND window_handler)
 	RECT rect;
 	RECT text_rect;
 	SIZE text_size;
-	HBRUSH brush;
+	HBRUSH background_brush;
+	HBRUSH focused_monitor_ws_brush;
+	HBRUSH focused_ws_brush;
 	b3_ws_t *focused_ws;
 	int i;
 	int arr_length;
@@ -186,13 +201,15 @@ b3_bar_draw(b3_bar_t *bar, HWND window_handler)
 	BeginPaint(window_handler, &ps);
 
 	/** Init everything */
-	brush = CreateSolidBrush(RGB(255, 255, 255));
+	background_brush = CreateSolidBrush(RGB(255, 255, 255));
+	focused_monitor_ws_brush = CreateSolidBrush(RGB(255, 0, 0));
+	focused_ws_brush = CreateSolidBrush(RGB(100, 100, 100));
+
 	rect.top = bar->area.top;
 	rect.bottom = bar->area.bottom;
 	rect.left = 0; /** We are drawing relative to the window! */
 	rect.right = bar->area.right - bar->area.left;
-	FillRect(hdc, &rect, brush);
-	DeleteObject(brush);
+	FillRect(hdc, &rect, background_brush);
 
 	rect.top = bar->area.top;
 	rect.bottom = bar->area.bottom;
@@ -202,7 +219,6 @@ b3_bar_draw(b3_bar_t *bar, HWND window_handler)
 	text_rect.top = rect.top + B3_BAR_BORDER_TO_TEXT_DISTANCE;
 	text_rect.bottom = rect.bottom - B3_BAR_BORDER_TO_TEXT_DISTANCE;
 
-	brush = CreateSolidBrush(RGB(255, 0, 0));
 	arr_length = array_size(b3_wsman_get_ws_arr(bar->wsman));
 	for (i = 0; i < arr_length; i++) {
 		array_get_at(b3_wsman_get_ws_arr(bar->wsman), i, (void *) &ws);
@@ -214,7 +230,11 @@ b3_bar_draw(b3_bar_t *bar, HWND window_handler)
 		text_rect.right = rect.right - B3_BAR_BORDER_TO_TEXT_DISTANCE;
 
 		if (strcmp(b3_ws_get_name(ws), b3_ws_get_name(focused_ws)) == 0) {
-			FillRect(hdc, &rect, brush);
+			if (b3_bar_is_focused(bar)) {
+				FillRect(hdc, &rect, focused_monitor_ws_brush);
+			} else {
+				FillRect(hdc, &rect, focused_ws_brush);
+			}
 		} else {
 			Rectangle(hdc, rect.left, rect.top, rect.right, rect.bottom);
 		}
@@ -223,7 +243,10 @@ b3_bar_draw(b3_bar_t *bar, HWND window_handler)
 
 		rect.left = rect.right + B3_BAR_WORKSPACE_INDICATOR_DISTANCE;
 	}
-	DeleteObject(brush);
+
+	DeleteObject(background_brush);
+	DeleteObject(focused_monitor_ws_brush);
+	DeleteObject(focused_ws_brush);
 
    	EndPaint(window_handler, &ps);
     ReleaseDC(window_handler, hdc);

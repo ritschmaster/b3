@@ -58,6 +58,8 @@ typedef struct b3_bar_s
 	HWND window_handler;
 
 	int height;
+
+	char focused;
 } b3_bar_t;
 
 /**
@@ -84,5 +86,11 @@ b3_bar_get_position(b3_bar_t *bar);
 
 extern int
 b3_bar_create_window(b3_bar_t *bar, const char *monitor_name);
+
+extern char
+b3_bar_is_focused(b3_bar_t *bar);
+
+extern int
+b3_bar_set_focused(b3_bar_t *bar, char focused);
 
 #endif // B3_BAR_H

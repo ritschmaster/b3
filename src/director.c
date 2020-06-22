@@ -193,7 +193,45 @@ b3_director_get_focused_monitor(b3_director_t *director)
 }
 
 int
-b3_director_set_focused_monitor(b3_director_t *director, const char *monitor_name)
+b3_director_set_focused_monitor(b3_director_t *director, b3_monitor_t *monitor)
+{
+	int error;
+	char managed;
+	ArrayIter iter;
+	b3_monitor_t *monitor_iter;
+
+	WaitForSingleObject(director->global_mutex, INFINITE);
+
+	error = 1;
+
+	managed = 0;
+	array_iter_init(&iter, director->monitor_arr);
+    while (!managed && array_iter_next(&iter, (void*) &monitor_iter) != CC_ITER_END) {
+    	if (monitor_iter == monitor) {
+    		managed = 1;
+    	}
+    }
+
+    if (managed) {
+    	wbk_logger_log(&logger, INFO, "Switching to monitor %s.\n", b3_monitor_get_monitor_name(monitor));
+
+		if (director->focused_monitor) {
+			b3_bar_set_focused(b3_monitor_get_bar(director->focused_monitor), 0);
+		}
+		director->focused_monitor = monitor;
+
+		b3_bar_set_focused(b3_monitor_get_bar(director->focused_monitor), 1);
+
+		error = 0;
+    }
+
+	ReleaseMutex(director->global_mutex);
+
+	return error;
+}
+
+int
+b3_director_set_focused_monitor_by_name(b3_director_t *director, const char *monitor_name)
 {
 	char found;
 	ArrayIter iter;
@@ -211,7 +249,8 @@ b3_director_set_focused_monitor(b3_director_t *director, const char *monitor_nam
     }
 
     if (found) {
-    	director->focused_monitor = monitor;
+    	b3_director_set_focused_monitor(director, monitor);
+
     	wbk_logger_log(&logger, INFO, "Switching to monitor %s.\n", monitor_name);
     	ret = 0;
     } else {
@@ -245,9 +284,9 @@ b3_director_switch_to_ws(b3_director_t *director, const char *ws_id)
     }
 
     if (found) {
-    	director->focused_monitor = monitor;
-    	wbk_logger_log(&logger, INFO, "Switching to monitor %s.\n", b3_monitor_get_monitor_name(monitor));
+    	b3_director_set_focused_monitor(director, monitor);
     }
+
 	b3_monitor_set_focused_ws(director->focused_monitor, ws_id);
 	focused_win = b3_ws_get_focused_win(b3_monitor_get_focused_ws(b3_director_get_focused_monitor(director)));
 
