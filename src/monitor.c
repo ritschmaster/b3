@@ -159,16 +159,21 @@ b3_monitor_arrange_wins(b3_monitor_t *monitor)
 {
 	RECT monitor_area;
 	b3_bar_t *bar;
+	RECT bar_area;
+	int bar_height;
 	ArrayIter iter;
 	b3_ws_t *ws_iter;
 
 	monitor_area = monitor->monitor_area;
+
 	bar = b3_monitor_get_bar(monitor);
+	bar_area = b3_bar_get_area(bar);
+	bar_height = bar_area.bottom - bar_area.top;
 
 	if (b3_bar_get_position(bar) == TOP) {
-		monitor_area.top = monitor_area.top + bar->area.bottom;
+		monitor_area.top = monitor_area.top + bar_height;
 	} else if (b3_bar_get_position(bar) == BOTTOM) {
-		monitor_area.bottom = monitor_area.bottom - bar->area.bottom;
+		monitor_area.bottom = monitor_area.bottom - bar_height;
 	} else {
 		wbk_logger_log(&logger, SEVERE, "Arraning wins - bar position %d is not supported\n", b3_bar_get_position(bar));
 	}
@@ -196,8 +201,7 @@ b3_monitor_find_win(b3_monitor_t *monitor, const b3_win_t *win)
 int
 b3_monitor_show(b3_monitor_t *monitor)
 {
-	b3_bar_create_window(monitor->bar,
-						 b3_monitor_get_monitor_name(monitor));
+	b3_bar_show(monitor->bar);
 	return 0;
 }
 

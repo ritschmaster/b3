@@ -37,9 +37,12 @@
 
 #define B3_BAR_WIN_NAME "b3 bar"
 #define B3_BAR_WIN_NAME_LEN strlen(B3_BAR_WIN_NAME)
-#define B3_BAR_DEFAULT_BAR_HEIGHT 18
-#define B3_BAR_BORDER_TO_TEXT_DISTANCE 4
-#define B3_BAR_WORKSPACE_INDICATOR_DISTANCE 4
+
+#define B3_BAR_DEFAULT_POS TOP
+#define B3_BAR_DEFAULT_BAR_HEIGHT 20
+#define B3_BAR_DEFAULT_PADDING_TO_WINDOW 1
+#define B3_BAR_DEFAULT_PADDING_TO_FRAME 4
+#define B3_BAR_DEFAULT_PADDING_TO_NEXT_FRAME 4
 
 typedef enum b3_bar_pos_e
 {
@@ -56,8 +59,6 @@ typedef struct b3_bar_s
 	b3_wsman_t *wsman;
 
 	HWND window_handler;
-
-	int height;
 
 	char focused;
 } b3_bar_t;
@@ -84,11 +85,14 @@ b3_bar_get_area(b3_bar_t *bar);
 extern b3_bar_pos_t
 b3_bar_get_position(b3_bar_t *bar);
 
-extern int
-b3_bar_create_window(b3_bar_t *bar, const char *monitor_name);
-
 extern char
 b3_bar_is_focused(b3_bar_t *bar);
+
+extern int
+b3_bar_show(b3_bar_t *bar);
+
+extern int
+b3_bar_hide(b3_bar_t *bar);
 
 extern int
 b3_bar_set_focused(b3_bar_t *bar, char focused);

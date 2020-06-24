@@ -36,6 +36,9 @@
 static wbk_logger_t logger = { "bar" };
 
 static int
+b3_bar_create_window(b3_bar_t *bar, const char *monitor_name);
+
+static int
 b3_bar_draw(b3_bar_t *bar, HWND window_handler);
 
 static LRESULT
@@ -49,16 +52,16 @@ b3_bar_new(const char *monitor_name, RECT monitor_area, b3_wsman_t *wsman)
 	bar = NULL;
 	bar = malloc(sizeof(b3_bar_t));
 
-	bar->position = TOP; // TODO default
+	bar->position = B3_BAR_DEFAULT_POS;
 
 	bar->area.top    = monitor_area.top;
-	bar->area.bottom = B3_BAR_DEFAULT_BAR_HEIGHT;
+	bar->area.bottom = monitor_area.top + B3_BAR_DEFAULT_BAR_HEIGHT;
 	bar->area.left   = monitor_area.left;
 	bar->area.right  = monitor_area.right;
 
 	bar->wsman = wsman;
 
-	bar->height= B3_BAR_DEFAULT_BAR_HEIGHT;
+	b3_bar_create_window(bar, monitor_name);
 
 	return bar;
 }
@@ -68,6 +71,7 @@ b3_bar_free(b3_bar_t *bar)
 {
 	bar->wsman = NULL;
 
+	DestroyWindow(bar->window_handler);
 	bar->window_handler = NULL;
 
 	free(bar);
@@ -105,7 +109,6 @@ b3_bar_create_window(b3_bar_t *bar, const char *monitor_name)
 	int error;
 	WNDCLASSEX wc;
 	HINSTANCE hInstance;
-	TITLEBARINFO titlebar_info;
 	int monitor_name_len;
 	int titlebar_height;
 	char *win_class;
@@ -145,29 +148,16 @@ b3_bar_create_window(b3_bar_t *bar, const char *monitor_name)
 											 win_class,
 											 B3_BAR_WIN_NAME,
 											 WS_DISABLED | WS_BORDER,
-											 bar->area.left, 20,
+											 0, 0,
 											 100, 100,
 											 NULL, NULL, hInstance, bar);
 	}
 
 	if (!error) {
-		titlebar_info.cbSize = sizeof(TITLEBARINFO);
-		GetTitleBarInfo(bar->window_handler, &titlebar_info);
-		titlebar_height = titlebar_info.rcTitleBar.bottom - titlebar_info.rcTitleBar.top;
-		titlebar_height *= 1.3;
-	}
-
-	if (!error) {
+		SetWindowLong(bar->window_handler, GWL_STYLE, 0);
 		SetWindowLongPtr(bar->window_handler, GWLP_USERDATA, (LONG_PTR) bar);
 
-		SetWindowPos(bar->window_handler,
-					 HWND_TOPMOST,
-					 bar->area.left, bar->area.top - 20,
-					 bar->area.right, titlebar_height + bar->height,
-					 SWP_NOACTIVATE | SWP_NOSENDCHANGING);
-
-		UpdateWindow(bar->window_handler);
-		ShowWindow(bar->window_handler, SW_SHOW);
+		b3_bar_hide(bar);
 	}
 
 	if (win_class) {
@@ -175,6 +165,36 @@ b3_bar_create_window(b3_bar_t *bar, const char *monitor_name)
 	}
 
 	return error;
+}
+
+int
+b3_bar_show(b3_bar_t *bar)
+{
+	RECT area;
+
+	area = bar->area;
+
+	wbk_logger_log(&logger, DEBUG,
+				   "bar showing at - X: %d -> %d, Y: %d -> %d\n",
+				   area.left, area.right - area.left,
+				   area.top, area.bottom - area.top);
+
+	SetWindowPos(bar->window_handler,
+				 HWND_TOPMOST,
+				 area.left, area.top,
+				 area.right - area.left, area.bottom - area.top,
+				 SWP_NOACTIVATE | SWP_NOSENDCHANGING);
+
+	UpdateWindow(bar->window_handler);
+	ShowWindow(bar->window_handler, SW_SHOW);
+	return 0;
+}
+
+int
+b3_bar_hide(b3_bar_t *bar)
+{
+	ShowWindow(bar->window_handler, SW_HIDE);
+	return 0;
 }
 
 int
@@ -205,29 +225,29 @@ b3_bar_draw(b3_bar_t *bar, HWND window_handler)
 	focused_monitor_ws_brush = CreateSolidBrush(RGB(255, 0, 0));
 	focused_ws_brush = CreateSolidBrush(RGB(100, 100, 100));
 
-	rect.top = bar->area.top;
-	rect.bottom = bar->area.bottom;
-	rect.left = 0; /** We are drawing relative to the window! */
+	rect.top = 0;
+	rect.bottom = bar->area.bottom - bar->area.top;
+	rect.left = 0;
 	rect.right = bar->area.right - bar->area.left;
 	FillRect(hdc, &rect, background_brush);
 
-	rect.top = bar->area.top;
-	rect.bottom = bar->area.bottom;
+	rect.top = B3_BAR_DEFAULT_PADDING_TO_WINDOW;
+	rect.bottom = bar->area.bottom - bar->area.top - B3_BAR_DEFAULT_PADDING_TO_WINDOW;
 	rect.left = 0; /** We are drawing relative to the window! */
 	rect.right = 0; /** Will be overwritten */
 
-	text_rect.top = rect.top + B3_BAR_BORDER_TO_TEXT_DISTANCE;
-	text_rect.bottom = rect.bottom - B3_BAR_BORDER_TO_TEXT_DISTANCE;
+	text_rect.top = rect.top + B3_BAR_DEFAULT_PADDING_TO_FRAME;
+	text_rect.bottom = rect.bottom - B3_BAR_DEFAULT_PADDING_TO_FRAME;
 
 	arr_length = array_size(b3_wsman_get_ws_arr(bar->wsman));
 	for (i = 0; i < arr_length; i++) {
 		array_get_at(b3_wsman_get_ws_arr(bar->wsman), i, (void *) &ws);
 		GetTextExtentPoint32A(hdc, b3_ws_get_name(ws), strlen(b3_ws_get_name(ws)), &text_size);
-		str_length = text_size.cx + B3_BAR_BORDER_TO_TEXT_DISTANCE;
-		rect.right = rect.left + str_length + B3_BAR_BORDER_TO_TEXT_DISTANCE;
+		str_length = text_size.cx + B3_BAR_DEFAULT_PADDING_TO_FRAME;
+		rect.right = rect.left + str_length + B3_BAR_DEFAULT_PADDING_TO_FRAME;
 
-		text_rect.left = rect.left + B3_BAR_BORDER_TO_TEXT_DISTANCE;
-		text_rect.right = rect.right - B3_BAR_BORDER_TO_TEXT_DISTANCE;
+		text_rect.left = rect.left + B3_BAR_DEFAULT_PADDING_TO_FRAME;
+		text_rect.right = rect.right - B3_BAR_DEFAULT_PADDING_TO_FRAME;
 
 		if (strcmp(b3_ws_get_name(ws), b3_ws_get_name(focused_ws)) == 0) {
 			if (b3_bar_is_focused(bar)) {
@@ -241,7 +261,7 @@ b3_bar_draw(b3_bar_t *bar, HWND window_handler)
 
 		DrawText(hdc, b3_ws_get_name(ws), -1, &text_rect, DT_CENTER | DT_SINGLELINE | DT_VCENTER);
 
-		rect.left = rect.right + B3_BAR_WORKSPACE_INDICATOR_DISTANCE;
+		rect.left = rect.right + B3_BAR_DEFAULT_PADDING_TO_NEXT_FRAME;
 	}
 
 	DeleteObject(background_brush);
