@@ -31,7 +31,7 @@
 #ifndef B3_KBMAN_H
 #define B3_KBMAN_H
 
-#include <wbkbase/ikbman.h>
+#include <wbkbase/kbman.h>
 #include <wbkbase/kc_sys.h>
 #include <windows.h>
 
