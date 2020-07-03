@@ -91,19 +91,7 @@ b3_kbman_add_kc_director(b3_kbman_t *kbman, b3_kc_director_t *kc_director)
 int
 b3_kbman_exec(b3_kbman_t *kbman, wbk_b_t *b)
 {
-	int error;
-
-	error = -1;
-
-	if (error) {
-		error = b3_kbman_exec_kc_director(kbman, b);
-	}
-
-	if (error) {
-		error = wbk_kbman_exec(kbman->kbman, b);
-	}
-
-	return error;
+	return b3_kbman_exec_kc_director(kbman, b);
 }
 
 int
