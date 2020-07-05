@@ -87,6 +87,10 @@ b3_wsman_contains_ws(b3_wsman_t *wsman, const char *ws_id);
 extern b3_ws_t *
 b3_wsman_get_focused_ws(b3_wsman_t *wsman);
 
+/**
+ * @return Less than 0 if the workspaces was already focused. 0 if the focusing
+ * was successful. Greater than 0 if the focusing failed.
+ */
 extern int
 b3_wsman_set_focused_ws(b3_wsman_t *wsman, const char *ws_id);
 

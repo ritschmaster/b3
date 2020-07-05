@@ -106,6 +106,24 @@ b3_ws_factory_create(b3_ws_factory_t *ws_factory, const char *id)
 	return ws;
 }
 
+int
+b3_ws_factory_remove(b3_ws_factory_t *ws_factory, const char *id)
+{
+	int released;
+	char *not_a_number;
+	int number;
+
+	released = 1;
+	not_a_number = NULL;
+	number = strtol(id, &not_a_number, 10);
+	if ((not_a_number != NULL && not_a_number[0] == '\0')
+		|| not_a_number == NULL) {
+		released = b3_counter_add(ws_factory->ws_counter, number);
+	}
+
+	return released;
+}
+
 b3_ws_t *
 b3_ws_factory_ws_by_id(b3_ws_factory_t *ws_factory, const char *id)
 {

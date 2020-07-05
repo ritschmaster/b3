@@ -59,11 +59,31 @@ extern int
 b3_ws_factory_free(b3_ws_factory_t *ws_factory);
 
 /**
- * @param name If NULL then the next number by ws_counter will be used
- * @return Either an existing or a new workspace. Do not free it by yourself.
- *         Instead free an id by calling b3_ws_factory_remove.
+ * Either creates a new workspace or re-uses a workspace currently not in use by
+ * any other object if parameter id is NULL. If id is not NULL then it either
+ * creates the workspace or returns the workspace (which might already be in use
+ * in some other object).
+ *
+ * If the workspace is no longer used by any object, then call
+ * b3_ws_factory_remove() for it.
+ *
+ * @param name The name of the workspace to be used. If NULL then the next free
+ * number will be used.
+ * @return Either an existing or a new workspace. Do not free it by yourself! If
+ * no longer used, then call b3_ws_factory_remove() for that workspace id.
  */
 extern b3_ws_t *
 b3_ws_factory_create(b3_ws_factory_t *ws_factory, const char *id);
+
+/**
+ * Removes a workspace name from the used workspaces. This releases an
+ * automatically generated id to be re-used by a later caller of
+ * b3_ws_factory_create().
+ *
+ * @return 0 if the id was found and was released. Non-0 otherwise.
+ *
+ */
+extern int
+b3_ws_factory_remove(b3_ws_factory_t *ws_factory, const char *id);
 
 #endif // B3_WS_FACTORY_H

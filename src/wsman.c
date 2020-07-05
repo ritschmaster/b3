@@ -164,10 +164,14 @@ b3_wsman_get_focused_ws(b3_wsman_t *wsman)
 int
 b3_wsman_set_focused_ws(b3_wsman_t *wsman, const char *ws_id)
 {
+	int error;
 	int found;
 	ArrayIter iter;
 	b3_ws_t *ws;
+	b3_ws_t *old_focused_ws;
 
+	error = -1;
+	old_focused_ws = b3_wsman_get_focused_ws(wsman);
 	if (strcmp(b3_ws_get_name(wsman->focused_ws), ws_id) != 0) {
 		found = 0;
 		array_iter_init(&iter, b3_wsman_get_ws_arr(wsman));
@@ -177,18 +181,20 @@ b3_wsman_set_focused_ws(b3_wsman_t *wsman, const char *ws_id)
 			}
 		}
 
-		if (b3_ws_get_win_amount(wsman->focused_ws) <= 0) {
-			b3_wsman_remove(wsman, b3_ws_get_name(wsman->focused_ws));
-		}
-
 		if (!found) {
 			ws = b3_wsman_add(wsman, ws_id);
 		}
 
+		if (b3_ws_get_win_amount(wsman->focused_ws) <= 0) {
+			b3_wsman_remove(wsman, b3_ws_get_name(wsman->focused_ws));
+			b3_ws_factory_remove(wsman->ws_factory, b3_ws_get_name(old_focused_ws));
+		}
+
 		wsman->focused_ws = ws;
+		error = 0;
 	}
 
-    return 0;
+	return error;
 }
 
 int

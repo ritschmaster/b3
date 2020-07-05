@@ -590,6 +590,9 @@ b3_director_move_focused_workspace(b3_director_t *director, b3_ws_move_direction
 	ArrayIter monitor_iter;
 	b3_monitor_t *monitor;
 	RECT other_area;
+	b3_wsman_t *focused_wsman;
+	b3_wsman_t *other_wsman;
+	b3_ws_t *focused_ws;
 
 	WaitForSingleObject(director->global_mutex, INFINITE);
 	error = 1;
@@ -637,16 +640,12 @@ b3_director_move_focused_workspace(b3_director_t *director, b3_ws_move_direction
 	}
 
 	if (found) {
-		b3_wsman_t *focused_wsman;
-		b3_wsman_t *other_wsman;
-		b3_ws_t *ws;
-
 		focused_wsman = b3_monitor_get_wsman(b3_director_get_focused_monitor(director));
 		other_wsman = b3_monitor_get_wsman(monitor);
 
-		ws = b3_wsman_add(other_wsman, b3_ws_get_name(b3_wsman_get_focused_ws(focused_wsman)));
-		b3_wsman_remove(focused_wsman, b3_ws_get_name(ws));
-		b3_director_switch_to_ws(director, b3_ws_get_name(ws));
+		focused_ws = b3_wsman_add(other_wsman, b3_ws_get_name(b3_wsman_get_focused_ws(focused_wsman)));
+		b3_wsman_remove(focused_wsman, b3_ws_get_name(focused_ws));
+		b3_director_switch_to_ws(director, b3_ws_get_name(focused_ws));
 	} else {
 		wbk_logger_log(&logger, INFO, "Moving workspace not possible - no monitor in direction %d\n", direction);
 	}

@@ -25,6 +25,9 @@
 #include "counter.h"
 
 #include <stdlib.h>
+#include <wbkbase/logger.h>
+
+wbk_logger_t logger = { "counter" };
 
 static int
 arithmentic_cmp(void const *e1, void const *e2);
