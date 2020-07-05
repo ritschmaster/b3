@@ -112,6 +112,7 @@ b3_wsman_remove(b3_wsman_t *wsman, const char *ws_id)
     while (!found && array_iter_next(&iter, (void*) &ws) != CC_ITER_END) {
     	if (strcmp(b3_ws_get_name(ws), ws_id) == 0)	{
             array_iter_remove(&iter, NULL);
+            b3_ws_factory_remove(wsman->ws_factory, b3_ws_get_name(ws));
     		found = 1;
     		ret = 0;
     	}

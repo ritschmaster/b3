@@ -66,11 +66,4 @@ b3_ws_factory_free(b3_ws_factory_t *ws_factory);
 extern b3_ws_t *
 b3_ws_factory_create(b3_ws_factory_t *ws_factory, const char *id);
 
-/**
- * @return 0 if the id was found and could be freed. Non-0 if it could not be
- *         found or not freed.
- */
-extern int
-b3_ws_factory_remove(b3_ws_factory_t *ws_factory, const char *id);
-
 #endif // B3_WS_FACTORY_H

@@ -27,11 +27,14 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <wbkbase/logger.h>
 
 #define INT_AS_STRING_LENGTH 15
 
+static wbk_logger_t logger = { "ws_factory" };
+
 /**
- * @return To not free the returned object.
+ * @return Do not free the returned object.
  */
 static b3_ws_t *
 b3_ws_factory_ws_by_id(b3_ws_factory_t *ws_factory, const char *id);
@@ -89,44 +92,18 @@ b3_ws_factory_create(b3_ws_factory_t *ws_factory, const char *id)
 	}
 
 	ws = b3_ws_factory_ws_by_id(ws_factory, id);
-	if (!ws) {
+	if (ws == NULL) {
 		ws = b3_ws_new(id);
+		array_add(ws_factory->ws_arr, ws);
 	}
 
 	if (tmp_name) {
 		id = NULL;
 		free(tmp_name);
+		tmp_name = NULL;
 	}
 
 	return ws;
-}
-
-int
-b3_ws_factory_remove(b3_ws_factory_t *ws_factory, const char *id)
-{
-	ArrayIter ws_iter;
-	b3_ws_t *ws;
-	char found;
-	int ret;
-
-	ws = NULL;
-	found = 0;
-	array_iter_init(&ws_iter, ws_factory->ws_arr);
-	while (array_iter_next(&ws_iter, (void *) &ws) != CC_ITER_END
-		   && !found) {
-		if (strcmp(b3_ws_get_name(ws), id) == 0) {
-			found = 1;
-		}
-	}
-
-	ret = 1;
-	if (found) {
-		b3_ws_free(ws);
-		ret = 0;
-	}
-
-	return ret;
-
 }
 
 b3_ws_t *
@@ -139,8 +116,7 @@ b3_ws_factory_ws_by_id(b3_ws_factory_t *ws_factory, const char *id)
 	ws = NULL;
 	found = 0;
 	array_iter_init(&ws_iter, ws_factory->ws_arr);
-	while (array_iter_next(&ws_iter, (void *) &ws) != CC_ITER_END
-		   && !found) {
+	while (!found && array_iter_next(&ws_iter, (void *) &ws) != CC_ITER_END) {
 		if (strcmp(b3_ws_get_name(ws), id) == 0) {
 			found = 1;
 		}
