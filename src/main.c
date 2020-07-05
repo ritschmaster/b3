@@ -308,6 +308,41 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		be = wbk_be_new(NOT_A_MODIFIER, 'q'); wbk_b_add(b, be); wbk_be_free(be);
 		kc_director = b3_kc_director_factory_create_caw(kc_director_factory, b, g_director);
 		b3_kbman_add_kc_director(g_kbman, kc_director);
+
+		b = wbk_b_new();
+		be = wbk_be_new(WIN, 0); wbk_b_add(b, be); wbk_be_free(be);
+		be = wbk_be_new(CTRL, 0); wbk_b_add(b, be); wbk_be_free(be);
+		be = wbk_be_new(NOT_A_MODIFIER, 'h'); wbk_b_add(b, be); wbk_be_free(be);
+		kc_director = b3_kc_director_factory_create_mfwl(kc_director_factory, b, g_director);
+		b3_kbman_add_kc_director(g_kbman, kc_director);
+
+		b = wbk_b_new();
+		be = wbk_be_new(WIN, 0); wbk_b_add(b, be); wbk_be_free(be);
+		be = wbk_be_new(CTRL, 0); wbk_b_add(b, be); wbk_be_free(be);
+		be = wbk_be_new(NOT_A_MODIFIER, 'j'); wbk_b_add(b, be); wbk_be_free(be);
+		kc_director = b3_kc_director_factory_create_mfwd(kc_director_factory, b, g_director);
+		b3_kbman_add_kc_director(g_kbman, kc_director);
+
+		b = wbk_b_new();
+		be = wbk_be_new(WIN, 0); wbk_b_add(b, be); wbk_be_free(be);
+		be = wbk_be_new(CTRL, 0); wbk_b_add(b, be); wbk_be_free(be);
+		be = wbk_be_new(NOT_A_MODIFIER, 'k'); wbk_b_add(b, be); wbk_be_free(be);
+		kc_director = b3_kc_director_factory_create_mfwu(kc_director_factory, b, g_director);
+		b3_kbman_add_kc_director(g_kbman, kc_director);
+
+		b = wbk_b_new();
+		be = wbk_be_new(WIN, 0); wbk_b_add(b, be); wbk_be_free(be);
+		be = wbk_be_new(CTRL, 0); wbk_b_add(b, be); wbk_be_free(be);
+		be = wbk_be_new(NOT_A_MODIFIER, 'l'); wbk_b_add(b, be); wbk_be_free(be);
+		kc_director = b3_kc_director_factory_create_mfwr(kc_director_factory, b, g_director);
+		b3_kbman_add_kc_director(g_kbman, kc_director);
+
+		b = wbk_b_new();
+		be = wbk_be_new(WIN, 0); wbk_b_add(b, be); wbk_be_free(be);
+		be = wbk_be_new(CTRL, 0); wbk_b_add(b, be); wbk_be_free(be);
+		be = wbk_be_new(NOT_A_MODIFIER, 'o'); wbk_b_add(b, be); wbk_be_free(be);
+		kc_director = b3_kc_director_factory_create_mfwr(kc_director_factory, b, g_director);
+		b3_kbman_add_kc_director(g_kbman, kc_director);
 		// TODO Remove end
 	}
 

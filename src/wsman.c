@@ -104,6 +104,7 @@ b3_wsman_remove(b3_wsman_t *wsman, const char *ws_id)
 	char found;
 	ArrayIter iter;
 	b3_ws_t *ws;
+	b3_ws_t *new_focused_ws;
 	int ret;
 
 	found = 0;
@@ -112,10 +113,21 @@ b3_wsman_remove(b3_wsman_t *wsman, const char *ws_id)
     while (!found && array_iter_next(&iter, (void*) &ws) != CC_ITER_END) {
     	if (strcmp(b3_ws_get_name(ws), ws_id) == 0)	{
             array_iter_remove(&iter, NULL);
-            b3_ws_factory_remove(wsman->ws_factory, b3_ws_get_name(ws));
     		found = 1;
     		ret = 0;
     	}
+    }
+
+    if (found) {
+		if (b3_wsman_get_focused_ws(wsman) == ws) {
+			if (array_size(b3_wsman_get_ws_arr(wsman))) {
+				array_get_at(b3_wsman_get_ws_arr(wsman), 0, (void *) &new_focused_ws);
+			} else {
+				new_focused_ws = b3_wsman_add(wsman, NULL);
+			}
+		}
+
+		b3_wsman_set_focused_ws(wsman, b3_ws_get_name(new_focused_ws));
     }
 
 	return ret;

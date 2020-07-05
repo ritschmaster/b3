@@ -250,3 +250,55 @@ b3_kc_director_factory_create_caw(b3_kc_director_factory_t *kc_director_factory,
 	return caw;
 
 }
+
+b3_kc_director_t *
+b3_kc_director_factory_create_mfwu(b3_kc_director_factory_t *kc_director_factory,
+								   wbk_b_t *comb,
+								   b3_director_t *director)
+{
+	b3_kc_director_t *mfwu;
+
+	mfwu = b3_kc_director_new(comb, director, MOVE_FOCUSED_WORKSPACE_UP, NULL);
+
+	return mfwu;
+
+}
+
+b3_kc_director_t *
+b3_kc_director_factory_create_mfwd(b3_kc_director_factory_t *kc_director_factory,
+								   wbk_b_t *comb,
+								   b3_director_t *director)
+{
+	b3_kc_director_t *mfwd;
+
+	mfwd = b3_kc_director_new(comb, director, MOVE_FOCUSED_WORKSPACE_DOWN, NULL);
+
+	return mfwd;
+
+}
+
+b3_kc_director_t *
+b3_kc_director_factory_create_mfwl(b3_kc_director_factory_t *kc_director_factory,
+								   wbk_b_t *comb,
+								   b3_director_t *director)
+{
+	b3_kc_director_t *mfwl;
+
+	mfwl = b3_kc_director_new(comb, director, MOVE_FOCUSED_WORKSPACE_LEFT, NULL);
+
+	return mfwl;
+
+}
+
+b3_kc_director_t *
+b3_kc_director_factory_create_mfwr(b3_kc_director_factory_t *kc_director_factory,
+								   wbk_b_t *comb,
+								   b3_director_t *director)
+{
+	b3_kc_director_t *mfwr;
+
+	mfwr = b3_kc_director_new(comb, director, MOVE_FOCUSED_WORKSPACE_RIGHT, NULL);
+
+	return mfwr;
+
+}

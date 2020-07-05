@@ -97,6 +97,7 @@ b3_director_free_monitor_arr(b3_director_t *director)
 	ArrayIter monitor_iter;
 	b3_monitor_t *monitor;
 
+	array_iter_init(&monitor_iter, director->monitor_arr);
 	while (array_iter_next(&monitor_iter, (void *) &monitor) != CC_ITER_END) {
 		b3_monitor_free(monitor);
 	}
@@ -578,6 +579,81 @@ b3_director_toggle_active_win_fullscreen(b3_director_t *director)
 	ReleaseMutex(director->global_mutex);
 
 	return 0;
+}
+
+int
+b3_director_move_focused_workspace(b3_director_t *director, b3_ws_move_direction_t direction)
+{
+	int error;
+	char found;
+	RECT focused_area;
+	ArrayIter monitor_iter;
+	b3_monitor_t *monitor;
+	RECT other_area;
+
+	WaitForSingleObject(director->global_mutex, INFINITE);
+	error = 1;
+
+	found = 0;
+	focused_area = b3_ws_get_monitor_area(b3_director_get_focused_monitor(director));
+	array_iter_init(&monitor_iter, b3_director_get_monitor_arr(director));
+	while (!found && array_iter_next(&monitor_iter, (void *) &monitor) != CC_ITER_END) {
+		if (monitor != b3_director_get_focused_monitor(director)) {
+			other_area = b3_ws_get_monitor_area(monitor);
+			switch (direction) {
+			case UP:
+				if (focused_area.top >= other_area.bottom) {
+					found = 1;
+					wbk_logger_log(&logger, INFO, "Moving workspace to the monitor on the up\n");
+				}
+				break;
+
+			case DOWN:
+				if (focused_area.bottom <= other_area.top) {
+					found = 1;
+					wbk_logger_log(&logger, INFO, "Moving workspace to the monitor on the down\n");
+				}
+				break;
+
+			case LEFT:
+				if (focused_area.left >= other_area.right) {
+					found = 1;
+					wbk_logger_log(&logger, INFO, "Moving workspace to the monitor on the left\n");
+				}
+				break;
+
+			case RIGHT:
+				if (focused_area.right <= other_area.left) {
+					found = 1;
+					wbk_logger_log(&logger, INFO, "Moving workspace to the monitor on the right\n");
+				}
+				break;
+
+			default:
+				wbk_logger_log(&logger, SEVERE, "Moving workspace not possible - unknown direction %d\n", direction);
+				break;
+			}
+		}
+	}
+
+	if (found) {
+		b3_wsman_t *focused_wsman;
+		b3_wsman_t *other_wsman;
+		b3_ws_t *ws;
+
+		focused_wsman = b3_monitor_get_wsman(b3_director_get_focused_monitor(director));
+		other_wsman = b3_monitor_get_wsman(monitor);
+
+		ws = b3_wsman_add(other_wsman, b3_ws_get_name(b3_wsman_get_focused_ws(focused_wsman)));
+		b3_wsman_remove(focused_wsman, b3_ws_get_name(ws));
+		b3_director_switch_to_ws(director, b3_ws_get_name(ws));
+	} else {
+		wbk_logger_log(&logger, INFO, "Moving workspace not possible - no monitor in direction %d\n", direction);
+	}
+
+	ReleaseMutex(director->global_mutex);
+
+	return error;
 }
 
 int

@@ -166,6 +166,12 @@ extern int
 b3_director_toggle_active_win_fullscreen(b3_director_t *director);
 
 /**
+ * @return 0 if the moving was successful. Non-0 otherwise.
+ */
+extern int
+b3_director_move_focused_workspace(b3_director_t *director, b3_ws_move_direction_t direction);
+
+/**
  * @brief Show the director
  */
 extern int

@@ -76,6 +76,18 @@ b3_kc_director_exec_tawf(b3_kc_director_t *kc_director);
 static int
 b3_kc_director_exec_caw(b3_kc_director_t *kc_director);
 
+static int
+b3_kc_director_exec_mfwu(b3_kc_director_t *kc_director);
+
+static int
+b3_kc_director_exec_mfwd(b3_kc_director_t *kc_director);
+
+static int
+b3_kc_director_exec_mfwl(b3_kc_director_t *kc_director);
+
+static int
+b3_kc_director_exec_mfwr(b3_kc_director_t *kc_director);
+
 b3_kc_director_t *
 b3_kc_director_new(wbk_b_t *comb, b3_director_t *director, b3_kc_director_kind_t kind, void *data)
 {
@@ -219,6 +231,22 @@ b3_kc_director_exec(b3_kc_director_t *kc_director)
 
 	case CLOSE_ACTIVE_WINDOW:
 		ret = b3_kc_director_exec_caw(kc_director);
+		break;
+
+	case MOVE_FOCUSED_WORKSPACE_UP:
+		ret = b3_kc_director_exec_mfwu(kc_director);
+		break;
+
+	case MOVE_FOCUSED_WORKSPACE_DOWN:
+		ret = b3_kc_director_exec_mfwd(kc_director);
+		break;
+
+	case MOVE_FOCUSED_WORKSPACE_LEFT:
+		ret = b3_kc_director_exec_mfwl(kc_director);
+		break;
+
+	case MOVE_FOCUSED_WORKSPACE_RIGHT:
+		ret = b3_kc_director_exec_mfwr(kc_director);
 		break;
 
 	default:
@@ -379,3 +407,44 @@ b3_kc_director_exec_caw(b3_kc_director_t *kc_director)
 
 	return ret;
 }
+
+int
+b3_kc_director_exec_mfwu(b3_kc_director_t *kc_director)
+{
+	int ret;
+
+	ret = b3_director_move_focused_workspace(kc_director->director, UP);
+
+	return ret;
+}
+
+int
+b3_kc_director_exec_mfwd(b3_kc_director_t *kc_director)
+{
+	int ret;
+
+	ret = b3_director_move_focused_workspace(kc_director->director, DOWN);
+
+	return ret;
+}
+
+int
+b3_kc_director_exec_mfwl(b3_kc_director_t *kc_director)
+{
+	int ret;
+
+	ret = b3_director_move_focused_workspace(kc_director->director, LEFT);
+
+	return ret;
+}
+
+int
+b3_kc_director_exec_mfwr(b3_kc_director_t *kc_director)
+{
+	int ret;
+
+	ret = b3_director_move_focused_workspace(kc_director->director, RIGHT);
+
+	return ret;
+}
+
