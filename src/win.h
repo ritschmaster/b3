@@ -33,8 +33,15 @@
 
 #include <windows.h>
 
+typedef enum b3_win_state_e
+{
+	NORMAL = 0,
+	MAXIMIZED
+} b3_win_state_t;
+
 typedef struct b3_win_s
 {
+	b3_win_state_t state;
 	HWND window_handler;
 	char floating;
 	RECT rect;
@@ -61,6 +68,12 @@ b3_win_free(b3_win_t *win);
 
 extern const char *
 b3_win_get_title(b3_win_t *win);
+
+extern b3_win_state_t
+b3_win_get_state(b3_win_t *win);
+
+extern int
+b3_win_set_state(b3_win_t *win, b3_win_state_t state);
 
 /**
   * @brief Gets if the window is floating.

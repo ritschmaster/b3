@@ -44,6 +44,8 @@ b3_win_new(HWND window_handler, char floating)
 	win = NULL;
 	win = malloc(sizeof(b3_win_t));
 
+	win->state = NORMAL;
+
 	win->window_handler = window_handler;
 
 	win->floating = floating;
@@ -70,6 +72,25 @@ b3_win_free(b3_win_t *win)
 
 	free(win);
 
+	return 0;
+}
+
+b3_win_state_t
+b3_win_get_state(b3_win_t *win)
+{
+	return win->state;
+}
+
+int
+b3_win_set_state(b3_win_t *win, b3_win_state_t state)
+{
+	win->state = state;
+
+	if (win->state == MAXIMIZED) {
+		SendMessage(b3_win_get_window_handler(win), WM_ENTERSIZEMOVE, (WPARAM) NULL, (LPARAM) NULL);
+		ShowWindow(b3_win_get_window_handler(win), SW_MAXIMIZE);
+		SendMessage(b3_win_get_window_handler(win), WM_EXITSIZEMOVE, (WPARAM) NULL, (LPARAM) NULL);
+	}
 	return 0;
 }
 
@@ -116,8 +137,9 @@ b3_win_show(b3_win_t *win, char topmost)
 		insert_after = HWND_TOPMOST;
 	}
 
-	if (!error) {
+	if (!error && win->state != MAXIMIZED) {
 		ShowWindow(b3_win_get_window_handler(win), SW_SHOWNOACTIVATE);
+		SendMessage(b3_win_get_window_handler(win), WM_ENTERSIZEMOVE, (WPARAM) NULL, (LPARAM) NULL);
 		SetWindowPos(b3_win_get_window_handler(win),
 					 insert_after,
 					 win->rect.left,
@@ -125,6 +147,7 @@ b3_win_show(b3_win_t *win, char topmost)
 					 win->rect.right - win->rect.left,
 					 win->rect.bottom - win->rect.top,
 					 SWP_NOACTIVATE);
+		SendMessage(b3_win_get_window_handler(win), WM_EXITSIZEMOVE, (WPARAM) NULL, (LPARAM) NULL);
 	}
 
 	return error;
@@ -133,7 +156,9 @@ b3_win_show(b3_win_t *win, char topmost)
 int
 b3_win_minimize(b3_win_t *win)
 {
+	SendMessage(b3_win_get_window_handler(win), WM_ENTERSIZEMOVE, (WPARAM) NULL, (LPARAM) NULL);
    	ShowWindow(win->window_handler, SW_SHOWMINNOACTIVE);
+	SendMessage(b3_win_get_window_handler(win), WM_EXITSIZEMOVE, (WPARAM) NULL, (LPARAM) NULL);
 	return 0;
 }
 

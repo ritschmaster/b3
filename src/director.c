@@ -117,6 +117,9 @@ b3_director_refresh(b3_director_t *director)
 
 	WaitForSingleObject(director->global_mutex, INFINITE);
 
+	b3_director_free_monitor_arr(director);
+	array_new(&(director->monitor_arr));
+
 	EnumDisplayMonitors(NULL, NULL, b3_director_enum_monitors, (LPARAM) director);
 
    	b3_director_repaint_all();
@@ -148,6 +151,7 @@ b3_director_enum_monitors(HMONITOR wmonitor, HDC hdc, LPRECT rect, LPARAM data)
     monitor = b3_monitor_factory_create(director->monitor_factory,
 		    		 	 	 	 	   	monitor_info.szDevice,
 									    monitor_info.rcWork);
+
     array_add(director->monitor_arr,
 	 	      monitor);
     if (director->focused_monitor == NULL) {
@@ -485,6 +489,7 @@ b3_director_move_active_win_to_ws(b3_director_t *director, const char *ws_id)
 			if (b3_director_remove_win(director, active_win) == 0) {
 				wbk_logger_log(&logger, INFO, "Moving window to workspace %s\n", ws_id);
 
+				b3_win_set_state(active_win, NORMAL);
 				b3_ws_add_win(ws, active_win);
 
 				active_win = b3_monitor_get_focused_win(b3_director_get_focused_monitor(director));
@@ -524,9 +529,12 @@ b3_director_move_active_win(b3_director_t *director, b3_ws_move_direction_t dire
 
 	WaitForSingleObject(director->global_mutex, INFINITE);
 
-	error = b3_ws_move_active_win(b3_monitor_get_focused_ws(director->focused_monitor),
-			 					  direction);
-    b3_director_arrange_wins(director);
+	error = 1;
+    if (b3_win_get_state(b3_ws_get_focused_win(b3_monitor_get_focused_ws(director->focused_monitor))) != MAXIMIZED) {
+		error = b3_ws_move_active_win(b3_monitor_get_focused_ws(director->focused_monitor),
+									   direction);
+		b3_director_arrange_wins(director);
+    }
 
 	ReleaseMutex(director->global_mutex);
 
@@ -545,9 +553,11 @@ b3_director_set_active_win_by_direction(b3_director_t *director, b3_ws_move_dire
 	win = b3_ws_get_win(b3_monitor_get_focused_ws(director->focused_monitor),
 		  			    direction);
 	if (win) {
+    	b3_win_set_state(b3_ws_get_focused_win(b3_monitor_get_focused_ws(director->focused_monitor)), NORMAL);
     	b3_ws_set_focused_win(b3_monitor_get_focused_ws(director->focused_monitor),
     						  win);
 		b3_director_w32_set_active_window(b3_win_get_window_handler(win), 1);
+		b3_director_arrange_wins(director);
 	}
 
 	ReleaseMutex(director->global_mutex);
@@ -565,15 +575,12 @@ b3_director_toggle_active_win_fullscreen(b3_director_t *director)
 
     active_win = b3_monitor_get_focused_win(director->focused_monitor);
     if (active_win) {
-    	windowplacement.length = sizeof(WINDOWPLACEMENT);
-		GetWindowPlacement(b3_win_get_window_handler(active_win),
-						   &windowplacement);
-
-		if (windowplacement.showCmd == SW_SHOWMAXIMIZED) {
-			b3_director_arrange_wins(director);
-		} else {
-			ShowWindow(b3_win_get_window_handler(active_win), SW_MAXIMIZE);
-		}
+    	if (b3_win_get_state(active_win) != MAXIMIZED) {
+    		b3_win_set_state(active_win, MAXIMIZED);
+    	} else {
+    		b3_win_set_state(active_win, NORMAL);
+    	}
+		b3_director_arrange_wins(director);
     }
 
 	ReleaseMutex(director->global_mutex);
@@ -722,7 +729,7 @@ b3_director_w32_set_active_window(HWND window_handler, char generate_lag)
 	 * the focus.
 	 */
 	int upper;
-	upper = 10;
+	upper = 1;
 	if (generate_lag) {
 		upper = 10000;
 	}
@@ -744,6 +751,7 @@ DWORD WINAPI
 b3_director_repaint_all_threaded(_In_ LPVOID param)
 {
 	SendMessage(HWND_BROADCAST, WM_NCPAINT, (WPARAM) NULL, (LPARAM) NULL);
+	return 0;
 }
 
 int
