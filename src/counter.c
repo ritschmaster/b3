@@ -70,6 +70,8 @@ b3_counter_next(b3_counter_t *counter)
 		if (first) {
 			next = *first;
 			list_remove_first(counter->reenabled_ones, (void *) &first);
+			free(first);
+			first = NULL;
 		} else {
 			fetch_next = 1;
 		}
@@ -88,21 +90,52 @@ b3_counter_next(b3_counter_t *counter)
 int
 b3_counter_add(b3_counter_t *counter, int number)
 {
-	int ret;
+	int error;
 	int *reenabled;
 
-	ret = 0;
+	error = 1;
 	if (b3_counter_is_reenable(counter)) {
+		wbk_logger_log(&logger, DEBUG, "Re-enabling %d\n", number);
+
 		reenabled = malloc(sizeof(int));
 		*reenabled = number;
 		list_add(counter->reenabled_ones, reenabled);
 		list_sort_in_place(counter->reenabled_ones, arithmentic_cmp);
-		ret = 0;
-	} else {
-		ret = 1;
+		error = 0;
 	}
 
-	return ret;
+	return error;
+}
+
+int
+b3_counter_disable(b3_counter_t *counter, int disable)
+{
+	int error;
+	int i;
+	int *reenabled;
+	ListIter iter;
+
+	error = 1;
+	if (b3_counter_is_reenable(counter)) {
+		wbk_logger_log(&logger, DEBUG, "Disabling until %d\n", disable);
+
+		if (counter->counter <= disable) {
+			for (i = counter->counter; i < disable; i++) {
+				b3_counter_add(counter, i);
+			}
+			counter->counter = disable + 1;
+		} else {
+			list_iter_init(&iter, counter->reenabled_ones);
+			while (list_iter_next(&iter, &reenabled) != CC_ITER_END) {
+				if (*reenabled == disable) {
+					list_iter_remove(&iter, NULL);
+					free(reenabled);
+				}
+			}
+		}
+	}
+
+	return error;
 }
 
 char

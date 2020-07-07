@@ -56,6 +56,9 @@ b3_counter_next(b3_counter_t *counter);
 extern int
 b3_counter_add(b3_counter_t *counter, int reenable);
 
+extern int
+b3_counter_disable(b3_counter_t *counter, int disable);
+
 extern char
 b3_counter_is_reenable(b3_counter_t *counter);
 

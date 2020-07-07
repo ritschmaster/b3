@@ -79,12 +79,20 @@ b3_ws_factory_free(b3_ws_factory_t *ws_factory)
 b3_ws_t *
 b3_ws_factory_create(b3_ws_factory_t *ws_factory, const char *id)
 {
+	char *not_a_number;
+	int number;
 	char *tmp_name;
 	b3_ws_t *ws;
 
 	tmp_name = NULL;
 
 	if (id) {
+		not_a_number = NULL;
+		number = strtol(id, &not_a_number, 10);
+		if ((not_a_number != NULL && not_a_number[0] == '\0')
+			|| not_a_number == NULL) {
+			b3_counter_disable(ws_factory->ws_counter, number);
+		}
 	} else {
 		tmp_name = malloc(sizeof(char) * INT_AS_STRING_LENGTH);
 		snprintf(tmp_name, INT_AS_STRING_LENGTH, "%d", b3_counter_next(ws_factory->ws_counter));
