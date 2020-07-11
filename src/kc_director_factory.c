@@ -302,3 +302,55 @@ b3_kc_director_factory_create_mfwr(b3_kc_director_factory_t *kc_director_factory
 	return mfwr;
 
 }
+
+b3_kc_director_t *
+b3_kc_director_factory_create_sfmu(b3_kc_director_factory_t *kc_director_factory,
+								   wbk_b_t *comb,
+								   b3_director_t *director)
+{
+	b3_kc_director_t *mfwu;
+
+	mfwu = b3_kc_director_new(comb, director, SET_FOCUSED_MONITOR_UP, NULL);
+
+	return mfwu;
+
+}
+
+b3_kc_director_t *
+b3_kc_director_factory_create_sfmd(b3_kc_director_factory_t *kc_director_factory,
+								   wbk_b_t *comb,
+								   b3_director_t *director)
+{
+	b3_kc_director_t *mfwd;
+
+	mfwd = b3_kc_director_new(comb, director, SET_FOCUSED_MONITOR_DOWN, NULL);
+
+	return mfwd;
+
+}
+
+b3_kc_director_t *
+b3_kc_director_factory_create_sfml(b3_kc_director_factory_t *kc_director_factory,
+								   wbk_b_t *comb,
+								   b3_director_t *director)
+{
+	b3_kc_director_t *mfwl;
+
+	mfwl = b3_kc_director_new(comb, director, SET_FOCUSED_MONITOR_LEFT, NULL);
+
+	return mfwl;
+
+}
+
+b3_kc_director_t *
+b3_kc_director_factory_create_sfmr(b3_kc_director_factory_t *kc_director_factory,
+								   wbk_b_t *comb,
+								   b3_director_t *director)
+{
+	b3_kc_director_t *mfwr;
+
+	mfwr = b3_kc_director_new(comb, director, SET_FOCUSED_MONITOR_RIGHT, NULL);
+
+	return mfwr;
+
+}

@@ -186,7 +186,7 @@ b3_kc_director_factory_create_caw(b3_kc_director_factory_t *kc_director_factory,
 								  b3_director_t *director);
 
 /**
- * @return A new key binding director command of the type MOVE_ACTIVE_WINDOW_UP.
+ * @return A new key binding director command of the type MOVE_FOCUSED_WORKSPACE_UP.
  * Free it by yourself!
  */
 extern b3_kc_director_t *
@@ -195,7 +195,7 @@ b3_kc_director_factory_create_mfwu(b3_kc_director_factory_t *kc_director_factory
 								   b3_director_t *director);
 
 /**
- * @return A new key binding director command of the type MOVE_ACTIVE_WINDOW_DOWN.
+ * @return A new key binding director command of the type MOVE_FOCUSED_WORKSPACE_DOWN.
  * Free it by yourself!
  */
 extern b3_kc_director_t *
@@ -204,7 +204,7 @@ b3_kc_director_factory_create_mfwd(b3_kc_director_factory_t *kc_director_factory
 								   b3_director_t *director);
 
 /**
- * @return A new key binding director command of the type MOVE_ACTIVE_WINDOW_LEFT.
+ * @return A new key binding director command of the type MOVE_FOCUSED_WORKSPACE_LEFT.
  * Free it by yourself!
  */
 extern b3_kc_director_t *
@@ -213,7 +213,7 @@ b3_kc_director_factory_create_mfwl(b3_kc_director_factory_t *kc_director_factory
 								   b3_director_t *director);
 
 /**
- * @return A new key binding director command of the type MOVE_ACTIVE_WINDOW_RIGHT.
+ * @return A new key binding director command of the type MOVE_FOCUSED_WORKSPACE_RIGHT.
  * Free it by yourself!
  */
 extern b3_kc_director_t *
@@ -221,5 +221,40 @@ b3_kc_director_factory_create_mfwr(b3_kc_director_factory_t *kc_director_factory
 								   wbk_b_t *comb,
 								   b3_director_t *director);
 
+/**
+ * @return A new key binding director command of the type SET_FOCUSED_MONITOR_UP.
+ * Free it by yourself!
+ */
+extern b3_kc_director_t *
+b3_kc_director_factory_create_sfmu(b3_kc_director_factory_t *kc_director_factory,
+								   wbk_b_t *comb,
+								   b3_director_t *director);
+
+/**
+ * @return A new key binding director command of the type SET_FOCUSED_MONITOR_DOWN.
+ * Free it by yourself!
+ */
+extern b3_kc_director_t *
+b3_kc_director_factory_create_sfmd(b3_kc_director_factory_t *kc_director_factory,
+								   wbk_b_t *comb,
+								   b3_director_t *director);
+
+/**
+ * @return A new key binding director command of the type SET_FOCUSED_MONITOR_LEFT.
+ * Free it by yourself!
+ */
+extern b3_kc_director_t *
+b3_kc_director_factory_create_sfml(b3_kc_director_factory_t *kc_director_factory,
+								   wbk_b_t *comb,
+								   b3_director_t *director);
+
+/**
+ * @return A new key binding director command of the type SET_FOCUSED_MONITOR_RIGHT.
+ * Free it by yourself!
+ */
+extern b3_kc_director_t *
+b3_kc_director_factory_create_sfmr(b3_kc_director_factory_t *kc_director_factory,
+								   wbk_b_t *comb,
+								   b3_director_t *director);
 
 #endif // B3_KC_DIRECTOR_FACTORY_H

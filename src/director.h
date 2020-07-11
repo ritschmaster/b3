@@ -86,14 +86,6 @@ b3_director_get_monitor_arr(b3_director_t *director);
 extern b3_monitor_t *
 b3_director_get_focused_monitor(b3_director_t *director);
 
-/**
- * It is only possible to set a monitor as focused, that is already available in the director.
- *
- * @return 0 if the focusing was successful. Non-0 otherwise.
- */
-int
-b3_director_set_focused_monitor(b3_director_t *director, b3_monitor_t *monitor);
-
 extern int
 b3_director_set_focused_monitor_by_name(b3_director_t *director, const char *monitor_name);
 
@@ -166,10 +158,21 @@ extern int
 b3_director_toggle_active_win_fullscreen(b3_director_t *director);
 
 /**
+ * @return Do not free the returned monitor!
+ */
+extern b3_monitor_t *
+b3_director_get_monitor_by_direction(b3_director_t *director, b3_ws_move_direction_t direction);
+
+/**
+ * Moves a workspaces to a monitor by direction.
+ *
  * @return 0 if the moving was successful. Non-0 otherwise.
  */
 extern int
-b3_director_move_focused_workspace(b3_director_t *director, b3_ws_move_direction_t direction);
+b3_director_move_focused_ws_to_monitor_by_dir(b3_director_t *director, b3_ws_move_direction_t direction);
+
+extern int
+b3_director_set_focused_monitor_by_direction(b3_director_t *director, b3_ws_move_direction_t direction);
 
 /**
  * @brief Show the director

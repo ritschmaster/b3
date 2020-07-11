@@ -79,7 +79,7 @@ b3_monitor_get_monitor_name(b3_monitor_t *monitor)
 }
 
 RECT
-b3_ws_get_monitor_area(b3_monitor_t *monitor)
+b3_monitor_get_monitor_area(b3_monitor_t *monitor)
 {
 	return monitor->monitor_area;
 }

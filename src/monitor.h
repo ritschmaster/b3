@@ -72,7 +72,7 @@ extern const char *
 b3_monitor_get_monitor_name(b3_monitor_t *monitor);
 
 extern RECT
-b3_ws_get_monitor_area(b3_monitor_t *monitor);
+b3_monitor_get_monitor_area(b3_monitor_t *monitor);
 
 extern b3_bar_t *
 b3_monitor_get_bar(b3_monitor_t *monitor);

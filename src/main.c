@@ -92,7 +92,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	if (g_director) {
 		g_kbman = b3_kbman_new(); // TODO move me into the parser
 
-		// TODO remove begin
+		// TODO remove begin (Start of hardcoded keybindings)
 		b = wbk_b_new();
 		be = wbk_be_new(WIN, 0); wbk_b_add(b, be); wbk_be_free(be);
 		be = wbk_be_new(NOT_A_MODIFIER, '1'); wbk_b_add(b, be); wbk_be_free(be);
@@ -312,6 +312,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		b = wbk_b_new();
 		be = wbk_be_new(WIN, 0); wbk_b_add(b, be); wbk_be_free(be);
 		be = wbk_be_new(CTRL, 0); wbk_b_add(b, be); wbk_be_free(be);
+		be = wbk_be_new(SHIFT, 0); wbk_b_add(b, be); wbk_be_free(be);
 		be = wbk_be_new(NOT_A_MODIFIER, 'h'); wbk_b_add(b, be); wbk_be_free(be);
 		kc_director = b3_kc_director_factory_create_mfwl(kc_director_factory, b, g_director);
 		b3_kbman_add_kc_director(g_kbman, kc_director);
@@ -319,6 +320,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		b = wbk_b_new();
 		be = wbk_be_new(WIN, 0); wbk_b_add(b, be); wbk_be_free(be);
 		be = wbk_be_new(CTRL, 0); wbk_b_add(b, be); wbk_be_free(be);
+		be = wbk_be_new(SHIFT, 0); wbk_b_add(b, be); wbk_be_free(be);
 		be = wbk_be_new(NOT_A_MODIFIER, 'j'); wbk_b_add(b, be); wbk_be_free(be);
 		kc_director = b3_kc_director_factory_create_mfwd(kc_director_factory, b, g_director);
 		b3_kbman_add_kc_director(g_kbman, kc_director);
@@ -326,6 +328,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		b = wbk_b_new();
 		be = wbk_be_new(WIN, 0); wbk_b_add(b, be); wbk_be_free(be);
 		be = wbk_be_new(CTRL, 0); wbk_b_add(b, be); wbk_be_free(be);
+		be = wbk_be_new(SHIFT, 0); wbk_b_add(b, be); wbk_be_free(be);
 		be = wbk_be_new(NOT_A_MODIFIER, 'k'); wbk_b_add(b, be); wbk_be_free(be);
 		kc_director = b3_kc_director_factory_create_mfwu(kc_director_factory, b, g_director);
 		b3_kbman_add_kc_director(g_kbman, kc_director);
@@ -333,6 +336,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		b = wbk_b_new();
 		be = wbk_be_new(WIN, 0); wbk_b_add(b, be); wbk_be_free(be);
 		be = wbk_be_new(CTRL, 0); wbk_b_add(b, be); wbk_be_free(be);
+		be = wbk_be_new(SHIFT, 0); wbk_b_add(b, be); wbk_be_free(be);
 		be = wbk_be_new(NOT_A_MODIFIER, 'l'); wbk_b_add(b, be); wbk_be_free(be);
 		kc_director = b3_kc_director_factory_create_mfwr(kc_director_factory, b, g_director);
 		b3_kbman_add_kc_director(g_kbman, kc_director);
@@ -340,10 +344,47 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		b = wbk_b_new();
 		be = wbk_be_new(WIN, 0); wbk_b_add(b, be); wbk_be_free(be);
 		be = wbk_be_new(CTRL, 0); wbk_b_add(b, be); wbk_be_free(be);
+		be = wbk_be_new(SHIFT, 0); wbk_b_add(b, be); wbk_be_free(be);
 		be = wbk_be_new(NOT_A_MODIFIER, 'o'); wbk_b_add(b, be); wbk_be_free(be);
 		kc_director = b3_kc_director_factory_create_mfwr(kc_director_factory, b, g_director);
 		b3_kbman_add_kc_director(g_kbman, kc_director);
-		// TODO Remove end
+
+		b = wbk_b_new();
+		be = wbk_be_new(WIN, 0); wbk_b_add(b, be); wbk_be_free(be);
+		be = wbk_be_new(CTRL, 0); wbk_b_add(b, be); wbk_be_free(be);
+		be = wbk_be_new(NOT_A_MODIFIER, 'h'); wbk_b_add(b, be); wbk_be_free(be);
+		kc_director = b3_kc_director_factory_create_sfml(kc_director_factory, b, g_director);
+		b3_kbman_add_kc_director(g_kbman, kc_director);
+
+		b = wbk_b_new();
+		be = wbk_be_new(WIN, 0); wbk_b_add(b, be); wbk_be_free(be);
+		be = wbk_be_new(CTRL, 0); wbk_b_add(b, be); wbk_be_free(be);
+		be = wbk_be_new(NOT_A_MODIFIER, 'j'); wbk_b_add(b, be); wbk_be_free(be);
+		kc_director = b3_kc_director_factory_create_sfmd(kc_director_factory, b, g_director);
+		b3_kbman_add_kc_director(g_kbman, kc_director);
+
+		b = wbk_b_new();
+		be = wbk_be_new(WIN, 0); wbk_b_add(b, be); wbk_be_free(be);
+		be = wbk_be_new(CTRL, 0); wbk_b_add(b, be); wbk_be_free(be);
+		be = wbk_be_new(NOT_A_MODIFIER, 'k'); wbk_b_add(b, be); wbk_be_free(be);
+		kc_director = b3_kc_director_factory_create_sfmu(kc_director_factory, b, g_director);
+		b3_kbman_add_kc_director(g_kbman, kc_director);
+
+		b = wbk_b_new();
+		be = wbk_be_new(WIN, 0); wbk_b_add(b, be); wbk_be_free(be);
+		be = wbk_be_new(CTRL, 0); wbk_b_add(b, be); wbk_be_free(be);
+		be = wbk_be_new(NOT_A_MODIFIER, 'l'); wbk_b_add(b, be); wbk_be_free(be);
+		kc_director = b3_kc_director_factory_create_sfmr(kc_director_factory, b, g_director);
+		b3_kbman_add_kc_director(g_kbman, kc_director);
+
+		b = wbk_b_new();
+		be = wbk_be_new(WIN, 0); wbk_b_add(b, be); wbk_be_free(be);
+		be = wbk_be_new(CTRL, 0); wbk_b_add(b, be); wbk_be_free(be);
+		be = wbk_be_new(NOT_A_MODIFIER, 'o'); wbk_b_add(b, be); wbk_be_free(be);
+		kc_director = b3_kc_director_factory_create_sfmr(kc_director_factory, b, g_director);
+		b3_kbman_add_kc_director(g_kbman, kc_director);
+
+		// TODO Remove end (End of hardcoded keybindings)
 	}
 
 	/**
@@ -367,6 +408,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		b3_director_refresh(g_director);
 
 		b3_win_watcher_start(win_watcher);
+
+		b3_director_show(g_director);
+		b3_director_switch_to_ws(g_director,
+								 b3_ws_get_name(b3_monitor_get_focused_ws(b3_director_get_focused_monitor(g_director))));
+
 		wbk_kbdaemon_start(kbdaemon);
 
 		main_loop(hInstance, nCmdShow);
@@ -404,10 +450,6 @@ int
 main_loop(HINSTANCE hInstance, int nCmdShow)
 {
 	MSG Msg;
-
-	b3_director_show(g_director);
-	b3_director_switch_to_ws(g_director,
-						     b3_ws_get_name(b3_monitor_get_focused_ws(b3_director_get_focused_monitor(g_director))));
 
 	while(GetMessage(&Msg, NULL, 0, 0) > 0) {
 		TranslateMessage(&Msg);
@@ -449,7 +491,7 @@ window_callback(HWND window_handler, UINT msg, WPARAM wParam, LPARAM lParam)
 	return result;
 }
 
-int
+inline int
 kbdaemon_exec_fn(wbk_b_t *b)
 {
 	return b3_kbman_exec(g_kbman, b);

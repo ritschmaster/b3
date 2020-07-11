@@ -43,6 +43,14 @@ static wbk_logger_t logger = { "director" };
 static int
 b3_director_free_monitor_arr(b3_director_t *director);
 
+/**
+ * It is only possible to set a monitor as focused, that is already available in the director.
+ *
+ * @return 0 if the focusing was successful. Non-0 otherwise.
+ */
+static int
+b3_director_set_focused_monitor(b3_director_t *director, b3_monitor_t *monitor);
+
 static const b3_monitor_t *
 b3_director_get_monitor_by_monitor_name(b3_director_t *director, const char *monitor_name);
 
@@ -588,65 +596,81 @@ b3_director_toggle_active_win_fullscreen(b3_director_t *director)
 	return 0;
 }
 
-int
-b3_director_move_focused_workspace(b3_director_t *director, b3_ws_move_direction_t direction)
+b3_monitor_t *
+b3_director_get_monitor_by_direction(b3_director_t *director, b3_ws_move_direction_t direction)
 {
-	int error;
 	char found;
-	RECT focused_area;
 	ArrayIter monitor_iter;
 	b3_monitor_t *monitor;
+	RECT focused_area;
 	RECT other_area;
-	b3_wsman_t *old_focused_wsman;
-	b3_wsman_t *new_focused_wsman;
-	b3_ws_t *focused_ws;
 
 	WaitForSingleObject(director->global_mutex, INFINITE);
-	error = 1;
 
 	found = 0;
-	focused_area = b3_ws_get_monitor_area(b3_director_get_focused_monitor(director));
+	focused_area = b3_monitor_get_monitor_area(b3_director_get_focused_monitor(director));
 	array_iter_init(&monitor_iter, b3_director_get_monitor_arr(director));
 	while (!found && array_iter_next(&monitor_iter, (void *) &monitor) != CC_ITER_END) {
 		if (monitor != b3_director_get_focused_monitor(director)) {
-			other_area = b3_ws_get_monitor_area(monitor);
+			other_area = b3_monitor_get_monitor_area(monitor);
 			switch (direction) {
 			case UP:
 				if (focused_area.top >= other_area.bottom) {
 					found = 1;
-					wbk_logger_log(&logger, INFO, "Moving workspace to the monitor on the up\n");
 				}
 				break;
 
 			case DOWN:
 				if (focused_area.bottom <= other_area.top) {
 					found = 1;
-					wbk_logger_log(&logger, INFO, "Moving workspace to the monitor on the down\n");
 				}
 				break;
 
 			case LEFT:
 				if (focused_area.left >= other_area.right) {
 					found = 1;
-					wbk_logger_log(&logger, INFO, "Moving workspace to the monitor on the left\n");
 				}
 				break;
 
 			case RIGHT:
 				if (focused_area.right <= other_area.left) {
 					found = 1;
-					wbk_logger_log(&logger, INFO, "Moving workspace to the monitor on the right\n");
 				}
 				break;
 
 			default:
-				wbk_logger_log(&logger, SEVERE, "Moving workspace not possible - unknown direction %d\n", direction);
+				wbk_logger_log(&logger, SEVERE, "Retrieving monitor not possible - unknown direction %d\n", direction);
 				break;
 			}
 		}
 	}
 
-	if (found) {
+	if (!found) {
+		monitor = NULL;
+	}
+
+	ReleaseMutex(director->global_mutex);
+
+	return monitor;
+
+}
+
+int
+b3_director_move_focused_ws_to_monitor_by_dir(b3_director_t *director, b3_ws_move_direction_t direction)
+{
+	int error;
+	b3_monitor_t *monitor;
+	b3_wsman_t *old_focused_wsman;
+	b3_wsman_t *new_focused_wsman;
+	b3_ws_t *focused_ws;
+
+	error = 1;
+
+	monitor = b3_director_get_monitor_by_direction(director, direction);
+
+	WaitForSingleObject(director->global_mutex, INFINITE);
+
+	if (monitor) {
 		old_focused_wsman = b3_monitor_get_wsman(b3_director_get_focused_monitor(director));
 		new_focused_wsman = b3_monitor_get_wsman(monitor);
 
@@ -654,8 +678,37 @@ b3_director_move_focused_workspace(b3_director_t *director, b3_ws_move_direction
 		b3_wsman_remove(old_focused_wsman, b3_ws_get_name(focused_ws));
 		b3_wsman_add(new_focused_wsman, b3_ws_get_name(focused_ws));
 		b3_director_switch_to_ws(director, b3_ws_get_name(focused_ws));
+
+		wbk_logger_log(&logger, INFO, "Moving workspace to the monitor in direction %d\n", direction);
+
+		error = 0;
 	} else {
 		wbk_logger_log(&logger, INFO, "Moving workspace not possible - no monitor in direction %d\n", direction);
+	}
+
+	ReleaseMutex(director->global_mutex);
+
+	return error;
+}
+
+int
+b3_director_set_focused_monitor_by_direction(b3_director_t *director, b3_ws_move_direction_t direction)
+{
+	int error;
+	b3_monitor_t *monitor;
+
+	error = 1;
+
+	monitor = b3_director_get_monitor_by_direction(director, direction);
+
+	WaitForSingleObject(director->global_mutex, INFINITE);
+
+	if (monitor) {
+		wbk_logger_log(&logger, INFO, "Changing focused monitor in direction %d\n", direction);
+		error = b3_director_switch_to_ws(director,
+									     b3_ws_get_name(b3_monitor_get_focused_ws(monitor)));
+	} else {
+		wbk_logger_log(&logger, INFO, "Changing focused monitor not possible - no monitor in direction %d\n", direction);
 	}
 
 	ReleaseMutex(director->global_mutex);
