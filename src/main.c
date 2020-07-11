@@ -384,6 +384,51 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		kc_director = b3_kc_director_factory_create_sfmr(kc_director_factory, b, g_director);
 		b3_kbman_add_kc_director(g_kbman, kc_director);
 
+		b = wbk_b_new();
+		be = wbk_be_new(WIN, 0); wbk_b_add(b, be); wbk_be_free(be);
+		be = wbk_be_new(CTRL, 0); wbk_b_add(b, be); wbk_be_free(be);
+		be = wbk_be_new(ALT, 0); wbk_b_add(b, be); wbk_be_free(be);
+		be = wbk_be_new(SHIFT, 0); wbk_b_add(b, be); wbk_be_free(be);
+		be = wbk_be_new(NOT_A_MODIFIER, 'h'); wbk_b_add(b, be); wbk_be_free(be);
+		kc_director = b3_kc_director_factory_create_mfwtml(kc_director_factory, b, g_director);
+		b3_kbman_add_kc_director(g_kbman, kc_director);
+
+		b = wbk_b_new();
+		be = wbk_be_new(WIN, 0); wbk_b_add(b, be); wbk_be_free(be);
+		be = wbk_be_new(CTRL, 0); wbk_b_add(b, be); wbk_be_free(be);
+		be = wbk_be_new(ALT, 0); wbk_b_add(b, be); wbk_be_free(be);
+		be = wbk_be_new(SHIFT, 0); wbk_b_add(b, be); wbk_be_free(be);
+		be = wbk_be_new(NOT_A_MODIFIER, 'j'); wbk_b_add(b, be); wbk_be_free(be);
+		kc_director = b3_kc_director_factory_create_mfwtmd(kc_director_factory, b, g_director);
+		b3_kbman_add_kc_director(g_kbman, kc_director);
+
+		b = wbk_b_new();
+		be = wbk_be_new(WIN, 0); wbk_b_add(b, be); wbk_be_free(be);
+		be = wbk_be_new(CTRL, 0); wbk_b_add(b, be); wbk_be_free(be);
+		be = wbk_be_new(ALT, 0); wbk_b_add(b, be); wbk_be_free(be);
+		be = wbk_be_new(SHIFT, 0); wbk_b_add(b, be); wbk_be_free(be);
+		be = wbk_be_new(NOT_A_MODIFIER, 'k'); wbk_b_add(b, be); wbk_be_free(be);
+		kc_director = b3_kc_director_factory_create_mfwtmu(kc_director_factory, b, g_director);
+		b3_kbman_add_kc_director(g_kbman, kc_director);
+
+		b = wbk_b_new();
+		be = wbk_be_new(WIN, 0); wbk_b_add(b, be); wbk_be_free(be);
+		be = wbk_be_new(CTRL, 0); wbk_b_add(b, be); wbk_be_free(be);
+		be = wbk_be_new(ALT, 0); wbk_b_add(b, be); wbk_be_free(be);
+		be = wbk_be_new(SHIFT, 0); wbk_b_add(b, be); wbk_be_free(be);
+		be = wbk_be_new(NOT_A_MODIFIER, 'l'); wbk_b_add(b, be); wbk_be_free(be);
+		kc_director = b3_kc_director_factory_create_mfwtmr(kc_director_factory, b, g_director);
+		b3_kbman_add_kc_director(g_kbman, kc_director);
+
+		b = wbk_b_new();
+		be = wbk_be_new(WIN, 0); wbk_b_add(b, be); wbk_be_free(be);
+		be = wbk_be_new(CTRL, 0); wbk_b_add(b, be); wbk_be_free(be);
+		be = wbk_be_new(ALT, 0); wbk_b_add(b, be); wbk_be_free(be);
+		be = wbk_be_new(SHIFT, 0); wbk_b_add(b, be); wbk_be_free(be);
+		be = wbk_be_new(NOT_A_MODIFIER, 'o'); wbk_b_add(b, be); wbk_be_free(be);
+		kc_director = b3_kc_director_factory_create_mfwtmr(kc_director_factory, b, g_director);
+		b3_kbman_add_kc_director(g_kbman, kc_director);
+
 		// TODO Remove end (End of hardcoded keybindings)
 	}
 

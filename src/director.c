@@ -717,6 +717,31 @@ b3_director_set_focused_monitor_by_direction(b3_director_t *director, b3_ws_move
 }
 
 int
+b3_director_move_focused_win_to_monitor_by_dir(b3_director_t *director, b3_ws_move_direction_t direction)
+{
+	int error;
+	b3_monitor_t *monitor;
+
+	error = 1;
+
+	monitor = b3_director_get_monitor_by_direction(director, direction);
+
+	WaitForSingleObject(director->global_mutex, INFINITE);
+
+	if (monitor) {
+		wbk_logger_log(&logger, INFO, "Moving the focused window to monitor in direction %d\n", direction);
+		error = b3_director_move_active_win_to_ws(director,
+									     	 	  b3_ws_get_name(b3_monitor_get_focused_ws(monitor)));
+	} else {
+		wbk_logger_log(&logger, INFO, "Moving the focused window to monitor not possible - no monitor in direction %d\n", direction);
+	}
+
+	ReleaseMutex(director->global_mutex);
+
+	return error;
+}
+
+int
 b3_director_show(b3_director_t *director)
 {
 	ArrayIter monitor_iter;

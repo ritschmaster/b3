@@ -171,8 +171,23 @@ b3_director_get_monitor_by_direction(b3_director_t *director, b3_ws_move_directi
 extern int
 b3_director_move_focused_ws_to_monitor_by_dir(b3_director_t *director, b3_ws_move_direction_t direction);
 
+/**
+ * Sets the focused monitor by direction.
+ *
+ * @return 0 if changing the focused monitor was successful. Non-0 otherwise.
+ */
 extern int
 b3_director_set_focused_monitor_by_direction(b3_director_t *director, b3_ws_move_direction_t direction);
+
+/**
+ * Moves a window to a monitor by direction. The window will be placed on the
+ * workspace currently in focused of the destination monitor.
+ *
+ * @return 0 if the moving was successful. Non-0 otherwise.
+ */
+extern int
+b3_director_move_focused_win_to_monitor_by_dir(b3_director_t *director, b3_ws_move_direction_t direction);
+
 
 /**
  * @brief Show the director

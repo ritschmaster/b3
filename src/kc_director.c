@@ -100,6 +100,18 @@ b3_kc_director_exec_sfml(b3_kc_director_t *kc_director);
 static int
 b3_kc_director_exec_sfmr(b3_kc_director_t *kc_director);
 
+static int
+b3_kc_director_exec_mfwtmu(b3_kc_director_t *kc_director);
+
+static int
+b3_kc_director_exec_mfwtmd(b3_kc_director_t *kc_director);
+
+static int
+b3_kc_director_exec_mfwtml(b3_kc_director_t *kc_director);
+
+static int
+b3_kc_director_exec_mfwtmr(b3_kc_director_t *kc_director);
+
 b3_kc_director_t *
 b3_kc_director_new(wbk_b_t *comb, b3_director_t *director, b3_kc_director_kind_t kind, void *data)
 {
@@ -277,6 +289,21 @@ b3_kc_director_exec(b3_kc_director_t *kc_director)
 		ret = b3_kc_director_exec_sfmr(kc_director);
 		break;
 
+	case MOVE_FOCUSED_WINDOW_TO_MONITOR_UP:
+		ret = b3_kc_director_exec_mfwtmu(kc_director);
+		break;
+
+	case MOVE_FOCUSED_WINDOW_TO_MONITOR_DOWN:
+		ret = b3_kc_director_exec_mfwtmd(kc_director);
+		break;
+
+	case MOVE_FOCUSED_WINDOW_TO_MONITOR_LEFT:
+		ret = b3_kc_director_exec_mfwtml(kc_director);
+		break;
+
+	case MOVE_FOCUSED_WINDOW_TO_MONITOR_RIGHT:
+		ret = b3_kc_director_exec_mfwtmr(kc_director);
+		break;
 
 	default:
 		ret = -1;
@@ -513,6 +540,46 @@ b3_kc_director_exec_sfmr(b3_kc_director_t *kc_director)
 	int ret;
 
 	ret = b3_director_set_focused_monitor_by_direction(kc_director->director, RIGHT);
+
+	return ret;
+}
+
+int
+b3_kc_director_exec_mfwtmu(b3_kc_director_t *kc_director)
+{
+	int ret;
+
+	ret = b3_director_move_focused_win_to_monitor_by_dir(kc_director->director, UP);
+
+	return ret;
+}
+
+int
+b3_kc_director_exec_mfwtmd(b3_kc_director_t *kc_director)
+{
+	int ret;
+
+	ret = b3_director_move_focused_win_to_monitor_by_dir(kc_director->director, DOWN);
+
+	return ret;
+}
+
+int
+b3_kc_director_exec_mfwtml(b3_kc_director_t *kc_director)
+{
+	int ret;
+
+	ret = b3_director_move_focused_win_to_monitor_by_dir(kc_director->director, LEFT);
+
+	return ret;
+}
+
+int
+b3_kc_director_exec_mfwtmr(b3_kc_director_t *kc_director)
+{
+	int ret;
+
+	ret = b3_director_move_focused_win_to_monitor_by_dir(kc_director->director, RIGHT);
 
 	return ret;
 }
