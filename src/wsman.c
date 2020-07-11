@@ -185,8 +185,8 @@ b3_wsman_set_focused_ws(b3_wsman_t *wsman, const char *ws_id)
 			ws = b3_wsman_add(wsman, ws_id);
 		}
 
-		if (b3_ws_get_win_amount(wsman->focused_ws) <= 0) {
-			b3_wsman_remove(wsman, b3_ws_get_name(wsman->focused_ws));
+		if (b3_ws_get_win_amount(old_focused_ws) <= 0) {
+			b3_wsman_remove(wsman, b3_ws_get_name(old_focused_ws));
 			b3_ws_factory_remove(wsman->ws_factory, b3_ws_get_name(old_focused_ws));
 		}
 
