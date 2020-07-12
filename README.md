@@ -89,7 +89,8 @@ Then compile and install w32bindkeys. Please have a look at its [README](https:/
 
 Then compile b3:
 
-    mingw64-configure
+    export PKG_CONFIG_PATH=/usr/x86_64-w64-mingw32/lib/pkgconfig/
+    ./configure --host=x86_64-w64-mingw32
     make
 
 ## Version scheme
