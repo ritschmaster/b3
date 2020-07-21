@@ -48,6 +48,8 @@ typedef struct b3_director_s
 	 */
 	Array *monitor_arr;
 
+	char ignore_set_foucsed_win;
+
 	b3_monitor_factory_t *monitor_factory;
 } b3_director_t;
 
