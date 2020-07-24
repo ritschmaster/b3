@@ -44,7 +44,7 @@ You will need a functioning MinGW environment. This sections describes the compi
 
 First install the dependencies:
 
-    pacman -S gcc make cmake automake autoconf
+    pacman -S make cmake automake autoconf mingw-w64-x86_64-gcc libtool
 
 Then compile and install Collections-C:
 
