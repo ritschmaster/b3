@@ -71,7 +71,7 @@ Afterwards you may install b3 - depending on your MinGW environment - by perform
 
 First install MinGW:
 
-    sudo dnf install -y mingw64-gcc mingw64-gcc-c++ mingw64-winpthreads-static cmake automake autoconf autoconf-archive libtool
+    sudo dnf install -y mingw64-gcc mingw64-gcc-c++ cmake automake autoconf autoconf-archive libtool
 
 Then compile and install Collections-C:
 
