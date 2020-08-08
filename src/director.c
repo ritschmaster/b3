@@ -312,7 +312,6 @@ b3_director_switch_to_ws(b3_director_t *director, const char *ws_id)
     	wbk_logger_log(&logger, DEBUG, "Restoring focused window\n");
     	director->ignore_set_foucsed_win = 1;
     	b3_director_w32_set_active_window(b3_win_get_window_handler(focused_win), 0);
-    	director->ignore_set_foucsed_win = 0;
     }
 
     b3_director_repaint_all();
@@ -408,9 +407,9 @@ b3_director_set_active_win(b3_director_t *director, b3_win_t *win)
 	b3_win_t *found_win;
 	int ret;
 
-	if (!director->ignore_set_foucsed_win) {
-		WaitForSingleObject(director->global_mutex, INFINITE);
+	WaitForSingleObject(director->global_mutex, INFINITE);
 
+	if (!director->ignore_set_foucsed_win) {
 		found = 0;
 		array_iter_init(&iter, director->monitor_arr);
 		while (!found && array_iter_next(&iter, (void*) &monitor) != CC_ITER_END) {
@@ -436,9 +435,11 @@ b3_director_set_active_win(b3_director_t *director, b3_win_t *win)
 			wbk_logger_log(&logger, SEVERE, "Failed updating active window: activated window is unknown\n");
 			ret = 1;
 		}
-
-		ReleaseMutex(director->global_mutex);
+	} else {
+		director->ignore_set_foucsed_win = 0;
 	}
+
+	ReleaseMutex(director->global_mutex);
 
 	return ret;
 }
@@ -517,7 +518,6 @@ b3_director_move_active_win_to_ws(b3_director_t *director, const char *ws_id)
 					 */
 					director->ignore_set_foucsed_win = 1;
 					b3_director_w32_set_active_window(b3_win_get_window_handler(active_win), 1);
-					director->ignore_set_foucsed_win = 0;
 				}
 
 				ret = 0;
@@ -574,7 +574,6 @@ b3_director_set_active_win_by_direction(b3_director_t *director, b3_ws_move_dire
     						  win);
 		director->ignore_set_foucsed_win = 1;
 		b3_director_w32_set_active_window(b3_win_get_window_handler(win), 1);
-		director->ignore_set_foucsed_win = 0;
 		b3_director_arrange_wins(director);
 	}
 
