@@ -68,6 +68,15 @@ b3_kbman_add_kc_sys(b3_kbman_t *kbman, wbk_kc_sys_t *kc_sys);
 extern int
 b3_kbman_add_kc_director(b3_kbman_t *kbman, b3_kc_director_t *kc_director);
 
+/**
+ * Create an array of nominator new key board managers and divide the internal
+ * key commands by nominator over those new key board managers. The key commands
+ * are copied during this processes. The returned array and the returned key
+ * board managers need to be freed by yourself!
+ */
+extern b3_kbman_t **
+b3_kbman_split(b3_kbman_t *kbman, int nominator);
+
 extern int
 b3_kbman_exec(b3_kbman_t *kbman, wbk_b_t *b);
 

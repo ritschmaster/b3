@@ -88,6 +88,33 @@ b3_kbman_add_kc_director(b3_kbman_t *kbman, b3_kc_director_t *kc_director)
 	return 0;
 }
 
+b3_kbman_t **
+b3_kbman_split(b3_kbman_t *kbman, int nominator)
+{
+	b3_kbman_t **kbmans;
+	int i;
+	int j;
+
+	kbmans = malloc(sizeof(b3_kbman_t **) * nominator);
+
+	for (i = 0; i < nominator; i++) {
+		kbmans[i] = b3_kbman_new();
+		for (j = 0; j < kbman->kc_director_arr_len; j++) {
+			if (j % nominator == i) {
+				b3_kbman_add_kc_director(kbmans[i], b3_kc_director_clone(kbman->kc_director_arr[j]));
+			}
+		}
+
+		for (j = 0; j < kbman->kbman->kc_sys_arr_len; j++) {
+			if (j % nominator == i) {
+				b3_kbman_add_kc_sys(kbmans[i], wbk_kc_sys_clone(kbman->kbman->kc_sys_arr[j]));
+			}
+		}
+	}
+
+	return kbmans;
+}
+
 int
 b3_kbman_exec(b3_kbman_t *kbman, wbk_b_t *b)
 {

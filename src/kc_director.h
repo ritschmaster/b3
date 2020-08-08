@@ -98,6 +98,12 @@ extern b3_kc_director_t *
 b3_kc_director_new(wbk_b_t *comb, b3_director_t *director, b3_kc_director_kind_t kind, void *data);
 
 /**
+ * Clones a key binding command
+ */
+extern b3_kc_director_t *
+b3_kc_director_clone(const b3_kc_director_t *other);
+
+/**
  * @brief Frees a key binding command
  * @return Non-0 if the freeing failed
  */

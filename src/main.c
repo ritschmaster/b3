@@ -39,13 +39,16 @@
 #include "director.h"
 #include "win_watcher.h"
 
+#define B3_KBDAEMON_ARR_LEN 3
+
 static wbk_logger_t logger = { "main" };
 
 static const char g_szClassName[] = "myWindowClass";
 
 static b3_director_t *g_director;
 
-static b3_kbman_t *g_kbman;
+static wbk_kbdaemon_t **g_kbdaemon_arr = NULL;
+static b3_kbman_t **g_kbman_arr = NULL;
 
 static int
 main_loop(HINSTANCE hInstance, int nCmdShow);
@@ -54,10 +57,11 @@ static LRESULT CALLBACK
 window_callback(HWND window_handler, UINT msg, WPARAM wParam, LPARAM lParam);
 
 static int
-kbdaemon_exec_fn(wbk_b_t *b);
+kbdaemon_exec_fn(wbk_kbdaemon_t *kbdaemon, wbk_b_t *b);
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
+	int error;
 	b3_win_factory_t *win_factory;
 	b3_ws_factory_t *ws_factory;
 	b3_wsman_factory_t *wsman_factory;
@@ -68,7 +72,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	wbk_b_t *b; // TODO remove me
 	wbk_be_t *be; // TODO remove me
 	b3_kc_director_t *kc_director; // TODO remove me
-	wbk_kbdaemon_t *kbdaemon;
+	b3_kbman_t *g_kbman;
+	int i;
+
+	error = 0;
 
 	wbk_logger_set_level(SEVERE);
 #ifdef DEBUG_ENABLED
@@ -547,56 +554,95 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		b3_kbman_add_kc_director(g_kbman, kc_director);
 
 		// TODO Remove end (End of hardcoded keybindings)
+
+		if (g_kbman) {
+			g_kbman_arr = b3_kbman_split(g_kbman, B3_KBDAEMON_ARR_LEN);
+
+			b3_kbman_free(g_kbman);
+			g_kbman = NULL;
+		} else {
+			error = 1;
+		}
 	}
 
 	/**
 	 * Setup window watcher
 	 */
-	if (g_director) {
+	if (!error) {
 		win_watcher = b3_win_watcher_new(win_factory, g_director);
 	}
 
 	/**
-	 * Setup keyboard daemon
+	 * "Start" director
 	 */
-	if (g_director) {
-		kbdaemon = wbk_kbdaemon_new(kbdaemon_exec_fn);
-	}
-
-	/**
-	 * Start main loops
-	 */
-	if (g_director && kbdaemon && g_kbman && win_watcher) {
+	if (!error) {
 		b3_director_refresh(g_director);
-
-		b3_win_watcher_start(win_watcher);
 
 		b3_director_show(g_director);
 		b3_director_switch_to_ws(g_director,
 								 b3_ws_get_name(b3_monitor_get_focused_ws(b3_director_get_focused_monitor(g_director))));
 
-		wbk_kbdaemon_start(kbdaemon);
+	}
 
+	/**
+	 * Start win watcher
+	 */
+	if (!error) {
+		b3_win_watcher_start(win_watcher);
+	}
+
+	/**
+	 * Setup keyboard daemon
+	 */
+	if (!error) {
+		g_kbdaemon_arr = malloc(sizeof(wbk_kbdaemon_t **) * B3_KBDAEMON_ARR_LEN);
+		for (i = 0; i < B3_KBDAEMON_ARR_LEN; i++) {
+			g_kbdaemon_arr[i] = wbk_kbdaemon_new(kbdaemon_exec_fn);
+			if (g_kbdaemon_arr[i]) {
+				error = wbk_kbdaemon_start(g_kbdaemon_arr[i]);
+			} else {
+				error = 1;
+			}
+		}
+	}
+
+	/**
+	 * Start main loops
+	 */
+	if (!error) {
 		main_loop(hInstance, nCmdShow);
 
-		wbk_kbdaemon_stop(kbdaemon);
 		b3_win_watcher_stop(win_watcher);
 	}
 
-	if (kbdaemon) {
-		wbk_kbdaemon_free(kbdaemon);
+	if (g_kbdaemon_arr) {
+		for (i = 0; i < B3_KBDAEMON_ARR_LEN; i++) {
+			if (g_kbdaemon_arr[i]) {
+				wbk_kbdaemon_free(g_kbdaemon_arr[i]);
+				g_kbdaemon_arr[i] = NULL;
+			}
+		}
+		free(g_kbdaemon_arr);
+		g_kbdaemon_arr = NULL;
 	}
 
-	if (g_director) {
-		b3_director_free(g_director);
-	}
-
-	if (g_kbman) {
-		b3_kbman_free(g_kbman);
+	if (g_kbman_arr) {
+		for (i = 0; i < B3_KBDAEMON_ARR_LEN; i++) {
+			if (g_kbman_arr[i]) {
+				b3_kbman_free(g_kbman_arr[i]);
+				g_kbman_arr[i] = NULL;
+			}
+		}
+		free(g_kbman_arr);
+		g_kbman_arr = NULL;
 	}
 
 	if (win_watcher) {
 		b3_win_watcher_free(win_watcher);
+	}
+
+	if (g_director) {
+		b3_director_free(g_director);
 	}
 
 	b3_win_factory_free(win_factory);
@@ -605,7 +651,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	b3_monitor_factory_free(monitor_factory);
 	b3_kc_director_factory_free(kc_director_factory);
 
-	return 0;
+	return error;
 }
 
 int
@@ -654,7 +700,14 @@ window_callback(HWND window_handler, UINT msg, WPARAM wParam, LPARAM lParam)
 }
 
 inline int
-kbdaemon_exec_fn(wbk_b_t *b)
+kbdaemon_exec_fn(wbk_kbdaemon_t *kbdaemon, wbk_b_t *b)
 {
-	return b3_kbman_exec(g_kbman, b);
+	if (kbdaemon == g_kbdaemon_arr[0])
+		return b3_kbman_exec(g_kbman_arr[0], b);
+	else if (kbdaemon == g_kbdaemon_arr[1])
+		return b3_kbman_exec(g_kbman_arr[1], b);
+	else if (kbdaemon == g_kbdaemon_arr[2])
+		return b3_kbman_exec(g_kbman_arr[2], b);
+	else
+		return 1;
 }

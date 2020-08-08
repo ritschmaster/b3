@@ -137,6 +137,45 @@ b3_kc_director_new(wbk_b_t *comb, b3_director_t *director, b3_kc_director_kind_t
 	return kc_director;
 }
 
+/**
+ * Clones a key binding command
+ */
+extern b3_kc_director_t *
+b3_kc_director_clone(const b3_kc_director_t *other)
+{
+	wbk_b_t *comb;
+	char *data_str;
+	void *data;
+	int len;
+	b3_kc_director_t *kc_director;
+
+	kc_director = NULL;
+	if (other) {
+		comb = wbk_b_clone(b3_kc_director_get_binding(other));
+
+		switch (other->kind) {
+		case CHANGE_WORKSPACE:
+		case CHANGE_MONITOR:
+		case MOVE_ACTIVE_WINDOW_TO_WORKSPACE:
+			len = strlen((char *) other->data) + 1;
+			data_str = malloc(sizeof(char) * len);
+			memcpy(data_str, (char *) other->data, sizeof(char) * len);
+			data = data_str;
+			break;
+
+		default:
+			if (other->data) {
+				wbk_logger_log(&logger, SEVERE, "Object to clone: kind %d does not expect data\n", other->kind);
+			}
+			data = NULL;
+		}
+
+		kc_director = b3_kc_director_new(comb, other->director, other->kind, data);
+	}
+
+	return kc_director;
+}
+
 int
 b3_kc_director_free(b3_kc_director_t *kc_director)
 {
