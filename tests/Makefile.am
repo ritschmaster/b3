@@ -22,11 +22,34 @@
 # SOFTWARE.
 ################################################################################
 
-AM_CFLAGS = -I$(top_builddir)/src 
+
+#AM_CFLAGS = -I$(top_builddir)/src
+AM_CFLAGS = -D TESTDATADIR=\"$(top_builddir)/tests\"
+
 if DEBUG
-AM_CFLAGS = g -O0
+AM_CFLAGS += g -O0
 AM_LDFLAGS = -g -O0
 else
 AM_CFLAGS += -O2
 endif
+
+TESTS = test_parser
+
+check_PROGRAMS = test_parser
+
+noinst_LTLIBRARIES = libb3test.la
+
+libb3test_la_SOURCES = test.h
+libb3test_la_SOURCES += test.c
+
+test_parser_SOURCES = test_parser.c
+test_parser_CFLAGS = $(AM_CFLAGS)
+#test_parser_CFLAGS += @collectionc_CFLAGS@
+test_parser_LDFLAGS = $(AM_LDFLAGS)
+test_parser_LDFLAGS += -mwindows
+test_parser_LDFLAGS += -static
+test_parser_LDADD = libb3test.la
+test_parser_LDADD += $(top_builddir)/src/libb3interpreter.la
+test_parser_LDADD += $(top_builddir)/src/libb3parser.la
+#test_parser_LDADD += @collectionc_LIBS@
 

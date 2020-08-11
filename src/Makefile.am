@@ -22,31 +22,35 @@
 # SOFTWARE.
 ################################################################################
 
+AM_YFLAGS = -d
+
 if DEBUG
 AM_CFLAGS = -O0
 AM_CFLAGS += -D DEBUG_ENABLED=1
-AM_LDFLAGS = -g -O0 
+AM_LDFLAGS = -g -O0
 else
 AM_CFLAGS = -O2
 AM_LDFLAGS = -O2
 endif
 
-bin_PROGRAMS = b3 
+bin_PROGRAMS = b3
 
 noinst_LTLIBRARIES = libb3parser.la
 noinst_LTLIBRARIES += libb3interpreter.la
 
 
-libb3parser_la_SOURCES = win.c win.h # todo
+BUILT_SOURCES = lexer_gen.h
+BUILT_SOURCES += lexer_gen.c
+BUILT_SOURCES += parser_gen.h
+BUILT_SOURCES += parser_gen.c
 
-libb3parser_la_CFLAGS = $(AM_CFLAGS)
-libb3parser_la_CFLAGS += @collectionc_CFLAGS@
+CLEANFILES = lexer_gen.h
+CLEANFILES += lexer_gen.c
+CLEANFILES += parser_gen.h
+CLEANFILES += parser_gen.c
 
-libb3parser_la_LDFLAGS = $(AM_LDFLAGS) 
-libb3parser_la_LDFLAGS += -mwindows 
-libb3parser_la_LDFLAGS += -static
-
-libb3parser_la_LIBADD = @collectionc_LIBS@
+lexer_gen.h: Makefile
+parser_gen.h: Makefile
 
 
 libb3interpreter_la_SOURCES = director.c director.h
@@ -64,12 +68,11 @@ libb3interpreter_la_SOURCES += ws_factory.c ws_factory.h
 libb3interpreter_la_SOURCES += wsman_factory.c wsman_factory.h
 libb3interpreter_la_SOURCES += monitor_factory.c monitor_factory.h
 libb3interpreter_la_SOURCES += kc_director_factory.c kc_director_factory.h
-libb3interpreter_la_SOURCES += parser.c parser.h
 libb3interpreter_la_SOURCES += til.c til.h
 libb3interpreter_la_SOURCES += counter.c counter.h
 
 libb3interpreter_la_CFLAGS = $(AM_CFLAGS)
-libb3interpreter_la_CFLAGS += @collectionc_CFLAGS@ 
+libb3interpreter_la_CFLAGS += @collectionc_CFLAGS@
 libb3interpreter_la_CFLAGS += @libwbkbase_CFLAGS@
 
 libb3interpreter_la_LDFLAGS = $(AM_LDFLAGS)
@@ -80,16 +83,35 @@ libb3interpreter_la_LIBADD = @collectionc_LIBS@
 libb3interpreter_la_LIBADD += @libwbkbase_LIBS@
 
 
+nodist_libb3parser_la_SOURCES = lexer_gen.h lexer_gen.c
+nodist_libb3parser_la_SOURCES += parser_gen.h parser_gen.c
+
+libb3parser_la_SOURCES = lexer_gen.l lexer_gen.h lexer_gen.c
+libb3parser_la_SOURCES += parser_gen.y parser_gen.h parser_gen.c
+libb3parser_la_SOURCES += parser.h parser.c
+
+libb3parser_la_CFLAGS = $(AM_CFLAGS)
+libb3parser_la_CFLAGS += @collectionc_CFLAGS@
+
+libb3parser_la_LDFLAGS = $(AM_LDFLAGS)
+libb3parser_la_LDFLAGS += -mwindows
+libb3parser_la_LDFLAGS += -static
+
+libb3parser_la_LIBADD = libb3interpreter.la
+libb3parser_la_LIBADD += @collectionc_LIBS@
+
+
 b3_SOURCES = main.c
 
 b3_CFLAGS = $(AM_CFLAGS)
 b3_CFLAGS += @libwbkbase_CFLAGS@
 
 b3_LDFLAGS = $(AM_LDFLAGS)
-b3_LDFLAGS += -mwindows 
+b3_LDFLAGS += -mwindows
 b3_LDFLAGS += -static
 
 b3_LDADD = libb3interpreter.la
+b3_LDADD += libb3parser.la
 b3_LDADD += @libwbkbase_LIBS@
 
 

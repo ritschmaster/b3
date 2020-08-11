@@ -23,38 +23,23 @@
 *******************************************************************************/
 
 /**
- * @author Richard Bäck <richard.baeck@mailbox.org>
- * @date 2020-02-27
- * @brief File contains the parser class definition
+ * @author Richard BÃ¤ck <richard.baeck@mailbox.org>
+ * @date 2020-08-04
+ * @brief File contains the common test function definition
  */
 
-#include <stdio.h>
+#ifndef B3_TEST_H
+#define B3_TEST_H
 
-#include "kbman.h"
-#include "kc_director_factory.h"
+extern void
+b3_test(void (*setup)(void), void (*teardown)(void), int (*test_fn)(void));
 
-#ifndef B3_PARSER_H
-#define B3_PARSER_H
+extern void
+b3_test_empty_setup(void);
 
-typedef struct b3_parser_s
-{
-	b3_kc_director_factory_t *kc_director_factory;
-} b3_parser_t;
+extern void
+b3_test_empty_teardown(void);
 
-/**
- * @param ws_factory A workspace factory. It will not be freed by freeing the
- * workspace manager factory!
- */
-extern b3_parser_t *
-b3_parser_new(b3_kc_director_factory_t *kc_director_factory);
+#endif // B3_TEST_H
 
-extern int
-b3_parser_free(b3_parser_t *parser);
 
-extern b3_kbman_t *
-b3_parser_parse_str(b3_parser_t *parser, const char *str);
-
-extern b3_kbman_t *
-b3_parser_parse_file(b3_parser_t *parser, FILE *file);
-
-#endif // B3_PARSER_H

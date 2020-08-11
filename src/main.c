@@ -83,7 +83,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	monitor_factory = b3_monitor_factory_new(wsman_factory);
 	kc_director_factory = b3_kc_director_factory_new();
 
-	parser = b3_parser_new(kc_director_factory, "");
+	parser = b3_parser_new(kc_director_factory);
 
 	g_director = b3_director_new(monitor_factory);
 	/**

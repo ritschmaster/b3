@@ -32,14 +32,18 @@
 
 #include <stdlib.h>
 
+#include "parser_gen.h"
+#include "lexer_gen.h"
+
+static b3_kbman_t *
+b3_parser_parse(b3_parser_t *parser, yyscan_t scanner);
+
 b3_parser_t *
-b3_parser_new(b3_kc_director_factory_t *kc_director_factory, const char *filename)
+b3_parser_new(b3_kc_director_factory_t *kc_director_factory)
 {
 	b3_parser_t *parser;
 
 	parser = malloc(sizeof(b3_parser_t));
-
-	parser->parser = wbk_parser_new(filename);
 
 	parser->kc_director_factory = kc_director_factory;
 
@@ -49,11 +53,68 @@ b3_parser_new(b3_kc_director_factory_t *kc_director_factory, const char *filenam
 extern int
 b3_parser_free(b3_parser_t *parser)
 {
-	wbk_parser_free(parser->parser);
-	parser->parser = NULL;
-
 	parser->kc_director_factory = NULL;
 
 	free(parser);
 	return 0;
+}
+
+b3_kbman_t *
+b3_parser_parse_str(b3_parser_t *parser, const char *str)
+{
+	yyscan_t scanner;
+	YY_BUFFER_STATE state;
+	b3_kbman_t *kbman;
+
+	if (yylex_init(&scanner)) {
+		// couldn't initialize return NULL;
+		// TODO
+	}
+
+	state = yy_scan_string(str, scanner);
+
+	kbman = b3_parser_parse(parser, scanner);
+
+	yy_delete_buffer(state, scanner);
+
+	yylex_destroy(scanner);
+
+	return kbman;
+}
+
+b3_kbman_t *
+b3_parser_parse_file(b3_parser_t *parser, FILE *file)
+{
+	yyscan_t scanner;
+	YY_BUFFER_STATE state;
+	b3_kbman_t *kbman;
+
+	if (yylex_init(&scanner)) {
+		// couldn't initialize return NULL;
+		// TODO
+	}
+
+	yyset_in(file, scanner);
+	kbman = b3_parser_parse_file(parser, scanner);
+
+	yy_delete_buffer(state, scanner);
+
+	yylex_destroy(scanner);
+
+	return kbman;
+}
+
+b3_kbman_t *
+b3_parser_parse(b3_parser_t *parser, yyscan_t scanner)
+{
+	b3_kbman_t *kbman;
+
+	kbman = b3_kbman_new();
+
+	if (yyparse(&kbman, scanner)) {
+		b3_kbman_free(kbman);
+		kbman = NULL;
+	}
+
+	return kbman;
 }

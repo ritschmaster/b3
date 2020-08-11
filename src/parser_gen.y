@@ -22,39 +22,77 @@
   SOFTWARE.
 *******************************************************************************/
 
+%{
+
 /**
- * @author Richard Bäck <richard.baeck@mailbox.org>
- * @date 2020-02-27
- * @brief File contains the parser class definition
+ * @author Richard BÃ¤ck <richard.baeck@mailbox.org>
+ * @date 2020-08-03
+ * @brief File contains the parser definition
  */
 
+#include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 
 #include "kbman.h"
-#include "kc_director_factory.h"
+#include "parser_gen.h"
+#include "lexer_gen.h"
 
-#ifndef B3_PARSER_H
-#define B3_PARSER_H
+int
+yyerror(b3_kbman_t **kbman, yyscan_t scanner, const char *msg) {
+	fprintf(stderr, "Error: %s\n", msg);
 
-typedef struct b3_parser_s
-{
-	b3_kc_director_factory_t *kc_director_factory;
-} b3_parser_t;
+	return 0;
+}
 
-/**
- * @param ws_factory A workspace factory. It will not be freed by freeing the
- * workspace manager factory!
- */
-extern b3_parser_t *
-b3_parser_new(b3_kc_director_factory_t *kc_director_factory);
+%}
 
-extern int
-b3_parser_free(b3_parser_t *parser);
+%code requires {
 
-extern b3_kbman_t *
-b3_parser_parse_str(b3_parser_t *parser, const char *str);
+#ifndef YY_TYPEDEF_YY_SCANNER_T
+#define YY_TYPEDEF_YY_SCANNER_T
+typedef void* yyscan_t;
+#endif
 
-extern b3_kbman_t *
-b3_parser_parse_file(b3_parser_t *parser, FILE *file);
+}
 
-#endif // B3_PARSER_H
+%output  "parser_gen.c"
+%defines "parser_gen.h"
+
+%define api.pure
+%lex-param   { yyscan_t scanner }
+%parse-param { b3_kbman_t **kbman }
+%parse-param { yyscan_t scanner }
+
+%union {
+	char c;
+}
+
+%token               TOKEN_MODIFIER
+%token               TOKEN_KEY
+%token               TOKEN_PLUS
+%token               TOKEN_BINDSYM
+%token               TOKEN_SPACE
+%token               TOKEN_EOL
+%token               TOKEN_EOF
+
+%%
+
+statements: TOKEN_EOL statement TOKEN_EOL statements
+	  | TOKEN_EOL statement TOKEN_EOL statements
+	  | statement TOKEN_EOF
+	  | TOKEN_EOL statement TOKEN_EOF
+	  | TOKEN_EOL TOKEN_EOF
+
+statement: bindsym
+	 ;
+
+bindsym: TOKEN_BINDSYM TOKEN_SPACE binding TOKEN_SPACE
+
+binding: TOKEN_MODIFIER
+       | TOKEN_MODIFIER TOKEN_SPACE TOKEN_PLUS TOKEN_SPACE binding
+       | TOKEN_KEY
+       | TOKEN_KEY TOKEN_SPACE TOKEN_PLUS TOKEN_SPACE binding
+       ;
+
+%%

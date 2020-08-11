@@ -22,39 +22,44 @@
   SOFTWARE.
 *******************************************************************************/
 
-/**
- * @author Richard Bäck <richard.baeck@mailbox.org>
- * @date 2020-02-27
- * @brief File contains the parser class definition
- */
+%{
 
-#include <stdio.h>
+/**
+ * @author Richard BÃ¤ck <richard.baeck@mailbox.org>
+ * @date 2020-08-03
+ * @brief File contains the lexical analyzator definition
+ */
 
 #include "kbman.h"
-#include "kc_director_factory.h"
+#include "parser_gen.h"
 
-#ifndef B3_PARSER_H
-#define B3_PARSER_H
+%}
 
-typedef struct b3_parser_s
-{
-	b3_kc_director_factory_t *kc_director_factory;
-} b3_parser_t;
+%option outfile="lexer_gen.c" header-file="lexer_gen.h"
+%option warn nodefault
 
-/**
- * @param ws_factory A workspace factory. It will not be freed by freeing the
- * workspace manager factory!
- */
-extern b3_parser_t *
-b3_parser_new(b3_kc_director_factory_t *kc_director_factory);
+%option reentrant noyywrap never-interactive nounistd
+%option bison-bridge
 
-extern int
-b3_parser_free(b3_parser_t *parser);
+MODIFIER        (MOD4|MOD1)
+KEY             [a-zA-Z0-9]
+PLUS            [+]
+BINDSYM         bindsym
+SPACE           [ ]+
+EOL             [\n]+
+EOF             \Z
 
-extern b3_kbman_t *
-b3_parser_parse_str(b3_parser_t *parser, const char *str);
+%%
 
-extern b3_kbman_t *
-b3_parser_parse_file(b3_parser_t *parser, FILE *file);
+{MODIFIER}               { return TOKEN_MODIFIER; }
+{KEY}                    { return TOKEN_KEY; }
+{PLUS}                   { return TOKEN_PLUS; }
+{BINDSYM}                { return TOKEN_BINDSYM; }
+{SPACE}                  { return TOKEN_SPACE; }
+{EOL}                    { return TOKEN_EOL; }
+{EOF}                    { return 0; }
 
-#endif // B3_PARSER_H
+%%
+
+
+
