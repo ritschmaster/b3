@@ -30,5 +30,9 @@ ylwrap
 **/*.trs
 **/*.exe
 
+src/parser_gen.h
+src/parser_gen.c
+src/lexer_gen.h
+src/lexer_gen.c
 src/b3
 

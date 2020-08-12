@@ -27,7 +27,7 @@
 AM_CFLAGS = -D TESTDATADIR=\"$(top_builddir)/tests\"
 
 if DEBUG
-AM_CFLAGS += g -O0
+AM_CFLAGS += -g -O0
 AM_LDFLAGS = -g -O0
 else
 AM_CFLAGS += -O2

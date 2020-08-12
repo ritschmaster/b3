@@ -288,6 +288,7 @@ b3_director_switch_to_ws(b3_director_t *director, const char *ws_id)
 	b3_monitor_t *monitor;
 	b3_win_t *focused_win;
 
+	wbk_logger_log(&logger, DEBUG, "\n>>>>>> STARTING TO WAIT\n\n");
 	WaitForSingleObject(director->global_mutex, INFINITE);
 
 	found = 0;
@@ -542,15 +543,21 @@ int
 b3_director_move_active_win(b3_director_t *director, b3_ws_move_direction_t direction)
 {
 	int error;
+	b3_win_t *focused_win;
 
 	WaitForSingleObject(director->global_mutex, INFINITE);
 
 	error = 1;
-    if (b3_win_get_state(b3_ws_get_focused_win(b3_monitor_get_focused_ws(director->focused_monitor))) != MAXIMIZED) {
-		error = b3_ws_move_active_win(b3_monitor_get_focused_ws(director->focused_monitor),
-									   direction);
-		b3_director_arrange_wins(director);
-    }
+	focused_win = b3_ws_get_focused_win(b3_monitor_get_focused_ws(director->focused_monitor));
+	if (focused_win) {
+		if (b3_win_get_state(focused_win) != MAXIMIZED) {
+			error = b3_ws_move_active_win(b3_monitor_get_focused_ws(director->focused_monitor),
+										   direction);
+			b3_director_arrange_wins(director);
+		}
+	} else {
+		wbk_logger_log(&logger, INFO, "No focused window available to move in a direction.\n");
+	}
 
 	ReleaseMutex(director->global_mutex);
 
@@ -598,6 +605,8 @@ b3_director_toggle_active_win_fullscreen(b3_director_t *director)
     		b3_win_set_state(active_win, NORMAL);
     	}
 		b3_director_arrange_wins(director);
+    } else {
+		wbk_logger_log(&logger, INFO, "No focused window available to toggle fullscreen.\n");
     }
 
 	ReleaseMutex(director->global_mutex);
@@ -789,9 +798,24 @@ b3_director_draw(b3_director_t *director, HWND window_handler)
 int
 b3_director_close_active_win(b3_director_t *director)
 {
-	SendMessage(b3_win_get_window_handler(b3_ws_get_focused_win(b3_monitor_get_focused_ws(b3_director_get_focused_monitor(director)))),
-				WM_CLOSE, (WPARAM) NULL, (LPARAM) NULL);
-	return 0;
+	int error;
+	b3_win_t *focused_win;
+
+	WaitForSingleObject(director->global_mutex, INFINITE);
+
+	error = 1;
+	focused_win = b3_ws_get_focused_win(b3_monitor_get_focused_ws(b3_director_get_focused_monitor(director)));
+	if (focused_win) {
+		SendMessage(b3_win_get_window_handler(focused_win),
+					WM_CLOSE, (WPARAM) NULL, (LPARAM) NULL);
+		error = 0;
+	} else {
+		wbk_logger_log(&logger, INFO, "No focused window available to close.\n");
+	}
+
+	ReleaseMutex(director->global_mutex);
+
+	return error;
 }
 
 int
