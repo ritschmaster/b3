@@ -27,7 +27,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <wbkbase/logger.h>
+#include <w32bindkeys/logger.h>
 
 #define INT_AS_STRING_LENGTH 15
 

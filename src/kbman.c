@@ -24,7 +24,7 @@
 
 #include "kbman.h"
 
-#include <wbkbase/logger.h>
+#include <w32bindkeys/logger.h>
 #include <sys/types.h>
 #include <unistd.h>
 #include <windows.h>

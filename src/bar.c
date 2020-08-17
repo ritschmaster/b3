@@ -29,7 +29,7 @@
 #include <collectc/hashtable.h>
 #include <collectc/array.h>
 #include <windows.h>
-#include <wbkbase/logger.h>
+#include <w32bindkeys/logger.h>
 
 #include "ws.h"
 

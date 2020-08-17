@@ -26,7 +26,7 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include <wbkbase/logger.h>
+#include <w32bindkeys/logger.h>
 
 static wbk_logger_t logger = { "monitor" };
 

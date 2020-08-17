@@ -28,7 +28,7 @@
  * @brief File contains the key binding director command class definition
  */
 
-#include <wbkbase/kc.h>
+#include <w32bindkeys/kc.h>
 
 #include "director.h"
 

@@ -33,7 +33,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <windows.h>
-#include <wbkbase/logger.h>
+#include <w32bindkeys/logger.h>
 
 #include "monitor.h"
 #include "ws.h"

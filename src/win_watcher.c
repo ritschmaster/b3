@@ -27,7 +27,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <wbkbase/logger.h>
+#include <w32bindkeys/logger.h>
 #include <windows.h>
 #include <collectc/hashtable.h>
 

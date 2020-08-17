@@ -25,7 +25,7 @@
 #include "counter.h"
 
 #include <stdlib.h>
-#include <wbkbase/logger.h>
+#include <w32bindkeys/logger.h>
 
 wbk_logger_t logger = { "counter" };
 

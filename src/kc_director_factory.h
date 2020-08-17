@@ -29,7 +29,7 @@
  * definition
  */
 
-#include <wbkbase/kc.h>
+#include <w32bindkeys/kc.h>
 
 #include "kc_director.h"
 #include "director.h"

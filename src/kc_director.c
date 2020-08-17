@@ -30,7 +30,7 @@
 
 #include "kc_director.h"
 
-#include <wbkbase/logger.h>
+#include <w32bindkeys/logger.h>
 
 static wbk_logger_t logger =  { "kc_director" };
 

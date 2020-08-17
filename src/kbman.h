@@ -31,8 +31,8 @@
 #ifndef B3_KBMAN_H
 #define B3_KBMAN_H
 
-#include <wbkbase/kbman.h>
-#include <wbkbase/kc_sys.h>
+#include <w32bindkeys/kbman.h>
+#include <w32bindkeys/kc_sys.h>
 #include <windows.h>
 
 #include "kc_director.h"

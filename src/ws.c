@@ -25,7 +25,7 @@
 #include "ws.h"
 
 #include <string.h>
-#include <wbkbase/logger.h>
+#include <w32bindkeys/logger.h>
 #include <windows.h>
 #include <collectc/stack.h>
 

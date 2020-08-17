@@ -25,8 +25,8 @@
 #include <stdio.h>
 #include <collectc/array.h>
 #include <windows.h>
-#include <wbkbase/logger.h>
-#include <wbkbase/kbdaemon.h>
+#include <w32bindkeys/logger.h>
+#include <w32bindkeys/kbdaemon.h>
 #include <getopt.h>
 
 #include "win_factory.h"

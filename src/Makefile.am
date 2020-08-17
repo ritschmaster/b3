@@ -73,14 +73,14 @@ libb3interpreter_la_SOURCES += counter.c counter.h
 
 libb3interpreter_la_CFLAGS = $(AM_CFLAGS)
 libb3interpreter_la_CFLAGS += @collectionc_CFLAGS@
-libb3interpreter_la_CFLAGS += @libwbkbase_CFLAGS@
+libb3interpreter_la_CFLAGS += @libw32bindkeys_CFLAGS@
 
 libb3interpreter_la_LDFLAGS = $(AM_LDFLAGS)
 libb3interpreter_la_LDFLAGS += -mwindows
 libb3interpreter_la_LDFLAGS += -static
 
 libb3interpreter_la_LIBADD = @collectionc_LIBS@
-libb3interpreter_la_LIBADD += @libwbkbase_LIBS@
+libb3interpreter_la_LIBADD += @libw32bindkeys_LIBS@
 
 
 nodist_libb3parser_la_SOURCES = lexer_gen.h lexer_gen.c
@@ -104,7 +104,7 @@ libb3parser_la_LIBADD += @collectionc_LIBS@
 b3_SOURCES = main.c
 
 b3_CFLAGS = $(AM_CFLAGS)
-b3_CFLAGS += @libwbkbase_CFLAGS@
+b3_CFLAGS += @libw32bindkeys_CFLAGS@
 
 b3_LDFLAGS = $(AM_LDFLAGS)
 b3_LDFLAGS += -mwindows
@@ -112,6 +112,6 @@ b3_LDFLAGS += -static
 
 b3_LDADD = libb3interpreter.la
 b3_LDADD += libb3parser.la
-b3_LDADD += @libwbkbase_LIBS@
+b3_LDADD += @libw32bindkeys_LIBS@
 
 
