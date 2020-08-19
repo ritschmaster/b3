@@ -21,14 +21,22 @@ __b__(aeck's implementation of i) __3__ (for Windows)
 3. See [Compiling](#Compiling)
 4. Execute `b3.exe`
 
-## Remarks on Windows integration
+## FAQ
+
+### How does b3 integrate into Windows?
 
 * Your default Windows expierence stays the same. b3 lives within the Microsoft
   default Explorer shell and just adds functionalities you know and love of i3.
-* <kbd>Alt</kbd> + <kbd>Tab</kbd> is still avialable
+* Stuff like <kbd>Alt</kbd> + <kbd>Tab</kbd> is still avialable
 * Switching between windows in the plain Windows way will be automatically
   recognized by b3 (e.g. switch to workspace of that window).
 * The Windows 10 desktop are still available but useless when b3 is running.
+* It is possible to rebind almost any key combination. <kbd>Win</kbd> + <kbd>h</kbd>, <kbd>j</kbd>, <kbd>k</kbd>, <kbd>l</kbd> is supported (for <kbd>l</kbd> see [here](https://github.com/ritschmaster/w32bindkeys#i-want-to-remap-the-win-key)
+
+### What are the project's goals?
+
+1. Be as i3 like as possible while integrating into default Windows as easily as possible.
+2. Being stable is more important than having more features
 
 ## Compiling
 
@@ -66,6 +74,10 @@ Then compile b3:
 Afterwards you may install b3 - depending on your MinGW environment - by performing:
 
     make install
+
+If you are unsatisfied with b3 you may uninstall it again:
+
+    make uninstall
 
 ### On Fedora Linux (64 bit)
 
