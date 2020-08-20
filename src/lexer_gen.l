@@ -28,10 +28,76 @@
  * @author Richard Bäck <richard.baeck@mailbox.org>
  * @date 2020-08-03
  * @brief File contains the lexical analyzator definition
+ *
+ * The lexical analyzator is not thread safe!
  */
 
+#include <string.h>
+#include <w32bindkeys/be.h>
+
+#include "kc_director_factory.h"
+#include "director.h"
 #include "kbman.h"
 #include "parser_gen.h"
+
+static wbk_mk_t
+get_modifier(char *str);
+
+static wbk_mk_t
+get_modifier(char *str)
+{
+	char *str_copy;
+	int length;
+	int i;
+	wbk_mk_t modifier;
+
+	length = strlen(str) + 1;
+	str_copy = malloc(sizeof(char) * length);
+	for (i = 0; i < length; i++) {
+		str_copy[i] = tolower(str[i]);
+	}
+
+	if (strcmp(str_copy, "mod4") == 0) {
+		modifier = WIN;
+	} else if (strcmp(str_copy, "mod1") == 0) {
+		modifier = ALT;
+	} else if (strcmp(str_copy, "shift") == 0) {
+		modifier = SHIFT;
+	} else if (strcmp(str_copy, "space") == 0) {
+		modifier = SPACE;
+	} else if (strcmp(str_copy, "ctrl") == 0) {
+		modifier = CTRL;
+	} else if (strcmp(str_copy, "f1") == 0) {
+		modifier = F1;
+	} else if (strcmp(str_copy, "f2") == 0) {
+		modifier = F2;
+	} else if (strcmp(str_copy, "f3") == 0) {
+		modifier = F3;
+	} else if (strcmp(str_copy, "f4") == 0) {
+		modifier = F4;
+	} else if (strcmp(str_copy, "f5") == 0) {
+		modifier = F5;
+	} else if (strcmp(str_copy, "f6") == 0) {
+		modifier = F6;
+	} else if (strcmp(str_copy, "f7") == 0) {
+		modifier = F7;
+	} else if (strcmp(str_copy, "f8") == 0) {
+		modifier = F8;
+	} else if (strcmp(str_copy, "f9") == 0) {
+		modifier = F9;
+	} else if (strcmp(str_copy, "f10") == 0) {
+		modifier = F10;
+	} else if (strcmp(str_copy, "f11") == 0) {
+		modifier = F11;
+	} else if (strcmp(str_copy, "f12") == 0) {
+		modifier = F12;
+	} else {
+		modifier = NOT_A_MODIFIER;
+	}
+
+	return modifier;
+}
+
 
 %}
 
@@ -41,20 +107,48 @@
 %option reentrant noyywrap never-interactive nounistd
 %option bison-bridge
 
-MODIFIER        (MOD4|MOD1)
+MODIFIER        ([mM][oO][dD]1|[mM][oO][dD]4|[sS][hH][iI][fF][tT]|[sS][pP][aA][cC][eE]|[cC][tT][rR][lL]|[fF]([1-9]|10|11|12))
 KEY             [a-zA-Z0-9]
 PLUS            [+]
 BINDSYM         bindsym
-SPACE           [ ]+
+MOVE            move
+FOCUS           focus
+CONTAINER       container
+WORKSPACE       workspace
+UP              up
+DOWN            down
+LEFT            left
+RIGHT           right
+KILL            kill
+FLOATING        floating
+FULLSCREEN      fullscreen
+TOGGLE          toggle
+TO              to
+OUTPUT          output
+SPACE           [ \t]+
 EOL             [\n]+
 EOF             \Z
 
 %%
 
-{MODIFIER}               { return TOKEN_MODIFIER; }
-{KEY}                    { return TOKEN_KEY; }
+{MODIFIER}               { yylval->modifier = get_modifier(yytext); return TOKEN_MODIFIER; }
+{KEY}                    { yylval->key = tolower(yytext[0]); return TOKEN_KEY; }
 {PLUS}                   { return TOKEN_PLUS; }
 {BINDSYM}                { return TOKEN_BINDSYM; }
+{MOVE}                   { return TOKEN_MOVE; }
+{FOCUS}                  { return TOKEN_FOCUS; }
+{CONTAINER}              { return TOKEN_CONTAINER; }
+{WORKSPACE}              { return TOKEN_WORKSPACE; }
+{UP}                     { return TOKEN_UP; }
+{DOWN}                   { return TOKEN_DOWN; }
+{LEFT}                   { return TOKEN_LEFT; }
+{RIGHT}                  { return TOKEN_RIGHT; }
+{KILL}                   { return TOKEN_KILL; }
+{FLOATING}               { return TOKEN_FLOATING; }
+{FULLSCREEN}             { return TOKEN_FULLSCREEN; }
+{TOGGLE}                 { return TOKEN_TOGGLE; }
+{TO}                     { return TOKEN_TO; }
+{OUTPUT}                 { return TOKEN_OUTPUT; }
 {SPACE}                  { return TOKEN_SPACE; }
 {EOL}                    { return TOKEN_EOL; }
 {EOF}                    { return 0; }

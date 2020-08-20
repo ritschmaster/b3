@@ -36,7 +36,7 @@
 #include "lexer_gen.h"
 
 static b3_kbman_t *
-b3_parser_parse(b3_parser_t *parser, yyscan_t scanner);
+b3_parser_parse(b3_parser_t *parser, b3_director_t *director, yyscan_t scanner);
 
 b3_parser_t *
 b3_parser_new(b3_kc_director_factory_t *kc_director_factory)
@@ -60,7 +60,7 @@ b3_parser_free(b3_parser_t *parser)
 }
 
 b3_kbman_t *
-b3_parser_parse_str(b3_parser_t *parser, const char *str)
+b3_parser_parse_str(b3_parser_t *parser, b3_director_t *director, const char *str)
 {
 	yyscan_t scanner;
 	YY_BUFFER_STATE state;
@@ -73,7 +73,7 @@ b3_parser_parse_str(b3_parser_t *parser, const char *str)
 
 	state = yy_scan_string(str, scanner);
 
-	kbman = b3_parser_parse(parser, scanner);
+	kbman = b3_parser_parse(parser, director, scanner);
 
 	yy_delete_buffer(state, scanner);
 
@@ -83,7 +83,7 @@ b3_parser_parse_str(b3_parser_t *parser, const char *str)
 }
 
 b3_kbman_t *
-b3_parser_parse_file(b3_parser_t *parser, FILE *file)
+b3_parser_parse_file(b3_parser_t *parser, b3_director_t *director, FILE *file)
 {
 	yyscan_t scanner;
 	YY_BUFFER_STATE state;
@@ -95,7 +95,7 @@ b3_parser_parse_file(b3_parser_t *parser, FILE *file)
 	}
 
 	yyset_in(file, scanner);
-	kbman = b3_parser_parse_file(parser, scanner);
+	kbman = b3_parser_parse(parser, director, scanner);
 
 	yy_delete_buffer(state, scanner);
 
@@ -105,13 +105,13 @@ b3_parser_parse_file(b3_parser_t *parser, FILE *file)
 }
 
 b3_kbman_t *
-b3_parser_parse(b3_parser_t *parser, yyscan_t scanner)
+b3_parser_parse(b3_parser_t *parser, b3_director_t *director, yyscan_t scanner)
 {
 	b3_kbman_t *kbman;
 
 	kbman = b3_kbman_new();
 
-	if (yyparse(&kbman, scanner)) {
+	if (yyparse(&(parser->kc_director_factory), &director, &kbman, scanner)) {
 		b3_kbman_free(kbman);
 		kbman = NULL;
 	}

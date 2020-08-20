@@ -24,7 +24,7 @@
 
 
 #AM_CFLAGS = -I$(top_builddir)/src
-AM_CFLAGS = -D TESTDATADIR=\"$(top_builddir)/tests\"
+AM_CFLAGS = -D TESTDATADIR=\"$(top_builddir)/tests\" -Wl,--allow-multiple-definition
 
 if DEBUG
 AM_CFLAGS += -g -O0
@@ -51,5 +51,6 @@ test_parser_LDFLAGS += -static
 test_parser_LDADD = libb3test.la
 test_parser_LDADD += $(top_builddir)/src/libb3interpreter.la
 test_parser_LDADD += $(top_builddir)/src/libb3parser.la
+test_parser_LDADD += @libw32bindkeys_LIBS@
 #test_parser_LDADD += @collectionc_LIBS@
 
