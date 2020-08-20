@@ -133,18 +133,22 @@ b3_kbman_exec_kc_director(b3_kbman_t *kbman, wbk_b_t *b)
 
 	found_at = -1;
 	for (i = 0; found_at < 0 && i < kbman->kc_director_arr_len; i++) {
+#ifdef DEBUG_ENABLED
 		char *mine;
 		char *his;
 		mine = wbk_b_to_str(b3_kc_director_get_binding(kbman->kc_director_arr[i]));
 		his = wbk_b_to_str(b);
 		wbk_logger_log(&logger, DEBUG, "COMPARING: i = %d, %s = %s?\n", i, mine, his);
+#endif
 
 		if (wbk_b_compare(b3_kc_director_get_binding(kbman->kc_director_arr[i]), b) == 0) {
 			found_at = i;
 		}
 
+#ifdef DEBUG_ENABLED
 		free(mine);
 		free(his);
+#endif
 	}
 
 	if (found_at >= 0) {
