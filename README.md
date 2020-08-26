@@ -107,15 +107,13 @@ Then compile b3:
 
 ## Version scheme
 
-The version scheme of w32bindkeys is as follows: 1.2.3
+The version scheme of w32bindkeys is as follows: x.y.z
 
-1. Stages:
- 0. Alpha
- 1. Beta
- 2. For Production use
-2. Releases breaking compatibility of its API or the configuration file.
-3. Collection of changes not breaking any compatibility.
-
+* x is the stage:
+  * < 0 is an unstable release
+  * > 0 is a stable release
+* y incidates changes to the API or the configuration file functionalities.
+* z indicates additions without breaking any compatibility.
 ## Author
 
 Richard Bäck <richard.baeck@mailbox.org>
