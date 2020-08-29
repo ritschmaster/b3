@@ -29,6 +29,7 @@
 #include <w32bindkeys/kbdaemon.h>
 #include <getopt.h>
 
+#include "../config.h"
 #include "win_factory.h"
 #include "ws_factory.h"
 #include "wsman_factory.h"
@@ -39,7 +40,15 @@
 #include "director.h"
 #include "win_watcher.h"
 
+#define B3_GETOPT_OPTIONS "dvV"
+
 #define B3_KBDAEMON_ARR_LEN 3
+
+static struct option B3_GETOPT_LONG_OPTIONS[] = {
+    /*   NAME          ARGUMENT           FLAG  SHORTNAME */
+        {"all",        no_argument,       NULL, 'd'},
+        {NULL,         0,                 NULL, 0}
+    };
 
 static wbk_logger_t logger = { "main" };
 
@@ -49,6 +58,9 @@ static b3_director_t *g_director;
 
 static wbk_kbdaemon_t **g_kbdaemon_arr = NULL;
 static b3_kbman_t **g_kbman_arr = NULL;
+
+static int
+print_version(void);
 
 static int
 parameterized_main(const char *config_file);
@@ -66,22 +78,65 @@ int
 WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
 	int error;
+	char exec;
+	LPWSTR *wargv;
+	char **argv;
+	int argc;
 	char *config_file;
 	int length;
+	int i;
+	size_t size;
+	int opt;
+	int option_index;
 
-wbk_logger_set_level(SEVERE);
-#ifdef DEBUG_ENABLED
-	wbk_logger_set_level(DEBUG);
-#else
-	wbk_logger_set_level(INFO);
-#endif
+	wbk_logger_set_level(SEVERE);
+
+	exec = 1;
+
+	wargv = CommandLineToArgvW(GetCommandLineW(), &argc);
+	if (wargv) {
+		argv = malloc(sizeof(char *) * argc);
+		for (i = 0; i < argc; i++) {
+			size = sizeof(char) * (sizeof(wchar_t) * wcslen(wargv[i]) + 1);
+			argv[i] = malloc(size);
+			memset(argv[i], 0, size);
+			wcstombs(argv[i], wargv[i], size);
+		}
+
+		option_index = 0;
+		while ((opt = getopt_long(argc, argv,
+								  B3_GETOPT_OPTIONS,
+								  B3_GETOPT_LONG_OPTIONS,
+								  &option_index))
+				!= -1) {
+			switch(opt) {
+			case 'V':
+				wbk_logger_set_level(INFO);
+				break;
+
+			case 'd':
+				wbk_logger_set_level(DEBUG);
+				break;
+
+			case 'v':
+				error = print_version();
+				exec = 0;
+				break;
+			}
+		}
+
+		free(argv);
+		LocalFree(wargv);
+	}
 
 	length = strlen("config") + 1;
 	config_file = malloc(sizeof(char) * length);
 	memset(config_file, 0, sizeof(char) * length);
 	strcpy(config_file, "config");
 
-	error = parameterized_main(config_file);
+	if (exec) {
+		error = parameterized_main(config_file);
+	}
 
 	free(config_file);
 
@@ -306,3 +361,11 @@ kbdaemon_exec_fn(wbk_kbdaemon_t *kbdaemon, wbk_b_t *b)
 	else
 		return 1;
 }
+
+int
+print_version(void)
+{
+	fprintf(stdout, "%s version %s\n", PACKAGE, PACKAGE_VERSION);
+	return 0;
+}
+
