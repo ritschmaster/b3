@@ -107,7 +107,6 @@ get_modifier(char *str)
 %option reentrant noyywrap never-interactive nounistd
 %option bison-bridge
 
-COMMENT         #
 MODIFIER        ([mM][oO][dD]1|[mM][oO][dD]4|[sS][hH][iI][fF][tT]|[sS][pP][aA][cC][eE]|[cC][tT][rR][lL]|[fF]([1-9]|10|11|12))
 KEY             [a-zA-Z0-9]
 PLUS            [+]
@@ -126,13 +125,13 @@ FULLSCREEN      fullscreen
 TOGGLE          toggle
 TO              to
 OUTPUT          output
+COMMENT         #.*
 SPACE           [ \t]+
 EOL             [\n]+
 EOF             \Z
 
 %%
 
-{COMMENT}                { return TOKEN_COMMENT; }
 {MODIFIER}               { yylval->modifier = get_modifier(yytext); return TOKEN_MODIFIER; }
 {KEY}                    { yylval->key = tolower(yytext[0]); return TOKEN_KEY; }
 {PLUS}                   { return TOKEN_PLUS; }
@@ -151,6 +150,7 @@ EOF             \Z
 {TOGGLE}                 { return TOKEN_TOGGLE; }
 {TO}                     { return TOKEN_TO; }
 {OUTPUT}                 { return TOKEN_OUTPUT; }
+{COMMENT}                { return TOKEN_COMMENT; }
 {SPACE}                  { return TOKEN_SPACE; }
 {EOL}                    { return TOKEN_EOL; }
 {EOF}                    { return 0; }

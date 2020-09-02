@@ -139,7 +139,6 @@ typedef void* yyscan_t;
 	char key;
 }
 
-%token               TOKEN_COMMENT
 %token <modifier>    TOKEN_MODIFIER
 %token <key>         TOKEN_KEY
 %token               TOKEN_PLUS
@@ -158,6 +157,7 @@ typedef void* yyscan_t;
 %token               TOKEN_TOGGLE
 %token               TOKEN_TO
 %token               TOKEN_OUTPUT
+%token               TOKEN_COMMENT
 %token               TOKEN_SPACE
 %token               TOKEN_EOL
 %token               TOKEN_EOF
@@ -187,18 +187,7 @@ statements:
           |
 	  ;
 
-comment: TOKEN_COMMENT comment-text
-       ;
-
-comment-text: TOKEN_KEY 
-            | comment-text TOKEN_KEY 
-            | TOKEN_SPACE
-            | comment-text TOKEN_SPACE 
-            | TOKEN_COMMENT
-            | comment-text TOKEN_COMMENT
-            |
-            ;
-
+comment: TOKEN_COMMENT ; 
 
 statement: bindsym
 	 ;
