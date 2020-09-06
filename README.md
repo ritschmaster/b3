@@ -4,7 +4,7 @@
 [![Join the chat at https://gitter.im/b3wm/community](https://badges.gitter.im/b3wm/community.svg)](https://gitter.im/b3wm/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 ![GitHub All Releases](https://img.shields.io/github/downloads/ritschmaster/b3/total)
 
-__b__(aeck's implementation of i) __3__ (for Windows)
+__b__(aeck's implementation of i) __3__ (wm for Windows)
 
 ## Using b3
 
@@ -22,6 +22,10 @@ __b__(aeck's implementation of i) __3__ (for Windows)
 4. Execute `b3.exe`
 
 ## FAQ
+
+### What features of i3 are currently supported?
+
+See [here](https://github.com/ritschmaster/b3/blob/master/CompatibilityList.md).
 
 ### How does b3 integrate into Windows?
 
@@ -111,7 +115,7 @@ The version scheme of w32bindkeys is as follows: x.y.z
 
 * x is the stage:
   * < 0 is an unstable release
-  * > 0 is a stable release
+  * \> 0 is a stable release
 * y incidates changes to the API or the configuration file functionalities.
 * z indicates additions without breaking any compatibility.
 ## Author
