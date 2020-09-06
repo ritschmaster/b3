@@ -40,5 +40,5 @@ release-zip:
 	zip @PACKAGE_NAME@-@PACKAGE_VERSION@.zip README.md
 	zip @PACKAGE_NAME@-@PACKAGE_VERSION@.zip ChangeLog.md
 	zip @PACKAGE_NAME@-@PACKAGE_VERSION@.zip CompatibilityList.md
-	zip @PACKAGE_NAME@-@PACKAGE_VERSION@.zip src/b3.exe
+	zip @PACKAGE_NAME@-@PACKAGE_VERSION@.zip -j src/b3.exe
 

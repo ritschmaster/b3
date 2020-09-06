@@ -1,3 +1,17 @@
+# Release 0.4
+
+* Bugfixes:
+  * Using many workspaces and many windows might resulted at some point into short loops of b3 switching between the windows by its own. This is finally solved.
+  * Toggling a window to fullscreen is fully supported. It will stay in fullscreen even when switching between workspaces.
+
+Features:
+* Setting key bindings is now possible in a configuration file. Re-compilationis not needed any more. For the availabe commands see the [Compatibility List](https://github.com/ritschmaster/b3/blob/master/CompatibilityList.md)
+* A CLI interface like in i3 (e.g. `b3.exe -d` to enable logging on debug level).
+
+Known bugs:
+* Windows in fullscreen might not be repainted when switching onto their workspace. This results into just a big white window. Switching onto the workspace again redraws the window correctly.
+* Re-drawing of moved windows does not always work correctly. This is most likely due some lacking hacks when using the WIN32 API.
+
 # Release 0.3
 
 Bugfixes:
