@@ -125,6 +125,7 @@ b3_win_show(b3_win_t *win, char topmost)
 {
 	int error;
 	HWND insert_after;
+	RECT cur_rect;
 
 	error = 0;
 
@@ -140,13 +141,17 @@ b3_win_show(b3_win_t *win, char topmost)
 	if (!error && win->state != MAXIMIZED) {
 		ShowWindow(b3_win_get_window_handler(win), SW_SHOWNOACTIVATE);
 		SendMessage(b3_win_get_window_handler(win), WM_ENTERSIZEMOVE, (WPARAM) NULL, (LPARAM) NULL);
-		SetWindowPos(b3_win_get_window_handler(win),
-					 insert_after,
-					 win->rect.left,
-					 win->rect.top,
-					 win->rect.right - win->rect.left,
-					 win->rect.bottom - win->rect.top,
-					 SWP_NOACTIVATE);
+
+		GetWindowRect(b3_win_get_window_handler(win), &cur_rect);
+		if (EqualRect(&cur_rect, &(win->rect)) == 0) {
+			SetWindowPos(b3_win_get_window_handler(win),
+						 insert_after,
+						 win->rect.left,
+						 win->rect.top,
+						 win->rect.right - win->rect.left,
+						 win->rect.bottom - win->rect.top,
+						 SWP_NOACTIVATE);
+		}
 		SendMessage(b3_win_get_window_handler(win), WM_EXITSIZEMOVE, (WPARAM) NULL, (LPARAM) NULL);
 	}
 
