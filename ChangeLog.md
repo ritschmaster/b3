@@ -1,8 +1,8 @@
 # Release 0.4
 
-* Bugfixes:
-  * Using many workspaces and many windows might resulted at some point into short loops of b3 switching between the windows by its own. This is finally solved.
-  * Toggling a window to fullscreen is fully supported. It will stay in fullscreen even when switching between workspaces.
+Bugfixes:
+* Using many workspaces and many windows might resulted at some point into short loops of b3 switching between the windows by its own. This is finally solved.
+* Toggling a window to fullscreen is fully supported. It will stay in fullscreen even when switching between workspaces.
 
 Features:
 * Setting key bindings is now possible in a configuration file. Re-compilationis not needed any more. For the availabe commands see the [Compatibility List](https://github.com/ritschmaster/b3/blob/master/CompatibilityList.md)
