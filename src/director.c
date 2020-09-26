@@ -461,7 +461,7 @@ b3_director_active_win_toggle_floating(b3_director_t *director)
 							!b3_win_get_floating(active_win));
 		toggle_failed = 0;
 		if (!toggle_failed) {
-			wbk_logger_log(&logger, SEVERE, "Activated window toggled floating\n");
+			wbk_logger_log(&logger, INFO, "Activated window toggled floating\n");
 			b3_monitor_arrange_wins(director->focused_monitor);
 		}
 	}
@@ -584,6 +584,8 @@ b3_director_set_active_win_by_direction(b3_director_t *director, b3_ws_move_dire
 		b3_director_arrange_wins(director);
 	}
 
+	b3_director_repaint_all();
+
 	ReleaseMutex(director->global_mutex);
 
 	return error;
@@ -608,6 +610,8 @@ b3_director_toggle_active_win_fullscreen(b3_director_t *director)
     } else {
 		wbk_logger_log(&logger, INFO, "No focused window available to toggle fullscreen.\n");
     }
+
+    b3_director_repaint_all();
 
 	ReleaseMutex(director->global_mutex);
 

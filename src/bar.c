@@ -287,7 +287,14 @@ b3_bar_WndProc(HWND window_handler, UINT msg, WPARAM wParam, LPARAM lParam)
 	switch(msg)
 	{
     	case WM_NCPAINT:
-			if (bar != NULL) b3_bar_draw(bar, window_handler);
+			if (bar != NULL) {
+				if (b3_wsman_any_win_has_state(bar->wsman, MAXIMIZED)) {
+					b3_bar_hide(bar);
+				} else {
+					b3_bar_show(bar);
+					b3_bar_draw(bar, window_handler);
+				}
+			}
 			break;
 
 		case WM_CLOSE:

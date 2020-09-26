@@ -163,6 +163,12 @@ extern int
 b3_ws_move_active_win(b3_ws_t *ws, b3_ws_move_direction_t direction);
 
 /**
+ * @return Non-0 if any window is currently maximized. 0 otherwise.
+ */
+extern int
+b3_ws_any_win_has_state(b3_ws_t *ws, b3_win_state_t state);
+
+/**
  * @return The window in the direction next to the focused window. If not found
  * then NULL. Do not free it!
  */

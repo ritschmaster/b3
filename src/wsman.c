@@ -238,6 +238,12 @@ b3_wsman_find_win(b3_wsman_t *wsman, const b3_win_t *win)
 	return ws;
 }
 
+int
+b3_wsman_any_win_has_state(b3_wsman_t *wsman, b3_win_state_t state)
+{
+	return b3_ws_any_win_has_state(b3_wsman_get_focused_ws(wsman), state);
+}
+
 Array *
 b3_wsman_get_ws_arr(b3_wsman_t *wsman)
 {

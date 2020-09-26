@@ -109,6 +109,12 @@ extern b3_ws_t *
 b3_wsman_find_win(b3_wsman_t *wsman, const b3_win_t *win);
 
 /**
+ * @return Non-0 if any window is currently maximized. 0 otherwise.
+ */
+extern int
+b3_wsman_any_win_has_state(b3_wsman_t *wsman, b3_win_state_t state);
+
+/**
  * @return The workspace array of the workspace manager. Do not free it or
  * any element of it!
  */

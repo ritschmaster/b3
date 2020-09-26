@@ -226,4 +226,10 @@ b3_winman_to_leaf(b3_winman_t *winman);
 extern int
 b3_winman_reorg(b3_winman_t *winman);
 
+/**
+ * @return Non-0 if any window is currently maximized. 0 otherwise.
+ */
+extern int
+b3_winman_any_win_has_state(b3_winman_t *winman, b3_win_state_t state);
+
 #endif // B3_WINMAN_H

@@ -48,7 +48,6 @@ static const b3_win_t *g_set_focused_win_win;
 static b3_win_t *g_set_focused_win_found;
 
 static HANDLE g_arrange_wins_mutex = NULL;
-static char g_any_maximized;
 
 static RECT g_arrange_wins_monitor_area;
 
@@ -69,9 +68,6 @@ b3_ws_winman_arrange(b3_ws_t *ws, b3_winman_t *winman, Stack *area_stack);
 
 static void
 b3_ws_winman_minimize_visitor(b3_winman_t *winman);
-
-static void
-b3_ws_winman_any_maximized_visitor(b3_winman_t *winman);
 
 static void
 b3_ws_winman_maximize_if_maximized_visitor(b3_winman_t *winman);
@@ -257,14 +253,10 @@ b3_ws_arrange_wins(b3_ws_t *ws, RECT monitor_area)
 	WaitForSingleObject(g_arrange_wins_mutex, INFINITE);
 
 
-	// TODO verify that monitor_area does not start at where the bar ends
-
 	stack_new(&area_stack);
 	stack_push(area_stack, (void *) &monitor_area);
 
-	g_any_maximized = 0;
-	b3_winman_traverse(ws->winman, b3_ws_winman_any_maximized_visitor);
-	if (g_any_maximized) {
+	if (b3_ws_any_win_has_state(ws, MAXIMIZED)) {
 		b3_ws_minimize_wins(ws);
 		b3_winman_traverse(ws->winman, b3_ws_winman_maximize_if_maximized_visitor);
 	} else {
@@ -399,6 +391,12 @@ b3_ws_move_active_win(b3_ws_t *ws, b3_ws_move_direction_t direction)
 	}
 
 	return error;
+}
+
+int
+b3_ws_any_win_has_state(b3_ws_t *ws, b3_win_state_t state)
+{
+	return b3_winman_any_win_has_state(ws->winman, state);
 }
 
 b3_win_t *
@@ -586,24 +584,6 @@ b3_ws_winman_minimize_visitor(b3_winman_t *winman)
 }
 
 void
-b3_ws_winman_any_maximized_visitor(b3_winman_t *winman)
-{
-	ArrayIter iter;
-	b3_win_t *win_iter;
-
-	if (!g_any_maximized) {
-		if (winman->type == LEAF) {
-			array_iter_init(&iter, b3_winman_get_win_arr(winman));
-			while (!g_any_maximized && array_iter_next(&iter, (void*) &win_iter) != CC_ITER_END) {
-				if (b3_win_get_state(win_iter) == MAXIMIZED) {
-					g_any_maximized = 1;
-				}
-			}
-		}
-	}
-}
-
-void
 b3_ws_winman_maximize_if_maximized_visitor(b3_winman_t *winman)
 {
 	ArrayIter iter;
@@ -613,7 +593,7 @@ b3_ws_winman_maximize_if_maximized_visitor(b3_winman_t *winman)
 		array_iter_init(&iter, b3_winman_get_win_arr(winman));
 		while (array_iter_next(&iter, (void*) &win_iter) != CC_ITER_END) {
 			if (b3_win_get_state(win_iter) == MAXIMIZED) {
-				b3_win_set_state(win_iter, MAXIMIZED);
+				b3_win_show(win_iter, 1);
 			}
 		}
 	}

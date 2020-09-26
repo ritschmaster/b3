@@ -434,6 +434,32 @@ b3_winman_reorg(b3_winman_t *winman)
 }
 
 int
+b3_winman_any_win_has_state(b3_winman_t *winman, b3_win_state_t state)
+{
+	ArrayIter iter;
+	b3_win_t *win_iter;
+	b3_winman_t *winman_iter;
+	int any_win_maximized;
+
+	any_win_maximized = 0;
+	if (winman->type == LEAF) {
+		array_iter_init(&iter, winman->win_arr);
+		while (!any_win_maximized && array_iter_next(&iter, (void*) &win_iter) != CC_ITER_END) {
+			if (b3_win_get_state(win_iter) == state) {
+				any_win_maximized = 1;
+			}
+		}
+	} else {
+		array_iter_init(&iter, winman->winman_arr);
+		while (!any_win_maximized && array_iter_next(&iter, (void*) &winman_iter) != CC_ITER_END) {
+			any_win_maximized = b3_winman_any_win_has_state(winman_iter, state);
+		}
+	}
+
+	return any_win_maximized;
+}
+
+int
 b3_winman_remove_win_leaf(b3_winman_t *winman, const b3_win_t *win)
 {
 	ArrayIter iter;
