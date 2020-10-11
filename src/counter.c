@@ -27,7 +27,7 @@
 #include <stdlib.h>
 #include <w32bindkeys/logger.h>
 
-wbk_logger_t logger = { "counter" };
+static wbk_logger_t logger = { "counter" };
 
 static int
 arithmentic_cmp(void const *e1, void const *e2);

@@ -39,9 +39,9 @@ function clean
 function debug
 {
     clean
-    
-    autoreconf -im 
-    ./configure --enable-debug --enable-install-base 
+
+    autoreconf -im
+    ./configure --enable-debug
     make
 }
 
@@ -49,8 +49,8 @@ function release
 {
     clean
 
-    autoreconf -im 
-    ./configure --enable-install-base 
+    autoreconf -im
+    ./configure
     make
 }
 

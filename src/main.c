@@ -27,6 +27,8 @@
 #include <windows.h>
 #include <w32bindkeys/logger.h>
 #include <w32bindkeys/kbdaemon.h>
+#include <w32bindkeys/util.h>
+#include <w32bindkeys/datafinder.h>
 #include <getopt.h>
 
 #include "../config.h"
@@ -63,7 +65,7 @@ static int
 print_version(void);
 
 static int
-parameterized_main(const char *config_file);
+parameterized_main(void);
 
 static int
 main_loop(void);
@@ -82,7 +84,6 @@ WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, in
 	LPWSTR *wargv;
 	char **argv;
 	int argc;
-	char *config_file;
 	int length;
 	int i;
 	size_t size;
@@ -129,24 +130,21 @@ WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, in
 		LocalFree(wargv);
 	}
 
-	length = strlen("config") + 1;
-	config_file = malloc(sizeof(char) * length);
-	memset(config_file, 0, sizeof(char) * length);
-	strcpy(config_file, "config");
-
 	if (exec) {
-		error = parameterized_main(config_file);
+		error = parameterized_main();
 	}
-
-	free(config_file);
 
 	return error;
 }
 
 int
-parameterized_main(const char *config_file)
+parameterized_main(void)
 {
 	int error;
+	char *dir;
+	char *config_filename;
+	FILE *config_file;
+	wbk_datafinder_t *datafinder;
 	b3_win_factory_t *win_factory;
 	b3_ws_factory_t *ws_factory;
 	b3_wsman_factory_t *wsman_factory;
@@ -154,7 +152,7 @@ parameterized_main(const char *config_file)
 	b3_kc_director_factory_t *kc_director_factory;
 	b3_parser_t *parser;
 	b3_win_watcher_t *win_watcher;
-		b3_kbman_t *g_kbman;
+	b3_kbman_t *g_kbman;
 	int i;
 
 	error = 0;
@@ -167,39 +165,40 @@ parameterized_main(const char *config_file)
 
 	parser = b3_parser_new(kc_director_factory);
 
-	FILE *file = fopen(config_file, "r");
-	g_director = NULL;
+	dir = wbk_path_from_home(".b3");
+	datafinder = wbk_datafinder_new(dir);
+	free(dir);
 
-	if (file) {
-		g_director = b3_director_new(monitor_factory);
+	dir = wbk_path_from_home(".config\\b3");
+	wbk_datafinder_add_datadir(datafinder, dir);
+	free(dir);
+
+	config_filename = wbk_datafinder_gen_path(datafinder, "config");
+	if (config_filename) {
+		config_file = fopen(config_filename, "r");
+		g_director = NULL;
+
+		if (config_file) {
+			g_director = b3_director_new(monitor_factory);
+		} else {
+			wbk_logger_log(&logger, SEVERE, "Could not open %s\n", config_filename);
+			error = 1;
+		}
+
+		free(config_filename);
+	} else {
+		wbk_logger_log(&logger, SEVERE, "Could not find a config file\n");
+		error = 2;
 	}
+
+
+	wbk_datafinder_free(datafinder);
+
 	/**
 	 * Setup key bindings
 	 */
 	if (g_director) {
-
-		// TODO remove begin (Start of hardcoded keybindings)
-//		wbk_b_t *b;
-//		wbk_be_t *be;
-//		b3_kc_director_t *kc_director;
-//		g_kbman = b3_kbman_new();
-//		b = wbk_b_new();
-//		be = wbk_be_new(CTRL, 0); wbk_b_add(b, be); wbk_be_free(be);
-//		be = wbk_be_new(WIN, 0); wbk_b_add(b, be); wbk_be_free(be);
-//		be = wbk_be_new(NOT_A_MODIFIER, '1'); wbk_b_add(b, be); wbk_be_free(be);
-//		kc_director = b3_kc_director_factory_create_cm(kc_director_factory, b, g_director, "\\\\.\\DISPLAY1");
-//		b3_kbman_add_kc_director(g_kbman, kc_director);
-//
-//		b = wbk_b_new();
-//		be = wbk_be_new(CTRL, 0); wbk_b_add(b, be); wbk_be_free(be);
-//		be = wbk_be_new(WIN, 0); wbk_b_add(b, be); wbk_be_free(be);
-//		be = wbk_be_new(NOT_A_MODIFIER, '2'); wbk_b_add(b, be); wbk_be_free(be);
-//		kc_director = b3_kc_director_factory_create_cm(kc_director_factory, b, g_director, "\\\\.\\DISPLAY2");
-//		b3_kbman_add_kc_director(g_kbman, kc_director);
-
-		g_kbman = b3_parser_parse_file(parser, g_director, file);
-
-		// TODO Remove end (End of hardcoded keybindings)
+		g_kbman = b3_parser_parse_file(parser, g_director, config_file);
 
 		if (g_kbman) {
 			g_kbman_arr = b3_kbman_split(g_kbman, B3_KBDAEMON_ARR_LEN);
@@ -207,12 +206,13 @@ parameterized_main(const char *config_file)
 			b3_kbman_free(g_kbman);
 			g_kbman = NULL;
 		} else {
+			wbk_logger_log(&logger, SEVERE, "Could not parse config file.\n");
 			error = 1;
 		}
 	}
 
-	if (file) {
-		fclose(file);
+	if (config_file) {
+		fclose(config_file);
 	}
 
 	/**
