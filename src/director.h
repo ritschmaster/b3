@@ -190,7 +190,6 @@ b3_director_set_focused_monitor_by_direction(b3_director_t *director, b3_ws_move
 extern int
 b3_director_move_focused_win_to_monitor_by_dir(b3_director_t *director, b3_ws_move_direction_t direction);
 
-
 /**
  * @brief Show the director
  */

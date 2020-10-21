@@ -553,7 +553,14 @@ b3_director_move_active_win(b3_director_t *director, b3_ws_move_direction_t dire
 		if (b3_win_get_state(focused_win) != MAXIMIZED) {
 			error = b3_ws_move_active_win(b3_monitor_get_focused_ws(director->focused_monitor),
 										   direction);
-			b3_director_arrange_wins(director);
+      if (!error) {
+        b3_director_arrange_wins(director);
+      } else {
+          /**
+           * Try changing to the other monitor then
+           */
+          error = b3_director_move_focused_win_to_monitor_by_dir(director, direction);
+      }
 		}
 	} else {
 		wbk_logger_log(&logger, INFO, "No focused window available to move in a direction.\n");
@@ -582,9 +589,12 @@ b3_director_set_active_win_by_direction(b3_director_t *director, b3_ws_move_dire
 		director->ignore_set_foucsed_win = 1;
 		b3_director_w32_set_active_window(b3_win_get_window_handler(win), 1);
 		b3_director_arrange_wins(director);
-	}
-
-	b3_director_repaint_all();
+	} else {
+    /**
+     * Try changing to the other monitor then
+     */
+    error = b3_director_set_focused_monitor_by_direction(director, direction);
+  }
 
 	ReleaseMutex(director->global_mutex);
 
