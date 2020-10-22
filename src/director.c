@@ -560,6 +560,10 @@ b3_director_move_active_win(b3_director_t *director, b3_ws_move_direction_t dire
            * Try changing to the other monitor then
            */
           error = b3_director_move_focused_win_to_monitor_by_dir(director, direction);
+
+          if (!error) {
+            b3_director_set_focused_monitor_by_direction(director, direction);
+          }
       }
 		}
 	} else {
