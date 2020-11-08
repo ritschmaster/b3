@@ -1,0 +1,345 @@
+'\" t
+.\"     Title: b3
+.\"      Date: 2020-11-08
+.\"    Manual: b3 Manual
+.\"    Source: b3 0.5
+.\"  Language: English
+.\"
+.TH "B3" "1" "11/08/2020" "b3 0\&.5" "b3 Manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+b3 \- b(aeck's implementation of i)3(wm for Windows)
+.SH "SYNOPSIS"
+.sp
+b3 [\-a] [\-c configfile] [\-C] [\-d all] [\-v] [\-V]
+.SH "OPTIONS"
+.\" .PP
+.\" \-a
+.\" .RS 4
+.\" Disables autostart\&.
+.\" .RE
+.\" .PP
+.\" \-c
+.\" .RS 4
+.\" Specifies an alternate configuration file path\&.
+.\" .RE
+.\" .PP
+.\" \-C
+.\" .RS 4
+.\" Check the configuration file for validity and exit\&.
+.\" .RE
+.PP
+\-d all
+.RS 4
+Enables debug logging\&. The
+\fIall\fR
+parameter is present for historical reasons\&.
+.RE
+.PP
+\-v
+.RS 4
+Display version number (and date of the last commit)\&.
+.RE
+.PP
+\-V
+.RS 4
+Be verbose\&.
+.RE
+.\" .PP
+.\" \-\-shmlog\-size <limit>
+.\" .RS 4
+.\" Limits the size of the i3 SHM log to <limit> bytes\&. Setting this to 0 disables SHM logging entirely\&. The default is 0 bytes\&.
+.\" .RE
+.SH "DESCRIPTION"
+.SS "INTRODUCTION"
+.sp
+b3 was created because i3, my favorite window manager, couldn't be run on Windows. There were/are other tiling window managers available on Windows but none of them tried to be like i3. Many thanks to the i3 developers to supply such a great software!
+.sp
+Please be aware that b3 is primarily targeted at advanced users and developers\&.
+.SS "TERMINOLOGY"
+.PP
+Tree
+.RS 4
+b3 keeps your layout in a tree data structure\&.
+.RE
+.PP
+Window
+.RS 4
+A window, like the Firefox browser window or a terminal emulator\&.
+.RE
+.PP
+Floating Window
+.RS 4
+A window which "floats" on top of other windows\&. This style is used by b3 to display windows with type "dialog", such as the "Print" or "Open File" dialog boxes in many GUI applications\&. Use of floating windows can be fine\-tuned with the for_window command (see HTML userguide)\&.
+.RE
+.PP
+Split container
+.RS 4
+A split container contains multiple other split containers or windows\&.
+.sp
+Containers can be used in various layouts\&. The default mode is called "default" and just resizes each client equally so that it fits\&.
+.RE
+.PP
+Workspace
+.RS 4
+A workspace is a set of containers\&. Other window managers call this "Virtual Desktops"\&.
+.sp
+In b3, each workspace is assigned to a specific virtual screen\&. By default, screen 1 has workspace 1, screen 2 has workspace 2 and so on\&... However, when you create a new workspace (by simply switching to it), it\(cqll be assigned the screen you are currently on\&.
+.RE
+.PP
+Output
+.RS 4
+Using the Windows Display Settings, you can have a screen spanning multiple real monitors\&. Furthermore, you can set them up in cloning mode or with positions (monitor 1 is left of monitor 2)\&.
+.sp
+b3 uses the Win32 API to query which outputs are available and which screens are connected to these outputs\&.
+.RE
+.SH "KEYBINDINGS"
+.sp
+Here is a short overview of the default keybindings:
+.\" .PP
+.\" Mod1+Enter
+.\" .RS 4
+.\" Open a new terminal emulator window\&.
+.\" .RE
+.\" .PP
+.\" Mod1+d
+.\" .RS 4
+.\" Open dmenu for starting any application by typing (part of) its name\&.
+.\" .RE
+.\" .PP
+.\" j/k/l/;
+.\" .RS 4
+.\" Direction keys (left, down, up, right)\&. They are on your homerow (see the mark on your "j" key)\&. Alternatively, you can use the cursor keys\&.
+.\" .RE
+.\" .PP
+.\" Mod1+<direction>
+.\" .RS 4
+.\" Focus window in <direction>\&.
+.\" .RE
+.\" .PP
+.\" Mod1+Shift+<direction>
+.\" .RS 4
+.\" Move window to <direction>\&.
+.\" .RE
+.PP
+Mod1+<number>
+.RS 4
+Switch to workspace <number>\&.
+.RE
+.PP
+Mod1+Shift+<number>
+.RS 4
+Move window to workspace <number>\&.
+.RE
+.PP
+Mod1+f
+.RS 4
+Toggle fullscreen mode\&.
+.RE
+.\" .PP
+.\" Mod1+s
+.\" .RS 4
+.\" Enable stacking layout for the current container\&.
+.\" .RE
+.\" .PP
+.\" Mod1+e
+.\" .RS 4
+.\" Enable default layout for the current container\&.
+.\" .RE
+.\" .PP
+.\" Mod1+w
+.\" .RS 4
+.\" Enable tabbed layout for the current container\&.
+.\" .RE
+.PP
+Mod1+Shift+Space
+.RS 4
+Toggle tiling/floating for the current container\&.
+.RE
+.\" .PP
+.\" Mod1+Space
+.\" .RS 4
+.\" Select the first tiling container if the current container is floating and vice\-versa\&.
+.\" .RE
+.PP
+Mod1+Shift+q
+.RS 4
+Kills the current window\&. This is equivalent to "clicking on the close button", meaning a polite request to the application to close this window\&. For example, Firefox will save its session upon such a request\&. If the application does not support that, the window will be killed and it depends on the application what happens\&.
+.RE
+.\" .PP
+.\" Mod1+Shift+r
+.\" .RS 4
+.\" Restarts b3 in place\&. Your layout will be preserved\&.
+.\" .RE
+.\" .PP
+.\" Mod1+Shift+e
+.\" .RS 4
+.\" Exits b3\&.
+.\" .RE
+.SH "FILES"
+.SS "~/\&.b3/config (or ~/\&.config/b3/config)"
+.sp
+When starting, b3 looks for configuration files in the following order:
+.sp
+.RS 4
+.ie n \{\
+\h'-04' 1.\h'+01'\c
+.\}
+.el \{\
+.sp -1
+.IP "  1." 4.2
+.\}
+~/\&.config/b3/config
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04' 2.\h'+01'\c
+.\}
+.el \{\
+.sp -1
+.IP "  2." 4.2
+.\}
+~/\&.b3/config
+.RE
+.sp
+.\" You can specify a custom path using the \-c option\&.
+.\" .PP
+.\" \fBSample configuration\fR. 
+.\" .sp
+.\" .if n \{\
+.\" .RS 4
+.\" .\}
+.\" .nf
+.\" # b3 config file (v4)
+.\" 
+.\" # Font for window titles\&. Will also be used by the bar unless a different font
+.\" # is used in the bar {} block below\&.
+.\" # This font is widely installed, provides lots of unicode glyphs, right\-to\-left
+.\" # text rendering and scalability on retina/hidpi displays (thanks to pango)\&.
+.\" font pango:DejaVu Sans Mono 8
+.\" # Before i3 v4\&.8, we used to recommend this one as the default:
+.\" # font \-misc\-fixed\-medium\-r\-normal\-\-13\-120\-75\-75\-C\-70\-iso10646\-1
+.\" # The font above is very space\-efficient, that is, it looks good, sharp and
+.\" # clear in small sizes\&. However, its unicode glyph coverage is limited, the old
+.\" # X core fonts rendering does not support right\-to\-left and this being a bitmap
+.\" # font, it doesn\(cqt scale on retina/hidpi displays\&.
+.\" 
+.\" # use Mouse+Mod1 to drag floating windows to their wanted position
+.\" floating_modifier Mod1
+.\" 
+.\" # start a terminal
+.\" bindsym Mod1+Return exec /usr/bin/urxvt
+.\" 
+.\" # kill focused window
+.\" bindsym Mod1+Shift+q kill
+.\" 
+.\" # start dmenu (a program launcher)
+.\" bindsym Mod1+d exec /usr/bin/dmenu_run
+.\" 
+.\" # change focus
+.\" bindsym Mod1+j focus left
+.\" bindsym Mod1+k focus down
+.\" bindsym Mod1+l focus up
+.\" bindsym Mod1+semicolon focus right
+.\" 
+.\" # alternatively, you can use the cursor keys:
+.\" bindsym Mod1+Left focus left
+.\" bindsym Mod1+Down focus down
+.\" bindsym Mod1+Up focus up
+.\" bindsym Mod1+Right focus right
+.\" 
+.\" # move focused window
+.\" bindsym Mod1+Shift+j move left
+.\" bindsym Mod1+Shift+k move down
+.\" bindsym Mod1+Shift+l move up
+.\" bindsym Mod1+Shift+semicolon move right
+.\" 
+.\" # alternatively, you can use the cursor keys:
+.\" bindsym Mod1+Shift+Left move left
+.\" bindsym Mod1+Shift+Down move down
+.\" bindsym Mod1+Shift+Up move up
+.\" bindsym Mod1+Shift+Right move right
+.\" 
+.\" # split in horizontal orientation
+.\" bindsym Mod1+h split h
+.\" 
+.\" # split in vertical orientation
+.\" bindsym Mod1+v split v
+.\" 
+.\" # enter fullscreen mode for the focused container
+.\" bindsym Mod1+f fullscreen toggle
+.\" 
+.\" # change container layout (stacked, tabbed, default)
+.\" bindsym Mod1+s layout stacking
+.\" bindsym Mod1+w layout tabbed
+.\" bindsym Mod1+e layout default
+.\" 
+.\" # toggle tiling / floating
+.\" bindsym Mod1+Shift+space floating toggle
+.\" 
+.\" # change focus between tiling / floating windows
+.\" bindsym Mod1+space focus mode_toggle
+.\" 
+.\" # focus the parent container
+.\" bindsym Mod1+a focus parent
+.\" 
+.\" # focus the child container
+.\" #bindsym Mod1+d focus child
+.\" 
+.\" # switch to workspace
+.\" bindsym Mod1+1 workspace 1
+.\" bindsym Mod1+2 workspace 2
+.\" # \&.\&.
+.\" 
+.\" # move focused container to workspace
+.\" bindsym Mod1+Shift+1 move workspace 1
+.\" bindsym Mod1+Shift+2 move workspace 2
+.\" # \&.\&.\&.
+.\" 
+.\" # reload the configuration file
+.\" bindsym Mod1+Shift+c reload
+.\" # restart b3 inplace (preserves your layout/session, can be used to upgrade b3)
+.\" bindsym Mod1+Shift+r restart
+.\" # exit b3 (logs you out of your X session)
+.\" bindsym Mod1+Shift+e exit
+.\" 
+.\" # display workspace buttons plus a statusline generated by b3status
+.\" bar {
+.\"     status_command b3status
+.\" }
+.\" .fi
+.\" .if n \{\
+.\" .RE
+.\" .\}
+.\" .sp
+.SS "~/.xsession Startup"
+.sp
+Under a UNIX-like system something like ~/.xsession handles the startup through the login manager. Under Windows the startup needs to be done after the login either manually or by an autostart application.
+.PP
+.sp
+.SH "TODO"
+.sp
+There is still lot of work to do\&. Please check our bugtracker for up\-to\-date information about tasks which are still not finished\&.
+.sp
+.SH "AUTHOR"
+.sp
+Richard Bäck

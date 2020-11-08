@@ -22,23 +22,6 @@
 # SOFTWARE.
 ################################################################################
 
-if DEBUG
-AM_CFLAGS = -g -O0
-AM_LDFLAGS = -g -O0
-else
-AM_CFLAGS = -O2
-AM_LDFLAGS = -O2
-endif
+man1_MANS = b3.1
 
-SUBDIRS = src tests man
-
-EXTRA_DIST = README README.md
-
-CLEANFILES = @PACKAGE_NAME@-@PACKAGE_VERSION@.zip
-
-release-zip:
-	zip @PACKAGE_NAME@-@PACKAGE_VERSION@.zip README.md
-	zip @PACKAGE_NAME@-@PACKAGE_VERSION@.zip ChangeLog.md
-	zip @PACKAGE_NAME@-@PACKAGE_VERSION@.zip CompatibilityList.md
-	zip @PACKAGE_NAME@-@PACKAGE_VERSION@.zip -j src/b3.exe
-
+dist_man_MANS = b3.1

@@ -42,6 +42,10 @@ See [here](https://github.com/ritschmaster/b3/blob/master/CompatibilityList.md).
 1. Be as i3 like as possible while integrating into default Windows as easily as possible.
 2. Being stable is more important than having more features
 
+### I need a default configuration
+
+Since version 0.4 a default config file is included in the [release zip](https://github.com/ritschmaster/b3/releases). There is also an example configuration available at `tests/full.config` (please place it as `config` in the same directory as `b3.exe` to use it).
+
 ## Compiling
 
 ### Dependencies
@@ -118,6 +122,7 @@ The version scheme of w32bindkeys is as follows: x.y.z
   * \> 0 is a stable release
 * y incidates changes to the API or the configuration file functionalities.
 * z indicates additions without breaking any compatibility.
+
 ## Author
 
 Richard Bäck <richard.baeck@mailbox.org>
