@@ -60,7 +60,7 @@ You will need a functioning MinGW environment. This sections describes the compi
 
 First install the dependencies:
 
-    pacman -S make cmake automake autoconf mingw-w64-x86_64-gcc libtool
+    pacman -S make cmake automake autoconf mingw-w64-x86_64-gcc libtool bison flex
 
 Then compile and install Collections-C:
 
@@ -91,7 +91,7 @@ If you are unsatisfied with b3 you may uninstall it again:
 
 First install MinGW:
 
-    sudo dnf install -y mingw64-gcc mingw64-gcc-c++ cmake automake autoconf autoconf-archive libtool
+    sudo dnf install -y mingw64-gcc mingw64-gcc-c++ cmake automake autoconf autoconf-archive libtool bison flex
 
 Then compile and install Collections-C:
 
