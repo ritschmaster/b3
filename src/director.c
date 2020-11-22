@@ -837,6 +837,26 @@ b3_director_close_active_win(b3_director_t *director)
 }
 
 int
+b3_director_remove_empty_ws(b3_director_t *director)
+{
+  ArrayIter monitor_iter;
+	b3_monitor_t *monitor;
+
+	WaitForSingleObject(director->global_mutex, INFINITE);
+
+	array_iter_init(&monitor_iter, director->monitor_arr);
+	while (array_iter_next(&monitor_iter, (void *) &monitor) != CC_ITER_END) {
+		b3_monitor_remove_empty_ws(monitor);
+	}
+
+  b3_director_repaint_all();
+
+	ReleaseMutex(director->global_mutex);
+
+  return 0;
+}
+
+int
 b3_director_w32_set_active_window(HWND window_handler, char generate_lag)
 {
 	int error;

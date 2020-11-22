@@ -126,6 +126,9 @@ b3_monitor_remove_win(b3_monitor_t *monitor, b3_win_t *win);
 extern int
 b3_monitor_arrange_wins(b3_monitor_t *monitor);
 
+extern int
+b3_monitor_remove_empty_ws(b3_monitor_t *monitor);
+
 /**
  * @return The workspace the window is placed on or NULL if it cannot be found.
  * Do not free it!

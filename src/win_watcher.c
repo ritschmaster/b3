@@ -188,6 +188,7 @@ b3_win_watcher_wnd_proc(HWND window_handler, UINT msg, WPARAM wParam, LPARAM lPa
 					win = b3_win_factory_win_create(win_watcher->win_factory, (HWND) lParam);
 					if (b3_director_remove_win(win_watcher->director, win) == 0) {
 						b3_win_factory_win_free(win_watcher->win_factory, win);
+            b3_director_remove_empty_ws(win_watcher->director);
 					}
 					break;
 

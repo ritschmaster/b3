@@ -44,6 +44,66 @@ b3_bar_draw(b3_bar_t *bar, HWND window_handler);
 static LRESULT
 CALLBACK b3_bar_WndProc(HWND window_handler, UINT msg, WPARAM wParam, LPARAM lParam);
 
+/**
+ * Belongs to b3_bar_draw() and b3_bar_draw_ws_visitor(). Do not set it
+ * somewhere else!
+ */
+static b3_bar_t *g_draw_bar;
+
+/**
+ * Belongs to b3_bar_draw() and b3_bar_draw_ws_visitor(). Do not set it
+ * somewhere else!
+ */
+static HDC g_draw_hdc;
+
+/**
+ * Belongs to b3_bar_draw() and b3_bar_draw_ws_visitor(). Do not set it
+ * somewhere else!
+ */
+static PAINTSTRUCT g_draw_ps;
+
+/**
+ * Belongs to b3_bar_draw() and b3_bar_draw_ws_visitor(). Do not set it
+ * somewhere else!
+ */
+static RECT rect;
+
+/**
+ * Belongs to b3_bar_draw() and b3_bar_draw_ws_visitor(). Do not set it
+ * somewhere else!
+ */
+static RECT text_rect;
+
+/**
+ * Belongs to b3_bar_draw() and b3_bar_draw_ws_visitor(). Do not set it
+ * somewhere else!
+ */
+static HBRUSH g_draw_bg_brush;
+
+/**
+ * Belongs to b3_bar_draw() and b3_bar_draw_ws_visitor(). Do not set it
+ * somewhere else!
+ */
+static HBRUSH g_draw_focused_monitor_ws_brush;
+
+/**
+ * Belongs to b3_bar_draw() and b3_bar_draw_ws_visitor(). Do not set it
+ * somewhere else!
+ */
+static HBRUSH g_draw_focused_ws_brush;
+
+/**
+ * Belongs to b3_bar_draw() and b3_bar_draw_ws_visitor(). Do not set it
+ * somewhere else!
+ */
+static b3_ws_t *g_draw_focused_ws;
+
+/**
+ * Visitor used in b3_bar_draw() to draw each available workspace.
+ */
+static void
+b3_bar_draw_ws_visitor(b3_ws_t *ws);
+
 b3_bar_t *
 b3_bar_new(const char *monitor_name, RECT monitor_area, b3_wsman_t *wsman)
 {
@@ -197,39 +257,55 @@ b3_bar_hide(b3_bar_t *bar)
 	return 0;
 }
 
+void
+b3_bar_draw_ws_visitor(b3_ws_t *ws)
+{
+  SIZE text_size;
+  int str_length;
+
+  GetTextExtentPoint32A(g_draw_hdc, b3_ws_get_name(ws), strlen(b3_ws_get_name(ws)), &text_size);
+  str_length = text_size.cx + B3_BAR_DEFAULT_PADDING_TO_FRAME;
+  rect.right = rect.left + str_length + B3_BAR_DEFAULT_PADDING_TO_FRAME;
+
+  text_rect.left = rect.left + B3_BAR_DEFAULT_PADDING_TO_FRAME;
+  text_rect.right = rect.right - B3_BAR_DEFAULT_PADDING_TO_FRAME;
+
+  if (strcmp(b3_ws_get_name(ws),
+             b3_ws_get_name(g_draw_focused_ws)) == 0) {
+    if (b3_bar_is_focused(g_draw_bar)) {
+      FillRect(g_draw_hdc, &rect, g_draw_focused_monitor_ws_brush);
+    } else {
+      FillRect(g_draw_hdc, &rect, g_draw_focused_ws_brush);
+    }
+  } else {
+    Rectangle(g_draw_hdc, rect.left, rect.top, rect.right, rect.bottom);
+  }
+
+  DrawText(g_draw_hdc, b3_ws_get_name(ws), -1, &text_rect, DT_CENTER | DT_SINGLELINE | DT_VCENTER);
+
+  rect.left = rect.right + B3_BAR_DEFAULT_PADDING_TO_NEXT_FRAME;
+}
+
 int
 b3_bar_draw(b3_bar_t *bar, HWND window_handler)
 {
-	HDC hdc;
-	PAINTSTRUCT ps;
-	ArrayIter iter;
-	b3_ws_t *ws;
-	RECT rect;
-	RECT text_rect;
-	SIZE text_size;
-	HBRUSH background_brush;
-	HBRUSH focused_monitor_ws_brush;
-	HBRUSH focused_ws_brush;
-	b3_ws_t *focused_ws;
-	int i;
-	int arr_length;
-	int str_length;
+	g_draw_bar = bar;
 
-	focused_ws = b3_wsman_get_focused_ws(bar->wsman);
+	g_draw_focused_ws = b3_wsman_get_focused_ws(bar->wsman);
 
-	hdc = GetDC(window_handler);
-	BeginPaint(window_handler, &ps);
+	g_draw_hdc = GetDC(window_handler);
+	BeginPaint(window_handler, &g_draw_ps);
 
 	/** Init everything */
-	background_brush = CreateSolidBrush(RGB(255, 255, 255));
-	focused_monitor_ws_brush = CreateSolidBrush(RGB(255, 0, 0));
-	focused_ws_brush = CreateSolidBrush(RGB(100, 100, 100));
+	g_draw_bg_brush = CreateSolidBrush(RGB(255, 255, 255));
+	g_draw_focused_monitor_ws_brush = CreateSolidBrush(RGB(255, 0, 0));
+	g_draw_focused_ws_brush = CreateSolidBrush(RGB(100, 100, 100));
 
 	rect.top = 0;
 	rect.bottom = bar->area.bottom - bar->area.top;
 	rect.left = 0;
 	rect.right = bar->area.right - bar->area.left;
-	FillRect(hdc, &rect, background_brush);
+	FillRect(g_draw_hdc, &rect, g_draw_bg_brush);
 
 	rect.top = B3_BAR_DEFAULT_PADDING_TO_WINDOW;
 	rect.bottom = bar->area.bottom - bar->area.top - B3_BAR_DEFAULT_PADDING_TO_WINDOW;
@@ -239,37 +315,14 @@ b3_bar_draw(b3_bar_t *bar, HWND window_handler)
 	text_rect.top = rect.top + B3_BAR_DEFAULT_PADDING_TO_FRAME;
 	text_rect.bottom = rect.bottom - B3_BAR_DEFAULT_PADDING_TO_FRAME;
 
-	arr_length = array_size(b3_wsman_get_ws_arr(bar->wsman));
-	for (i = 0; i < arr_length; i++) {
-		array_get_at(b3_wsman_get_ws_arr(bar->wsman), i, (void *) &ws);
-		GetTextExtentPoint32A(hdc, b3_ws_get_name(ws), strlen(b3_ws_get_name(ws)), &text_size);
-		str_length = text_size.cx + B3_BAR_DEFAULT_PADDING_TO_FRAME;
-		rect.right = rect.left + str_length + B3_BAR_DEFAULT_PADDING_TO_FRAME;
+  b3_wsman_iterate_ws_arr(bar->wsman, b3_bar_draw_ws_visitor);
 
-		text_rect.left = rect.left + B3_BAR_DEFAULT_PADDING_TO_FRAME;
-		text_rect.right = rect.right - B3_BAR_DEFAULT_PADDING_TO_FRAME;
+	DeleteObject(g_draw_bg_brush);
+	DeleteObject(g_draw_focused_monitor_ws_brush);
+	DeleteObject(g_draw_focused_ws_brush);
 
-		if (strcmp(b3_ws_get_name(ws), b3_ws_get_name(focused_ws)) == 0) {
-			if (b3_bar_is_focused(bar)) {
-				FillRect(hdc, &rect, focused_monitor_ws_brush);
-			} else {
-				FillRect(hdc, &rect, focused_ws_brush);
-			}
-		} else {
-			Rectangle(hdc, rect.left, rect.top, rect.right, rect.bottom);
-		}
-
-		DrawText(hdc, b3_ws_get_name(ws), -1, &text_rect, DT_CENTER | DT_SINGLELINE | DT_VCENTER);
-
-		rect.left = rect.right + B3_BAR_DEFAULT_PADDING_TO_NEXT_FRAME;
-	}
-
-	DeleteObject(background_brush);
-	DeleteObject(focused_monitor_ws_brush);
-	DeleteObject(focused_ws_brush);
-
-   	EndPaint(window_handler, &ps);
-    ReleaseDC(window_handler, hdc);
+   	EndPaint(window_handler, &g_draw_ps);
+    ReleaseDC(window_handler, g_draw_hdc);
 
 	return 0;
 }

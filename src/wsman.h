@@ -31,10 +31,14 @@
 #ifndef B3_WSMAN_H
 #define B3_WSMAN_H
 
+#include <windows.h>
+
 #include "ws_factory.h"
 
 typedef struct b3_wsman_s
 {
+	HANDLE global_mutex;
+
 	b3_ws_factory_t *ws_factory;
 
 	b3_ws_t *focused_ws;
@@ -114,11 +118,17 @@ b3_wsman_find_win(b3_wsman_t *wsman, const b3_win_t *win);
 extern int
 b3_wsman_any_win_has_state(b3_wsman_t *wsman, b3_win_state_t state);
 
+extern int
+b3_wsman_remove_empty_ws(b3_wsman_t *wsman);
+
 /**
- * @return The workspace array of the workspace manager. Do not free it or
- * any element of it!
+ * Iterate over the workspace array contained within the workspace manager. This
+ * is necessary as multiple threads may alter the contained workspaces at the
+ * same time as this method is thread safe.
+ *
+ * @param visitor A function that will visit each workspace.
  */
-extern Array *
-b3_wsman_get_ws_arr(b3_wsman_t *wsman);
+extern int
+b3_wsman_iterate_ws_arr(b3_wsman_t *wsman, void (*visitor)(b3_ws_t *ws));
 
 #endif // B3_WSMAN_H
