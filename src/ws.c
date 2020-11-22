@@ -33,29 +33,94 @@
 
 static wbk_logger_t logger = { "ws" };
 
-static HANDLE g_get_win_amount_mutex = NULL;
-static int g_get_win_amount;
+/**
+ * Communication structure for b3_ws_get_win_amount() and
+ * b3_ws_winman_amount_visitor().
+ */
+typedef struct b3_ws_get_win_amount_comm_s
+{
+  HANDLE mutex;
+  int amount;
+} b3_ws_get_win_amount_comm_t;
 
-static HANDLE g_first_leaf_mutex = NULL;
-static b3_winman_t *g_first_leaf;
+/**
+ * Communication structure for b3_ws_add_win() and
+ * b3_ws_winman_first_leaf_visitor().
+ */
+typedef struct b3_ws_winman_first_leaf_visitor_comm_s
+{
+  HANDLE mutex;
+  b3_winman_t *first_leaf;
+} b3_ws_winman_first_leaf_visitor_comm_t;
 
-static HANDLE g_active_win_toggle_floating_mutex = NULL;
-static const b3_win_t *g_active_win_toggle_floating_win;
-static int g_active_win_toggle_floating_toggle_failed;
+/**
+ * Communication structure for b3_active_win_toggle_floating() and
+ * b3_ws_winman_active_win_toggle_floating_visitor().
+ */
+typedef struct b3_active_win_toggle_floating_comm_s
+{
+  HANDLE mutex;
+  const b3_win_t *win;
+  int toggle_failed;
+} b3_active_win_toggle_floating_comm_t;
 
-static HANDLE g_set_focused_win_found_mutex = NULL;
-static const b3_win_t *g_set_focused_win_win;
-static b3_win_t *g_set_focused_win_found;
+/**
+ * Communication structure for b3_ws_set_focused_win() and
+ * b3_ws_winman_set_focused_win_visitor().
+ */
+typedef struct b3_ws_set_focused_win_comm_s
+{
+  HANDLE mutex;
+  const b3_win_t *win;
+  b3_win_t *found;
+} b3_ws_set_focused_win_comm_t;
 
-static HANDLE g_arrange_wins_mutex = NULL;
+/**
+ * Communication structure for b3_ws_arrange_wins() and
+ * b3_ws_winman_amount_visitor().
+ */
+typedef struct b3_ws_arrange_wins_comm_s
+{
+  HANDLE mutex;
+  int amount;
+} b3_ws_arrange_wins_comm_t;
 
-static RECT g_arrange_wins_monitor_area;
+/**
+ * Belongs to b3_ws_get_win_amount() and
+ * b3_ws_get_win_amount_ws_visitor(). Do not set it somewhere else!
+ */
+static b3_ws_get_win_amount_comm_t g_get_win_amount_comm;
+
+/**
+ * Belongs to b3_ws_winman_add_win() and
+ * b3_ws_winman_first_leaf_visitor(). Do not set it somewhere else!
+ */
+static b3_ws_winman_first_leaf_visitor_comm_t g_first_leaf;
+
+/**
+ * Belongs to b3_active_win_toggle_floating() and
+ * b3_ws_winman_active_win_toggle_floating_visitor(). Do not set it somewhere
+ * else!
+ */
+static b3_active_win_toggle_floating_comm_t g_active_win_toggle_floating_comm;
+
+/**
+ * Belongs to b3_ws_set_focused_win() and
+ * b3_ws_winmanset_focused_win_ws_visitor(). Do not set it somewhere else!
+ */
+static b3_ws_set_focused_win_comm_t g_ws_set_focused_win_comm;
+
+/**
+ * Belongs to b3_ws_arrange_wins() and
+ * b3_ws_arrange_wins_ws_visitor(). Do not set it somewhere else!
+ */
+static b3_ws_arrange_wins_comm_t g_arrange_wins_comm;
 
 static void
 b3_ws_winman_amount_visitor(b3_winman_t *winman);
 
 static void
-b3_ws_winman_first_leaf(b3_winman_t *winman);
+b3_ws_winman_first_leaf_visitor(b3_winman_t *winman);
 
 static void
 b3_ws_winman_active_win_toggle_floating_visitor(b3_winman_t *winman);
@@ -104,11 +169,11 @@ b3_ws_new(const char *name)
 {
 	b3_ws_t *ws;
 
-	if (g_get_win_amount_mutex == NULL) g_get_win_amount_mutex = CreateMutex(NULL, FALSE, NULL);
-	if (g_first_leaf_mutex == NULL) g_first_leaf_mutex = CreateMutex(NULL, FALSE, NULL);
-	if (g_active_win_toggle_floating_mutex == NULL) g_active_win_toggle_floating_mutex = CreateMutex(NULL, FALSE, NULL);
-	if (g_set_focused_win_found_mutex == NULL) g_set_focused_win_found_mutex  = CreateMutex(NULL, FALSE, NULL);
-	if (g_arrange_wins_mutex == NULL) g_arrange_wins_mutex = CreateMutex(NULL, FALSE, NULL);
+	if (g_get_win_amount_comm.mutex == NULL) g_get_win_amount_comm.mutex = CreateMutex(NULL, FALSE, NULL);
+	if (g_first_leaf.mutex == NULL) g_first_leaf.mutex = CreateMutex(NULL, FALSE, NULL);
+	if (g_active_win_toggle_floating_comm.mutex == NULL) g_active_win_toggle_floating_comm.mutex = CreateMutex(NULL, FALSE, NULL);
+	if (g_ws_set_focused_win_comm.mutex == NULL) g_ws_set_focused_win_comm.mutex  = CreateMutex(NULL, FALSE, NULL);
+	if (g_arrange_wins_comm.mutex == NULL) g_arrange_wins_comm.mutex = CreateMutex(NULL, FALSE, NULL);
 
 	ws = NULL;
 	ws = malloc(sizeof(b3_ws_t));
@@ -144,13 +209,13 @@ b3_ws_get_win_amount(b3_ws_t *ws)
 {
 	int amount;
 
-	WaitForSingleObject(g_get_win_amount_mutex, INFINITE);
+	WaitForSingleObject(g_get_win_amount_comm.mutex, INFINITE);
 
-	g_get_win_amount = 0;
+	g_get_win_amount_comm.amount = 0;
 	b3_winman_traverse(ws->winman, b3_ws_winman_amount_visitor);
-	amount = g_get_win_amount;
+	amount = g_get_win_amount_comm.amount;
 
-	ReleaseMutex(g_get_win_amount_mutex);
+	ReleaseMutex(g_get_win_amount_comm.mutex);
 
 	return amount;
 }
@@ -171,15 +236,15 @@ b3_ws_add_win(b3_ws_t *ws, b3_win_t *win)
 		} else {
 			wbk_logger_log(&logger, DEBUG, "Adding window to workspace %s - focused\n", b3_ws_get_name(ws));
 
-			WaitForSingleObject(g_first_leaf_mutex, INFINITE);
+			WaitForSingleObject(g_first_leaf.mutex, INFINITE);
 
-			g_first_leaf = NULL;
-			b3_winman_traverse(ws->winman, b3_ws_winman_first_leaf);
-			winman = g_first_leaf;
+			g_first_leaf.first_leaf = NULL;
+			b3_winman_traverse(ws->winman, b3_ws_winman_first_leaf_visitor);
+			winman = g_first_leaf.first_leaf;
 
 			ws->focused_win = win;
 
-			ReleaseMutex(g_first_leaf_mutex);
+			ReleaseMutex(g_first_leaf.mutex);
 		}
 
 		if (winman) {
@@ -230,14 +295,14 @@ b3_ws_active_win_toggle_floating(b3_ws_t *ws, const b3_win_t *win)
 {
 	int toggle_failed;
 
-	WaitForSingleObject(g_active_win_toggle_floating_mutex, INFINITE);
+	WaitForSingleObject(g_active_win_toggle_floating_comm.mutex, INFINITE);
 
-	g_active_win_toggle_floating_win = win;
-	g_active_win_toggle_floating_toggle_failed = 1;
+	g_active_win_toggle_floating_comm.win = win;
+	g_active_win_toggle_floating_comm.toggle_failed = 1;
 	b3_winman_traverse(ws->winman, b3_ws_winman_active_win_toggle_floating_visitor);
-	toggle_failed = g_active_win_toggle_floating_toggle_failed;
+	toggle_failed = g_active_win_toggle_floating_comm.toggle_failed;
 
-	ReleaseMutex(g_active_win_toggle_floating_mutex);
+	ReleaseMutex(g_active_win_toggle_floating_comm.mutex);
 
 	return toggle_failed;
 }
@@ -250,7 +315,7 @@ b3_ws_arrange_wins(b3_ws_t *ws, RECT monitor_area)
 	 */
 	Stack *area_stack;
 
-	WaitForSingleObject(g_arrange_wins_mutex, INFINITE);
+	WaitForSingleObject(g_arrange_wins_comm.mutex, INFINITE);
 
 
 	stack_new(&area_stack);
@@ -267,7 +332,7 @@ b3_ws_arrange_wins(b3_ws_t *ws, RECT monitor_area)
 	stack_pop(area_stack, (void *) NULL);
 	stack_destroy(area_stack);
 
-	ReleaseMutex(g_arrange_wins_mutex);
+	ReleaseMutex(g_arrange_wins_comm.mutex);
 
     return 0;
 }
@@ -323,14 +388,14 @@ b3_ws_set_focused_win(b3_ws_t *ws, const b3_win_t *win)
 	b3_win_t *set_focused_win_found;
 	int error;
 
-	WaitForSingleObject(g_set_focused_win_found_mutex, INFINITE);
+	WaitForSingleObject(g_ws_set_focused_win_comm.mutex, INFINITE);
 
-	g_set_focused_win_win = win;
-	g_set_focused_win_found = NULL;
+	g_ws_set_focused_win_comm.win = win;
+	g_ws_set_focused_win_comm.found = NULL;
 	b3_winman_traverse(ws->winman, b3_ws_winman_set_focused_win_visitor);
-	set_focused_win_found = g_set_focused_win_found;
+	set_focused_win_found = g_ws_set_focused_win_comm.found;
 
-	ReleaseMutex(g_set_focused_win_found_mutex);
+	ReleaseMutex(g_ws_set_focused_win_comm.mutex);
 
 	error = 1;
 	if (set_focused_win_found) {
@@ -434,15 +499,15 @@ void
 b3_ws_winman_amount_visitor(b3_winman_t *winman)
 {
 	 if (winman->type == LEAF) {
-		 g_get_win_amount += array_size(b3_winman_get_win_arr(winman));
+		 g_get_win_amount_comm.amount += array_size(b3_winman_get_win_arr(winman));
 	 }
 }
 
 void
-b3_ws_winman_first_leaf(b3_winman_t *winman)
+b3_ws_winman_first_leaf_visitor(b3_winman_t *winman)
 {
-	if (winman->type == LEAF && g_first_leaf == NULL) {
-		g_first_leaf = winman;
+	if (winman->type == LEAF && g_first_leaf.first_leaf == NULL) {
+		g_first_leaf.first_leaf = winman;
 	}
 }
 
@@ -455,11 +520,11 @@ b3_ws_winman_active_win_toggle_floating_visitor(b3_winman_t *winman)
 
 	if (winman->type == LEAF) {
 		array_iter_init(&iter, b3_winman_get_win_arr(winman));
-		while (g_active_win_toggle_floating_toggle_failed && array_iter_next(&iter, (void*) &win_iter) != CC_ITER_END) {
-			if (b3_win_compare(win_iter, g_active_win_toggle_floating_win) == 0) {
+		while (g_active_win_toggle_floating_comm.toggle_failed && array_iter_next(&iter, (void*) &win_iter) != CC_ITER_END) {
+			if (b3_win_compare(win_iter, g_active_win_toggle_floating_comm.win) == 0) {
 				floating = b3_win_get_floating(win_iter);
 				b3_win_set_floating(win_iter, !floating);
-				g_active_win_toggle_floating_toggle_failed = 0;
+				g_active_win_toggle_floating_comm.toggle_failed = 0;
 			}
 		}
 	}
@@ -607,9 +672,9 @@ b3_ws_winman_set_focused_win_visitor(b3_winman_t *winman)
 
 	if (winman->type == LEAF) {
 		array_iter_init(&iter, b3_winman_get_win_arr(winman));
-		while (!g_set_focused_win_found && array_iter_next(&iter, (void*) &win_iter) != CC_ITER_END) {
-			if (b3_win_compare(win_iter, g_set_focused_win_win) == 0) {
-				g_set_focused_win_found = win_iter;
+		while (!g_ws_set_focused_win_comm.found && array_iter_next(&iter, (void*) &win_iter) != CC_ITER_END) {
+			if (b3_win_compare(win_iter, g_ws_set_focused_win_comm.win) == 0) {
+				g_ws_set_focused_win_comm.found = win_iter;
 			}
 		}
 	}

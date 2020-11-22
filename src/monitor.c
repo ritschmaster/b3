@@ -31,10 +31,19 @@
 static wbk_logger_t logger = { "monitor" };
 
 /**
+ * Communication structure for b3_monitor_arrange_wins() and
+ * b3_monitor_arrange_wins_ws_visitor().
+ */
+typedef struct b3_monitor_arrange_wins_comm_s
+{
+  b3_monitor_t *monitor;
+} b3_monitor_arrange_wins_comm_t;
+
+/**
  * Belongs to b3_monitor_arrange_wins() and
  * b3_monitor_arrange_wins_ws_visitor(). Do not set it somewhere else!
  */
-static b3_monitor_t *g_arrange_monitor;
+static b3_monitor_arrange_wins_comm_t g_arrange_comm;
 
 static void
 b3_monitor_arrange_wins_ws_visitor(b3_ws_t *ws);
@@ -43,7 +52,7 @@ void
 b3_monitor_arrange_wins_ws_visitor(b3_ws_t *ws)
 {
   if (strcmp(b3_ws_get_name(ws),
-             b3_ws_get_name(b3_monitor_get_focused_ws(g_arrange_monitor)))) {
+             b3_ws_get_name(b3_monitor_get_focused_ws(g_arrange_comm.monitor)))) {
     b3_ws_minimize_wins(ws);
   }
 }
@@ -194,7 +203,7 @@ b3_monitor_arrange_wins(b3_monitor_t *monitor)
 		wbk_logger_log(&logger, SEVERE, "Arraning wins - bar position %d is not supported\n", b3_bar_get_position(bar));
 	}
 
-  g_arrange_monitor = monitor;
+  g_arrange_comm.monitor = monitor;
   b3_wsman_iterate_ws_arr(monitor->wsman, b3_monitor_arrange_wins_ws_visitor);
 
 	b3_ws_arrange_wins(b3_monitor_get_focused_ws(monitor), monitor_area);

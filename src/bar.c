@@ -35,68 +35,46 @@
 
 static wbk_logger_t logger = { "bar" };
 
+/**
+ * Communication structure for b3_bar_draw() and b3_bar_draw_ws_visitor().
+ */
+typedef struct b3_bar_draw_comm_s
+{
+  b3_bar_t *bar;
+  HDC hdc;
+  PAINTSTRUCT ps;
+  RECT rect;
+  RECT text_rect;
+  HBRUSH background_brush;
+  HBRUSH focused_monitor_ws_brush;
+  HBRUSH focused_ws_brush;
+  b3_ws_t *focused_ws;
+} b3_bar_draw_comm_t;
+
+/**
+ * Belongs to b3_bar_draw() and b3_bar_draw_ws_visitor(). Do not set it
+ * somewhere else!
+ */
+static b3_bar_draw_comm_t g_draw_comm;
+
+/**
+ * Creates the window that will be used to paint the status bar on.
+ */
 static int
 b3_bar_create_window(b3_bar_t *bar, const char *monitor_name);
 
+/**
+ * Draws the status bar.
+ */
 static int
 b3_bar_draw(b3_bar_t *bar, HWND window_handler);
 
+/**
+ * Window procedure attached to the window created by b3_bar_create_window(). It
+ * is used to trigger the drawing of the status bar.
+ */
 static LRESULT
 CALLBACK b3_bar_WndProc(HWND window_handler, UINT msg, WPARAM wParam, LPARAM lParam);
-
-/**
- * Belongs to b3_bar_draw() and b3_bar_draw_ws_visitor(). Do not set it
- * somewhere else!
- */
-static b3_bar_t *g_draw_bar;
-
-/**
- * Belongs to b3_bar_draw() and b3_bar_draw_ws_visitor(). Do not set it
- * somewhere else!
- */
-static HDC g_draw_hdc;
-
-/**
- * Belongs to b3_bar_draw() and b3_bar_draw_ws_visitor(). Do not set it
- * somewhere else!
- */
-static PAINTSTRUCT g_draw_ps;
-
-/**
- * Belongs to b3_bar_draw() and b3_bar_draw_ws_visitor(). Do not set it
- * somewhere else!
- */
-static RECT rect;
-
-/**
- * Belongs to b3_bar_draw() and b3_bar_draw_ws_visitor(). Do not set it
- * somewhere else!
- */
-static RECT text_rect;
-
-/**
- * Belongs to b3_bar_draw() and b3_bar_draw_ws_visitor(). Do not set it
- * somewhere else!
- */
-static HBRUSH g_draw_bg_brush;
-
-/**
- * Belongs to b3_bar_draw() and b3_bar_draw_ws_visitor(). Do not set it
- * somewhere else!
- */
-static HBRUSH g_draw_focused_monitor_ws_brush;
-
-/**
- * Belongs to b3_bar_draw() and b3_bar_draw_ws_visitor(). Do not set it
- * somewhere else!
- */
-static HBRUSH g_draw_focused_ws_brush;
-
-/**
- * Belongs to b3_bar_draw() and b3_bar_draw_ws_visitor(). Do not set it
- * somewhere else!
- */
-static b3_ws_t *g_draw_focused_ws;
 
 /**
  * Visitor used in b3_bar_draw() to draw each available workspace.
@@ -263,66 +241,71 @@ b3_bar_draw_ws_visitor(b3_ws_t *ws)
   SIZE text_size;
   int str_length;
 
-  GetTextExtentPoint32A(g_draw_hdc, b3_ws_get_name(ws), strlen(b3_ws_get_name(ws)), &text_size);
+  GetTextExtentPoint32A(g_draw_comm.hdc, b3_ws_get_name(ws), strlen(b3_ws_get_name(ws)), &text_size);
   str_length = text_size.cx + B3_BAR_DEFAULT_PADDING_TO_FRAME;
-  rect.right = rect.left + str_length + B3_BAR_DEFAULT_PADDING_TO_FRAME;
+  g_draw_comm.rect.right = g_draw_comm.rect.left + str_length + B3_BAR_DEFAULT_PADDING_TO_FRAME;
 
-  text_rect.left = rect.left + B3_BAR_DEFAULT_PADDING_TO_FRAME;
-  text_rect.right = rect.right - B3_BAR_DEFAULT_PADDING_TO_FRAME;
+  g_draw_comm.text_rect.left = g_draw_comm.rect.left + B3_BAR_DEFAULT_PADDING_TO_FRAME;
+  g_draw_comm.text_rect.right = g_draw_comm.rect.right - B3_BAR_DEFAULT_PADDING_TO_FRAME;
 
   if (strcmp(b3_ws_get_name(ws),
-             b3_ws_get_name(g_draw_focused_ws)) == 0) {
-    if (b3_bar_is_focused(g_draw_bar)) {
-      FillRect(g_draw_hdc, &rect, g_draw_focused_monitor_ws_brush);
+             b3_ws_get_name(g_draw_comm.focused_ws)) == 0) {
+    if (b3_bar_is_focused(g_draw_comm.bar)) {
+      FillRect(g_draw_comm.hdc, &g_draw_comm.rect, g_draw_comm.focused_monitor_ws_brush);
     } else {
-      FillRect(g_draw_hdc, &rect, g_draw_focused_ws_brush);
+      FillRect(g_draw_comm.hdc, &g_draw_comm.rect, g_draw_comm.focused_ws_brush);
     }
   } else {
-    Rectangle(g_draw_hdc, rect.left, rect.top, rect.right, rect.bottom);
+    Rectangle(g_draw_comm.hdc,
+              g_draw_comm.rect.left, g_draw_comm.rect.top,
+              g_draw_comm.rect.right, g_draw_comm.rect.bottom);
   }
 
-  DrawText(g_draw_hdc, b3_ws_get_name(ws), -1, &text_rect, DT_CENTER | DT_SINGLELINE | DT_VCENTER);
+  DrawText(g_draw_comm.hdc, b3_ws_get_name(ws),
+           -1,
+           &g_draw_comm.text_rect,
+           DT_CENTER | DT_SINGLELINE | DT_VCENTER);
 
-  rect.left = rect.right + B3_BAR_DEFAULT_PADDING_TO_NEXT_FRAME;
+  g_draw_comm.rect.left = g_draw_comm.rect.right + B3_BAR_DEFAULT_PADDING_TO_NEXT_FRAME;
 }
 
 int
 b3_bar_draw(b3_bar_t *bar, HWND window_handler)
 {
-	g_draw_bar = bar;
+	g_draw_comm.bar = bar;
 
-	g_draw_focused_ws = b3_wsman_get_focused_ws(bar->wsman);
+	g_draw_comm.focused_ws = b3_wsman_get_focused_ws(bar->wsman);
 
-	g_draw_hdc = GetDC(window_handler);
-	BeginPaint(window_handler, &g_draw_ps);
+	g_draw_comm.hdc = GetDC(window_handler);
+	BeginPaint(window_handler, &g_draw_comm.ps);
 
 	/** Init everything */
-	g_draw_bg_brush = CreateSolidBrush(RGB(255, 255, 255));
-	g_draw_focused_monitor_ws_brush = CreateSolidBrush(RGB(255, 0, 0));
-	g_draw_focused_ws_brush = CreateSolidBrush(RGB(100, 100, 100));
+	g_draw_comm.background_brush = CreateSolidBrush(RGB(255, 255, 255));
+	g_draw_comm.focused_monitor_ws_brush = CreateSolidBrush(RGB(255, 0, 0));
+	g_draw_comm.focused_ws_brush = CreateSolidBrush(RGB(100, 100, 100));
 
-	rect.top = 0;
-	rect.bottom = bar->area.bottom - bar->area.top;
-	rect.left = 0;
-	rect.right = bar->area.right - bar->area.left;
-	FillRect(g_draw_hdc, &rect, g_draw_bg_brush);
+	g_draw_comm.rect.top = 0;
+	g_draw_comm.rect.bottom = bar->area.bottom - bar->area.top;
+	g_draw_comm.rect.left = 0;
+	g_draw_comm.rect.right = bar->area.right - bar->area.left;
+	FillRect(g_draw_comm.hdc, &g_draw_comm.rect, g_draw_comm.background_brush);
 
-	rect.top = B3_BAR_DEFAULT_PADDING_TO_WINDOW;
-	rect.bottom = bar->area.bottom - bar->area.top - B3_BAR_DEFAULT_PADDING_TO_WINDOW;
-	rect.left = 0; /** We are drawing relative to the window! */
-	rect.right = 0; /** Will be overwritten */
+	g_draw_comm.rect.top = B3_BAR_DEFAULT_PADDING_TO_WINDOW;
+	g_draw_comm.rect.bottom = bar->area.bottom - bar->area.top - B3_BAR_DEFAULT_PADDING_TO_WINDOW;
+	g_draw_comm.rect.left = 0; /** We are drawing relative to the window! */
+	g_draw_comm.rect.right = 0; /** Will be overwritten */
 
-	text_rect.top = rect.top + B3_BAR_DEFAULT_PADDING_TO_FRAME;
-	text_rect.bottom = rect.bottom - B3_BAR_DEFAULT_PADDING_TO_FRAME;
+	g_draw_comm.text_rect.top = g_draw_comm.rect.top + B3_BAR_DEFAULT_PADDING_TO_FRAME;
+	g_draw_comm.text_rect.bottom = g_draw_comm.rect.bottom - B3_BAR_DEFAULT_PADDING_TO_FRAME;
 
   b3_wsman_iterate_ws_arr(bar->wsman, b3_bar_draw_ws_visitor);
 
-	DeleteObject(g_draw_bg_brush);
-	DeleteObject(g_draw_focused_monitor_ws_brush);
-	DeleteObject(g_draw_focused_ws_brush);
+	DeleteObject(g_draw_comm.background_brush);
+	DeleteObject(g_draw_comm.focused_monitor_ws_brush);
+	DeleteObject(g_draw_comm.focused_ws_brush);
 
-   	EndPaint(window_handler, &g_draw_ps);
-    ReleaseDC(window_handler, g_draw_hdc);
+   	EndPaint(window_handler, &g_draw_comm.ps);
+    ReleaseDC(window_handler, g_draw_comm.hdc);
 
 	return 0;
 }
