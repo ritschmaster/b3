@@ -44,9 +44,12 @@ static int
 b3_director_free_monitor_arr(b3_director_t *director);
 
 /**
- * It is only possible to set a monitor as focused, that is already available in the director.
+ * It is only possible to set a monitor as focused, that is already available
+ * in the director.
  *
- * @return 0 if the focusing was successful. Non-0 otherwise.
+ * @return 0 if the focusing was successful. 1 if a general error occurred. 2
+ * if the passed monitor is not managed by this director. 3 if the passed
+ * monitor is already focused.
  */
 static int
 b3_director_set_focused_monitor(b3_director_t *director, b3_monitor_t *monitor);
@@ -221,26 +224,32 @@ b3_director_set_focused_monitor(b3_director_t *director, b3_monitor_t *monitor)
 
 	managed = 0;
 	array_iter_init(&iter, director->monitor_arr);
-    while (!managed && array_iter_next(&iter, (void*) &monitor_iter) != CC_ITER_END) {
-    	if (monitor_iter == monitor) {
-    		managed = 1;
-    	}
+  while (!managed && array_iter_next(&iter, (void*) &monitor_iter) != CC_ITER_END) {
+    if (monitor_iter == monitor) {
+      managed = 1;
     }
+  }
 
-    if (managed) {
-    	wbk_logger_log(&logger, INFO, "Switching to monitor %s.\n", b3_monitor_get_monitor_name(monitor));
+  if (managed) {
+    wbk_logger_log(&logger, INFO, "Switching to monitor %s.\n", b3_monitor_get_monitor_name(monitor));
 
-		if (director->focused_monitor) {
-			b3_bar_set_focused(b3_monitor_get_bar(director->focused_monitor), 0);
-		}
-		director->focused_monitor = monitor;
+    if (director->focused_monitor && director->focused_monitor != monitor) {
+      if (director->focused_monitor) {
+        b3_bar_set_focused(b3_monitor_get_bar(director->focused_monitor), 0);
+      }
+      director->focused_monitor = monitor;
 
-		b3_bar_set_focused(b3_monitor_get_bar(director->focused_monitor), 1);
+      b3_bar_set_focused(b3_monitor_get_bar(director->focused_monitor), 1);
 
-		error = 0;
+      error = 0;
+    } else {
+      error = 3;
     }
+  } else {
+    error = 2;
+  }
 
-	ReleaseMutex(director->global_mutex);
+  ReleaseMutex(director->global_mutex);
 
 	return error;
 }
@@ -287,8 +296,7 @@ b3_director_switch_to_ws(b3_director_t *director, const char *ws_id)
 	ArrayIter iter;
 	b3_monitor_t *monitor;
 	b3_win_t *focused_win;
-
-	wbk_logger_log(&logger, DEBUG, "\n>>>>>> STARTING TO WAIT\n\n");
+  
 	WaitForSingleObject(director->global_mutex, INFINITE);
 
 	found = 0;

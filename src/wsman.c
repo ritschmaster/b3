@@ -313,17 +313,12 @@ b3_wsman_remove_empty_ws(b3_wsman_t *wsman)
     array_get_at(b3_wsman_get_ws_arr(wsman), i, (void *) &ws);
 
     if (b3_wsman_get_focused_ws(wsman) != ws && b3_ws_get_win_amount(ws) <= 0) {
-
-      wbk_logger_log(&logger, DEBUG, ">>> still alive1 %s\n", b3_ws_get_name(ws));
 			b3_wsman_remove(wsman, b3_ws_get_name(ws));
-      wbk_logger_log(&logger, DEBUG, ">>> still alive1.5\n");
 			b3_ws_factory_remove(wsman->ws_factory, b3_ws_get_name(ws));
-      wbk_logger_log(&logger, DEBUG, ">>> still alive2\n");
       ws = NULL;
 
       i = -1;
       len = array_size(b3_wsman_get_ws_arr(wsman));
-      wbk_logger_log(&logger, DEBUG, ">>> still alive3\n");
 		}
 
     i++;

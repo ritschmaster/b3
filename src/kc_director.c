@@ -31,6 +31,9 @@
 #include "kc_director.h"
 
 #include <w32bindkeys/logger.h>
+#include <windows.h>
+
+#include "monitor.h"
 
 static wbk_logger_t logger =  { "kc_director" };
 
@@ -111,6 +114,12 @@ b3_kc_director_exec_mfwtml(b3_kc_director_t *kc_director);
 
 static int
 b3_kc_director_exec_mfwtmr(b3_kc_director_t *kc_director);
+
+/**
+ * Position the cursor in the middle of the monitor.
+ */
+static int
+b3_kc_director_position_cursor(b3_monitor_t *monitor);
 
 b3_kc_director_t *
 b3_kc_director_new(wbk_b_t *comb, b3_director_t *director, b3_kc_director_kind_t kind, void *data)
@@ -359,10 +368,17 @@ b3_kc_director_exec_cw(b3_kc_director_t *kc_director)
 {
 	int ret;
 	char *ws_id;
+  b3_monitor_t *focused_monitor_old;
 
 	ws_id = kc_director->data;
 
+  focused_monitor_old = b3_director_get_focused_monitor(kc_director->director);
+
 	ret = b3_director_switch_to_ws(kc_director->director, ws_id);
+
+  if (focused_monitor_old != b3_director_get_focused_monitor(kc_director->director)) {
+    b3_kc_director_position_cursor(b3_director_get_focused_monitor(kc_director->director));
+  }
 
 	return ret;
 }
@@ -372,10 +388,17 @@ b3_kc_director_exec_cm(b3_kc_director_t *kc_director)
 {
 	int ret;
 	char *monitor_name;
+  b3_monitor_t *focused_monitor_old;
 
 	monitor_name = kc_director->data;
 
+  focused_monitor_old = b3_director_get_focused_monitor(kc_director->director);
+
 	ret = b3_director_set_focused_monitor_by_name(kc_director->director, monitor_name);
+
+  if (focused_monitor_old != b3_director_get_focused_monitor(kc_director->director)) {
+    b3_kc_director_position_cursor(b3_director_get_focused_monitor(kc_director->director));
+  }
 
 	return ret;
 }
@@ -407,8 +430,15 @@ int
 b3_kc_director_exec_mawu(b3_kc_director_t *kc_director)
 {
 	int ret;
+  b3_monitor_t *focused_monitor_old;
+
+  focused_monitor_old = b3_director_get_focused_monitor(kc_director->director);
 
 	ret = b3_director_move_active_win(kc_director->director, UP);
+
+  if (focused_monitor_old != b3_director_get_focused_monitor(kc_director->director)) {
+    b3_kc_director_position_cursor(b3_director_get_focused_monitor(kc_director->director));
+  }
 
 	return ret;
 }
@@ -417,8 +447,15 @@ int
 b3_kc_director_exec_mawd(b3_kc_director_t *kc_director)
 {
 	int ret;
+  b3_monitor_t *focused_monitor_old;
+
+  focused_monitor_old = b3_director_get_focused_monitor(kc_director->director);
 
 	ret = b3_director_move_active_win(kc_director->director, DOWN);
+
+  if (focused_monitor_old != b3_director_get_focused_monitor(kc_director->director)) {
+    b3_kc_director_position_cursor(b3_director_get_focused_monitor(kc_director->director));
+  }
 
 	return ret;
 }
@@ -427,8 +464,15 @@ int
 b3_kc_director_exec_mawl(b3_kc_director_t *kc_director)
 {
 	int ret;
+  b3_monitor_t *focused_monitor_old;
+
+  focused_monitor_old = b3_director_get_focused_monitor(kc_director->director);
 
 	ret = b3_director_move_active_win(kc_director->director, LEFT);
+
+  if (focused_monitor_old != b3_director_get_focused_monitor(kc_director->director)) {
+    b3_kc_director_position_cursor(b3_director_get_focused_monitor(kc_director->director));
+  }
 
 	return ret;
 }
@@ -437,8 +481,15 @@ int
 b3_kc_director_exec_mawr(b3_kc_director_t *kc_director)
 {
 	int ret;
+  b3_monitor_t *focused_monitor_old;
+
+  focused_monitor_old = b3_director_get_focused_monitor(kc_director->director);
 
 	ret = b3_director_move_active_win(kc_director->director, RIGHT);
+
+  if (focused_monitor_old != b3_director_get_focused_monitor(kc_director->director)) {
+    b3_kc_director_position_cursor(b3_director_get_focused_monitor(kc_director->director));
+  }
 
 	return ret;
 }
@@ -447,40 +498,68 @@ int
 b3_kc_director_exec_sawu(b3_kc_director_t *kc_director)
 {
 	int ret;
+  b3_monitor_t *focused_monitor_old;
+
+  focused_monitor_old = b3_director_get_focused_monitor(kc_director->director);
 
 	ret = b3_director_set_active_win_by_direction(kc_director->director, UP);
 
-	return ret;
+	if (focused_monitor_old != b3_director_get_focused_monitor(kc_director->director)) {
+    b3_kc_director_position_cursor(b3_director_get_focused_monitor(kc_director->director));
+  }
+
+  return ret;
 }
 
 int
 b3_kc_director_exec_sawd(b3_kc_director_t *kc_director)
 {
 	int ret;
+  b3_monitor_t *focused_monitor_old;
+
+  focused_monitor_old = b3_director_get_focused_monitor(kc_director->director);
 
 	ret = b3_director_set_active_win_by_direction(kc_director->director, DOWN);
 
-	return ret;
+	if (focused_monitor_old != b3_director_get_focused_monitor(kc_director->director)) {
+    b3_kc_director_position_cursor(b3_director_get_focused_monitor(kc_director->director));
+  }
+
+  return ret;
 }
 
 int
 b3_kc_director_exec_sawl(b3_kc_director_t *kc_director)
 {
 	int ret;
+  b3_monitor_t *focused_monitor_old;
+
+  focused_monitor_old = b3_director_get_focused_monitor(kc_director->director);
 
 	ret = b3_director_set_active_win_by_direction(kc_director->director, LEFT);
 
-	return ret;
+	if (focused_monitor_old != b3_director_get_focused_monitor(kc_director->director)) {
+    b3_kc_director_position_cursor(b3_director_get_focused_monitor(kc_director->director));
+  }
+
+  return ret;
 }
 
 int
 b3_kc_director_exec_sawr(b3_kc_director_t *kc_director)
 {
 	int ret;
+  b3_monitor_t *focused_monitor_old;
+
+  focused_monitor_old = b3_director_get_focused_monitor(kc_director->director);
 
 	ret = b3_director_set_active_win_by_direction(kc_director->director, RIGHT);
 
-	return ret;
+	if (focused_monitor_old != b3_director_get_focused_monitor(kc_director->director)) {
+    b3_kc_director_position_cursor(b3_director_get_focused_monitor(kc_director->director));
+  }
+
+  return ret;
 }
 
 int
@@ -507,8 +586,15 @@ int
 b3_kc_director_exec_mfwu(b3_kc_director_t *kc_director)
 {
 	int ret;
+  b3_monitor_t *focused_monitor_old;
+
+  focused_monitor_old = b3_director_get_focused_monitor(kc_director->director);
 
 	ret = b3_director_move_focused_ws_to_monitor_by_dir(kc_director->director, UP);
+
+  if (focused_monitor_old != b3_director_get_focused_monitor(kc_director->director)) {
+    b3_kc_director_position_cursor(b3_director_get_focused_monitor(kc_director->director));
+  }
 
 	return ret;
 }
@@ -517,9 +603,15 @@ int
 b3_kc_director_exec_mfwd(b3_kc_director_t *kc_director)
 {
 	int ret;
+  b3_monitor_t *focused_monitor_old;
+
+  focused_monitor_old = b3_director_get_focused_monitor(kc_director->director);
 
 	ret = b3_director_move_focused_ws_to_monitor_by_dir(kc_director->director, DOWN);
 
+  if (focused_monitor_old != b3_director_get_focused_monitor(kc_director->director)) {
+    b3_kc_director_position_cursor(b3_director_get_focused_monitor(kc_director->director));
+  }
 	return ret;
 }
 
@@ -527,9 +619,15 @@ int
 b3_kc_director_exec_mfwl(b3_kc_director_t *kc_director)
 {
 	int ret;
+  b3_monitor_t *focused_monitor_old;
+
+  focused_monitor_old = b3_director_get_focused_monitor(kc_director->director);
 
 	ret = b3_director_move_focused_ws_to_monitor_by_dir(kc_director->director, LEFT);
 
+  if (focused_monitor_old != b3_director_get_focused_monitor(kc_director->director)) {
+    b3_kc_director_position_cursor(b3_director_get_focused_monitor(kc_director->director));
+  }
 	return ret;
 }
 
@@ -537,8 +635,15 @@ int
 b3_kc_director_exec_mfwr(b3_kc_director_t *kc_director)
 {
 	int ret;
+  b3_monitor_t *focused_monitor_old;
+
+  focused_monitor_old = b3_director_get_focused_monitor(kc_director->director);
 
 	ret = b3_director_move_focused_ws_to_monitor_by_dir(kc_director->director, RIGHT);
+
+  if (focused_monitor_old != b3_director_get_focused_monitor(kc_director->director)) {
+    b3_kc_director_position_cursor(b3_director_get_focused_monitor(kc_director->director));
+  }
 
 	return ret;
 }
@@ -547,40 +652,68 @@ int
 b3_kc_director_exec_sfmu(b3_kc_director_t *kc_director)
 {
 	int ret;
+  b3_monitor_t *focused_monitor_old;
+
+  focused_monitor_old = b3_director_get_focused_monitor(kc_director->director);
 
 	ret = b3_director_set_focused_monitor_by_direction(kc_director->director, UP);
 
-	return ret;
+	if (focused_monitor_old != b3_director_get_focused_monitor(kc_director->director)) {
+    b3_kc_director_position_cursor(b3_director_get_focused_monitor(kc_director->director));
+  }
+
+  return ret;
 }
 
 int
 b3_kc_director_exec_sfmd(b3_kc_director_t *kc_director)
 {
 	int ret;
+  b3_monitor_t *focused_monitor_old;
+
+  focused_monitor_old = b3_director_get_focused_monitor(kc_director->director);
 
 	ret = b3_director_set_focused_monitor_by_direction(kc_director->director, DOWN);
 
-	return ret;
+	if (focused_monitor_old != b3_director_get_focused_monitor(kc_director->director)) {
+    b3_kc_director_position_cursor(b3_director_get_focused_monitor(kc_director->director));
+  }
+
+  return ret;
 }
 
 int
 b3_kc_director_exec_sfml(b3_kc_director_t *kc_director)
 {
 	int ret;
+  b3_monitor_t *focused_monitor_old;
+
+  focused_monitor_old = b3_director_get_focused_monitor(kc_director->director);
 
 	ret = b3_director_set_focused_monitor_by_direction(kc_director->director, LEFT);
 
-	return ret;
+	if (focused_monitor_old != b3_director_get_focused_monitor(kc_director->director)) {
+    b3_kc_director_position_cursor(b3_director_get_focused_monitor(kc_director->director));
+  }
+
+  return ret;
 }
 
 int
 b3_kc_director_exec_sfmr(b3_kc_director_t *kc_director)
 {
 	int ret;
+  b3_monitor_t *focused_monitor_old;
+
+  focused_monitor_old = b3_director_get_focused_monitor(kc_director->director);
 
 	ret = b3_director_set_focused_monitor_by_direction(kc_director->director, RIGHT);
 
-	return ret;
+	if (focused_monitor_old != b3_director_get_focused_monitor(kc_director->director)) {
+    b3_kc_director_position_cursor(b3_director_get_focused_monitor(kc_director->director));
+  }
+
+  return ret;
 }
 
 int
@@ -621,4 +754,18 @@ b3_kc_director_exec_mfwtmr(b3_kc_director_t *kc_director)
 	ret = b3_director_move_focused_win_to_monitor_by_dir(kc_director->director, RIGHT);
 
 	return ret;
+}
+
+int
+b3_kc_director_position_cursor(b3_monitor_t *monitor)
+{
+  RECT monitor_area;
+  POINT cursor_pos;
+
+  monitor_area = b3_monitor_get_monitor_area(monitor);
+  cursor_pos.y = monitor_area.top + (monitor_area.bottom - monitor_area.top) / 2;
+  cursor_pos.x = monitor_area.left + (monitor_area.right - monitor_area.left) / 2;
+  SetCursorPos(cursor_pos.x, cursor_pos.y);
+
+  return 0;
 }

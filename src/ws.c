@@ -715,7 +715,6 @@ b3_ws_move_active_win_default_up_down(b3_winman_t *start,
 				}
 			}
 
-			wbk_logger_log(&logger, DEBUG, ">>inspos %d\n", inspos);
 			if (inspos == 0) {
 				b3_winman_remove_win(start, focused_win);
 				array_get_at(b3_winman_get_winman_arr(inner_winman), inspos, (void *) &leaf_winman);
