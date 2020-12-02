@@ -399,6 +399,9 @@ b3_ws_set_focused_win(b3_ws_t *ws, const b3_win_t *win)
 
 	error = 1;
 	if (set_focused_win_found) {
+    if (ws->focused_win != set_focused_win_found) {
+      b3_win_set_state(ws->focused_win, NORMAL);
+    }
 		ws->focused_win = set_focused_win_found;
 		wbk_logger_log(&logger, DEBUG, "Updating focused window on workspace %s\n", ws->name);
 		error = 0;
