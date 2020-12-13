@@ -35,7 +35,7 @@ See [here](https://github.com/ritschmaster/b3/blob/master/CompatibilityList.md).
 * Switching between windows in the plain Windows way will be automatically
   recognized by b3 (e.g. switch to workspace of that window).
 * The Windows 10 desktop are still available but useless when b3 is running.
-* It is possible to rebind almost any key combination. <kbd>Win</kbd> + <kbd>h</kbd>, <kbd>j</kbd>, <kbd>k</kbd>, <kbd>l</kbd> is supported (for <kbd>l</kbd> see [here](https://github.com/ritschmaster/w32bindkeys#i-want-to-remap-the-win-key)
+* It is possible to rebind almost any key combination. <kbd>Win</kbd> + <kbd>h</kbd>, <kbd>j</kbd>, <kbd>k</kbd>, <kbd>l</kbd> is supported (for <kbd>l</kbd> see [here](https://github.com/ritschmaster/w32bindkeys#i-want-to-remap-the-win-key))
 
 ### What are the project's goals?
 
@@ -45,6 +45,10 @@ See [here](https://github.com/ritschmaster/b3/blob/master/CompatibilityList.md).
 ### I need a default configuration
 
 Since version 0.4 a default config file is included in the [release zip](https://github.com/ritschmaster/b3/releases). There is also an example configuration available at `tests/full.config` (please place it as `config` in the same directory as `b3.exe` to use it).
+
+### Are there known limitations?
+
+Yes, please see [here](https://github.com/ritschmaster/w32bindkeys#are-there-known-limitations?)
 
 ## Compiling
 
