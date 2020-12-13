@@ -48,7 +48,7 @@ Since version 0.4 a default config file is included in the [release zip](https:/
 
 ### Are there known limitations?
 
-Yes, please see [here](https://github.com/ritschmaster/w32bindkeys#are-there-known-limitations?)
+Yes, please see [here](https://github.com/ritschmaster/w32bindkeys#are-there-known-limitations).
 
 ## Compiling
 
