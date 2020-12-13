@@ -139,29 +139,33 @@ b3_win_show(b3_win_t *win, char topmost)
 	}
 
 	if (!error) {
-		ShowWindow(b3_win_get_window_handler(win), SW_SHOWNOACTIVATE);
 		SendMessage(b3_win_get_window_handler(win), WM_ENTERSIZEMOVE, (WPARAM) NULL, (LPARAM) NULL);
 
-		GetWindowRect(b3_win_get_window_handler(win), &cur_rect);
-		if (b3_win_get_state(win) != MAXIMIZED) {
-			if (EqualRect(&cur_rect, &(win->rect)) == 0) {
-				SetWindowPos(b3_win_get_window_handler(win),
-							 insert_after,
-							 win->rect.left,
-							 win->rect.top,
-							 win->rect.right - win->rect.left,
-							 win->rect.bottom - win->rect.top,
-							 SWP_NOACTIVATE);
-			}
-		} else {
-			SetWindowPos(b3_win_get_window_handler(win),
-							 insert_after,
-							 cur_rect.left,
-							 cur_rect.top,
-							 cur_rect.right - cur_rect.left,
-							 cur_rect.bottom - cur_rect.top,
-							 SWP_NOACTIVATE);
-		}
+		ShowWindow(b3_win_get_window_handler(win), SW_SHOWNOACTIVATE);
+
+    if (!b3_win_get_floating(win)) {
+      GetWindowRect(b3_win_get_window_handler(win), &cur_rect);
+      if (b3_win_get_state(win) != MAXIMIZED) {
+        if (EqualRect(&cur_rect, &(win->rect)) == 0) {
+          SetWindowPos(b3_win_get_window_handler(win),
+                       insert_after,
+                       win->rect.left,
+                       win->rect.top,
+                       win->rect.right - win->rect.left,
+                       win->rect.bottom - win->rect.top,
+                       SWP_NOACTIVATE);
+        }
+      } else {
+        SetWindowPos(b3_win_get_window_handler(win),
+                     insert_after,
+                     cur_rect.left,
+                     cur_rect.top,
+                     cur_rect.right - cur_rect.left,
+                     cur_rect.bottom - cur_rect.top,
+                     SWP_NOACTIVATE);
+      }
+    }
+
 		SendMessage(b3_win_get_window_handler(win), WM_EXITSIZEMOVE, (WPARAM) NULL, (LPARAM) NULL);
 	}
 

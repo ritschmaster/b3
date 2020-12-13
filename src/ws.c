@@ -614,6 +614,8 @@ b3_ws_winman_arrange(b3_ws_t *ws, b3_winman_t *winman, Stack *area_stack)
 					next_area->top += increment;
 				}
 
+        Sleep(100);
+
 				wbk_logger_log(&logger, DEBUG,
 							   "Workspace %s - Window placing - X: %d -> %d, Y: %d -> %d\n",
 							   b3_ws_get_name(ws),
@@ -624,10 +626,12 @@ b3_ws_winman_arrange(b3_ws_t *ws, b3_winman_t *winman, Stack *area_stack)
 			}
 		}
 
+    /**
+     * Show all floating windows on this workspace
+     */
+		array_iter_init(&iter, b3_winman_get_win_arr(winman));
 		while (array_iter_next(&iter, (void*) &win_iter) != CC_ITER_END) {
 			if (b3_win_get_floating(win_iter)) {
-				GetWindowRect(b3_win_get_window_handler(win_iter), &set_rect);
-				b3_win_set_rect(win_iter, set_rect);
 				b3_win_show(win_iter, 1);
 			}
 		}
