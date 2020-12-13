@@ -37,83 +37,101 @@
 
 static wbk_logger_t logger =  { "kc_director" };
 
+/**
+ * Implementaiton of wbk_kc_free().
+ *
+ * @brief Frees a key binding command
+ * @return Non-0 if the freeing failed
+ */
+extern int
+b3_kc_director_free_impl(wbk_kc_t *kc);
+
+/**
+ * Implementation of wbk_kc_exec().
+ *
+ * @brief Execute the director command of a key binding director command
+ * @return Non-0 if the execution failed
+ */
 static int
-b3_kc_director_exec_cw(b3_kc_director_t *kc_director);
+b3_kc_director_exec_impl(const wbk_kc_t *kc);
 
 static int
-b3_kc_director_exec_cm(b3_kc_director_t *kc_director);
+b3_kc_director_exec_cw(const b3_kc_director_t *kc_director);
 
 static int
-b3_kc_director_exec_mawtw(b3_kc_director_t *kc_director);
+b3_kc_director_exec_cm(const b3_kc_director_t *kc_director);
 
 static int
-b3_kc_director_exec_awtf(b3_kc_director_t *kc_director);
+b3_kc_director_exec_mawtw(const b3_kc_director_t *kc_director);
 
 static int
-b3_kc_director_exec_mawu(b3_kc_director_t *kc_director);
+b3_kc_director_exec_awtf(const b3_kc_director_t *kc_director);
 
 static int
-b3_kc_director_exec_mawd(b3_kc_director_t *kc_director);
+b3_kc_director_exec_mawu(const b3_kc_director_t *kc_director);
 
 static int
-b3_kc_director_exec_mawl(b3_kc_director_t *kc_director);
+b3_kc_director_exec_mawd(const b3_kc_director_t *kc_director);
 
 static int
-b3_kc_director_exec_mawr(b3_kc_director_t *kc_director);
+b3_kc_director_exec_mawl(const b3_kc_director_t *kc_director);
 
 static int
-b3_kc_director_exec_sawu(b3_kc_director_t *kc_director);
+b3_kc_director_exec_mawr(const b3_kc_director_t *kc_director);
 
 static int
-b3_kc_director_exec_sawd(b3_kc_director_t *kc_director);
+b3_kc_director_exec_sawu(const b3_kc_director_t *kc_director);
 
 static int
-b3_kc_director_exec_sawl(b3_kc_director_t *kc_director);
+b3_kc_director_exec_sawd(const b3_kc_director_t *kc_director);
 
 static int
-b3_kc_director_exec_sawr(b3_kc_director_t *kc_director);
+b3_kc_director_exec_sawl(const b3_kc_director_t *kc_director);
 
 static int
-b3_kc_director_exec_tawf(b3_kc_director_t *kc_director);
+b3_kc_director_exec_sawr(const b3_kc_director_t *kc_director);
 
 static int
-b3_kc_director_exec_caw(b3_kc_director_t *kc_director);
+b3_kc_director_exec_tawf(const b3_kc_director_t *kc_director);
 
 static int
-b3_kc_director_exec_mfwu(b3_kc_director_t *kc_director);
+b3_kc_director_exec_caw(const b3_kc_director_t *kc_director);
 
 static int
-b3_kc_director_exec_mfwd(b3_kc_director_t *kc_director);
+b3_kc_director_exec_mfwu(const b3_kc_director_t *kc_director);
 
 static int
-b3_kc_director_exec_mfwl(b3_kc_director_t *kc_director);
+b3_kc_director_exec_mfwd(const b3_kc_director_t *kc_director);
 
 static int
-b3_kc_director_exec_mfwr(b3_kc_director_t *kc_director);
+b3_kc_director_exec_mfwl(const b3_kc_director_t *kc_director);
 
 static int
-b3_kc_director_exec_sfmu(b3_kc_director_t *kc_director);
+b3_kc_director_exec_mfwr(const b3_kc_director_t *kc_director);
 
 static int
-b3_kc_director_exec_sfmd(b3_kc_director_t *kc_director);
+b3_kc_director_exec_sfmu(const b3_kc_director_t *kc_director);
 
 static int
-b3_kc_director_exec_sfml(b3_kc_director_t *kc_director);
+b3_kc_director_exec_sfmd(const b3_kc_director_t *kc_director);
 
 static int
-b3_kc_director_exec_sfmr(b3_kc_director_t *kc_director);
+b3_kc_director_exec_sfml(const b3_kc_director_t *kc_director);
 
 static int
-b3_kc_director_exec_mfwtmu(b3_kc_director_t *kc_director);
+b3_kc_director_exec_sfmr(const b3_kc_director_t *kc_director);
 
 static int
-b3_kc_director_exec_mfwtmd(b3_kc_director_t *kc_director);
+b3_kc_director_exec_mfwtmu(const b3_kc_director_t *kc_director);
 
 static int
-b3_kc_director_exec_mfwtml(b3_kc_director_t *kc_director);
+b3_kc_director_exec_mfwtmd(const b3_kc_director_t *kc_director);
 
 static int
-b3_kc_director_exec_mfwtmr(b3_kc_director_t *kc_director);
+b3_kc_director_exec_mfwtml(const b3_kc_director_t *kc_director);
+
+static int
+b3_kc_director_exec_mfwtmr(const b3_kc_director_t *kc_director);
 
 /**
  * Position the cursor in the middle of the monitor.
@@ -124,6 +142,7 @@ b3_kc_director_position_cursor(b3_monitor_t *monitor);
 b3_kc_director_t *
 b3_kc_director_new(wbk_b_t *comb, b3_director_t *director, b3_kc_director_kind_t kind, void *data)
 {
+  wbk_kc_t *kc;
 	b3_kc_director_t *kc_director;
 	int length;
 
@@ -132,7 +151,16 @@ b3_kc_director_new(wbk_b_t *comb, b3_director_t *director, b3_kc_director_kind_t
 	memset(kc_director, 0, sizeof(b3_kc_director_t));
 
 	if (kc_director != NULL) {
-		kc_director->kc = wbk_kc_new(comb);
+    kc = wbk_kc_new(comb);
+    memcpy(kc_director, kc, sizeof(wbk_kc_t));
+    free(kc); /* Just free the top level element */
+
+    kc_director->super_kc_free = kc_director->kc.kc_free;
+    kc_director->super_kc_exec = kc_director->kc.kc_exec;
+
+    kc_director->kc.kc_free = b3_kc_director_free_impl;
+    kc_director->kc.kc_exec = b3_kc_director_exec_impl;
+
 
 		kc_director->global_mutex = CreateMutex(NULL, FALSE, NULL);
 
@@ -146,10 +174,7 @@ b3_kc_director_new(wbk_b_t *comb, b3_director_t *director, b3_kc_director_kind_t
 	return kc_director;
 }
 
-/**
- * Clones a key binding command
- */
-extern b3_kc_director_t *
+b3_kc_director_t *
 b3_kc_director_clone(const b3_kc_director_t *other)
 {
 	wbk_b_t *comb;
@@ -160,7 +185,7 @@ b3_kc_director_clone(const b3_kc_director_t *other)
 
 	kc_director = NULL;
 	if (other) {
-		comb = wbk_b_clone(b3_kc_director_get_binding(other));
+		comb = wbk_b_clone(wbk_kc_get_binding((wbk_kc_t *) other));
 
 		switch (other->kind) {
 		case CHANGE_WORKSPACE:
@@ -186,10 +211,12 @@ b3_kc_director_clone(const b3_kc_director_t *other)
 }
 
 int
-b3_kc_director_free(b3_kc_director_t *kc_director)
+b3_kc_director_free_impl(wbk_kc_t *kc)
 {
-	wbk_kc_free(kc_director->kc);
-	kc_director->kc = NULL;
+  b3_kc_director_t *kc_director;
+
+  kc_director = (b3_kc_director_t *) kc;
+
 
 	ReleaseMutex(kc_director->global_mutex);
 	CloseHandle(kc_director->global_mutex);
@@ -221,28 +248,25 @@ b3_kc_director_free(b3_kc_director_t *kc_director)
 
 	kc_director->data = NULL;
 
-	free(kc_director);
+	kc_director->super_kc_free(kc);
 
 	return 0;
 }
 
-inline const wbk_b_t *
-b3_kc_director_get_binding(const b3_kc_director_t *kc)
-{
-	return wbk_kc_get_binding(kc->kc);
-}
-
 int
-b3_kc_director_exec(b3_kc_director_t *kc_director)
+b3_kc_director_exec_impl(const wbk_kc_t *kc)
 {
+  const b3_kc_director_t *kc_director;
 	int ret;
+
+  kc_director = (b3_kc_director_t *) kc;
 
 	WaitForSingleObject(kc_director->global_mutex, INFINITE);
 
 #ifdef DEBUG_ENABLED
 	char *binding;
 
-	binding = wbk_b_to_str(b3_kc_director_get_binding(kc_director));
+	binding = wbk_b_to_str(wbk_kc_get_binding(kc));
 	wbk_logger_log(&logger, DEBUG, "Exec binding: %s\n", binding);
 	free(binding);
 	binding = NULL;
@@ -364,7 +388,7 @@ b3_kc_director_exec(b3_kc_director_t *kc_director)
 }
 
 int
-b3_kc_director_exec_cw(b3_kc_director_t *kc_director)
+b3_kc_director_exec_cw(const b3_kc_director_t *kc_director)
 {
 	int ret;
 	char *ws_id;
@@ -384,7 +408,7 @@ b3_kc_director_exec_cw(b3_kc_director_t *kc_director)
 }
 
 int
-b3_kc_director_exec_cm(b3_kc_director_t *kc_director)
+b3_kc_director_exec_cm(const b3_kc_director_t *kc_director)
 {
 	int ret;
 	char *monitor_name;
@@ -404,7 +428,7 @@ b3_kc_director_exec_cm(b3_kc_director_t *kc_director)
 }
 
 int
-b3_kc_director_exec_mawtw(b3_kc_director_t *kc_director)
+b3_kc_director_exec_mawtw(const b3_kc_director_t *kc_director)
 {
 	int ret;
 	char *ws_id;
@@ -417,7 +441,7 @@ b3_kc_director_exec_mawtw(b3_kc_director_t *kc_director)
 }
 
 int
-b3_kc_director_exec_awtf(b3_kc_director_t *kc_director)
+b3_kc_director_exec_awtf(const b3_kc_director_t *kc_director)
 {
 	int ret;
 
@@ -427,7 +451,7 @@ b3_kc_director_exec_awtf(b3_kc_director_t *kc_director)
 }
 
 int
-b3_kc_director_exec_mawu(b3_kc_director_t *kc_director)
+b3_kc_director_exec_mawu(const b3_kc_director_t *kc_director)
 {
 	int ret;
   b3_monitor_t *focused_monitor_old;
@@ -444,7 +468,7 @@ b3_kc_director_exec_mawu(b3_kc_director_t *kc_director)
 }
 
 int
-b3_kc_director_exec_mawd(b3_kc_director_t *kc_director)
+b3_kc_director_exec_mawd(const b3_kc_director_t *kc_director)
 {
 	int ret;
   b3_monitor_t *focused_monitor_old;
@@ -461,7 +485,7 @@ b3_kc_director_exec_mawd(b3_kc_director_t *kc_director)
 }
 
 int
-b3_kc_director_exec_mawl(b3_kc_director_t *kc_director)
+b3_kc_director_exec_mawl(const b3_kc_director_t *kc_director)
 {
 	int ret;
   b3_monitor_t *focused_monitor_old;
@@ -478,7 +502,7 @@ b3_kc_director_exec_mawl(b3_kc_director_t *kc_director)
 }
 
 int
-b3_kc_director_exec_mawr(b3_kc_director_t *kc_director)
+b3_kc_director_exec_mawr(const b3_kc_director_t *kc_director)
 {
 	int ret;
   b3_monitor_t *focused_monitor_old;
@@ -495,7 +519,7 @@ b3_kc_director_exec_mawr(b3_kc_director_t *kc_director)
 }
 
 int
-b3_kc_director_exec_sawu(b3_kc_director_t *kc_director)
+b3_kc_director_exec_sawu(const b3_kc_director_t *kc_director)
 {
 	int ret;
   b3_monitor_t *focused_monitor_old;
@@ -512,7 +536,7 @@ b3_kc_director_exec_sawu(b3_kc_director_t *kc_director)
 }
 
 int
-b3_kc_director_exec_sawd(b3_kc_director_t *kc_director)
+b3_kc_director_exec_sawd(const b3_kc_director_t *kc_director)
 {
 	int ret;
   b3_monitor_t *focused_monitor_old;
@@ -529,7 +553,7 @@ b3_kc_director_exec_sawd(b3_kc_director_t *kc_director)
 }
 
 int
-b3_kc_director_exec_sawl(b3_kc_director_t *kc_director)
+b3_kc_director_exec_sawl(const b3_kc_director_t *kc_director)
 {
 	int ret;
   b3_monitor_t *focused_monitor_old;
@@ -546,7 +570,7 @@ b3_kc_director_exec_sawl(b3_kc_director_t *kc_director)
 }
 
 int
-b3_kc_director_exec_sawr(b3_kc_director_t *kc_director)
+b3_kc_director_exec_sawr(const b3_kc_director_t *kc_director)
 {
 	int ret;
   b3_monitor_t *focused_monitor_old;
@@ -563,7 +587,7 @@ b3_kc_director_exec_sawr(b3_kc_director_t *kc_director)
 }
 
 int
-b3_kc_director_exec_tawf(b3_kc_director_t *kc_director)
+b3_kc_director_exec_tawf(const b3_kc_director_t *kc_director)
 {
 	int ret;
 
@@ -573,7 +597,7 @@ b3_kc_director_exec_tawf(b3_kc_director_t *kc_director)
 }
 
 int
-b3_kc_director_exec_caw(b3_kc_director_t *kc_director)
+b3_kc_director_exec_caw(const b3_kc_director_t *kc_director)
 {
 	int ret;
 
@@ -583,7 +607,7 @@ b3_kc_director_exec_caw(b3_kc_director_t *kc_director)
 }
 
 int
-b3_kc_director_exec_mfwu(b3_kc_director_t *kc_director)
+b3_kc_director_exec_mfwu(const b3_kc_director_t *kc_director)
 {
 	int ret;
   b3_monitor_t *focused_monitor_old;
@@ -600,7 +624,7 @@ b3_kc_director_exec_mfwu(b3_kc_director_t *kc_director)
 }
 
 int
-b3_kc_director_exec_mfwd(b3_kc_director_t *kc_director)
+b3_kc_director_exec_mfwd(const b3_kc_director_t *kc_director)
 {
 	int ret;
   b3_monitor_t *focused_monitor_old;
@@ -616,7 +640,7 @@ b3_kc_director_exec_mfwd(b3_kc_director_t *kc_director)
 }
 
 int
-b3_kc_director_exec_mfwl(b3_kc_director_t *kc_director)
+b3_kc_director_exec_mfwl(const b3_kc_director_t *kc_director)
 {
 	int ret;
   b3_monitor_t *focused_monitor_old;
@@ -632,7 +656,7 @@ b3_kc_director_exec_mfwl(b3_kc_director_t *kc_director)
 }
 
 int
-b3_kc_director_exec_mfwr(b3_kc_director_t *kc_director)
+b3_kc_director_exec_mfwr(const b3_kc_director_t *kc_director)
 {
 	int ret;
   b3_monitor_t *focused_monitor_old;
@@ -649,7 +673,7 @@ b3_kc_director_exec_mfwr(b3_kc_director_t *kc_director)
 }
 
 int
-b3_kc_director_exec_sfmu(b3_kc_director_t *kc_director)
+b3_kc_director_exec_sfmu(const b3_kc_director_t *kc_director)
 {
 	int ret;
   b3_monitor_t *focused_monitor_old;
@@ -666,7 +690,7 @@ b3_kc_director_exec_sfmu(b3_kc_director_t *kc_director)
 }
 
 int
-b3_kc_director_exec_sfmd(b3_kc_director_t *kc_director)
+b3_kc_director_exec_sfmd(const b3_kc_director_t *kc_director)
 {
 	int ret;
   b3_monitor_t *focused_monitor_old;
@@ -683,7 +707,7 @@ b3_kc_director_exec_sfmd(b3_kc_director_t *kc_director)
 }
 
 int
-b3_kc_director_exec_sfml(b3_kc_director_t *kc_director)
+b3_kc_director_exec_sfml(const b3_kc_director_t *kc_director)
 {
 	int ret;
   b3_monitor_t *focused_monitor_old;
@@ -700,7 +724,7 @@ b3_kc_director_exec_sfml(b3_kc_director_t *kc_director)
 }
 
 int
-b3_kc_director_exec_sfmr(b3_kc_director_t *kc_director)
+b3_kc_director_exec_sfmr(const b3_kc_director_t *kc_director)
 {
 	int ret;
   b3_monitor_t *focused_monitor_old;
@@ -717,7 +741,7 @@ b3_kc_director_exec_sfmr(b3_kc_director_t *kc_director)
 }
 
 int
-b3_kc_director_exec_mfwtmu(b3_kc_director_t *kc_director)
+b3_kc_director_exec_mfwtmu(const b3_kc_director_t *kc_director)
 {
 	int ret;
 
@@ -727,7 +751,7 @@ b3_kc_director_exec_mfwtmu(b3_kc_director_t *kc_director)
 }
 
 int
-b3_kc_director_exec_mfwtmd(b3_kc_director_t *kc_director)
+b3_kc_director_exec_mfwtmd(const b3_kc_director_t *kc_director)
 {
 	int ret;
 
@@ -737,7 +761,7 @@ b3_kc_director_exec_mfwtmd(b3_kc_director_t *kc_director)
 }
 
 int
-b3_kc_director_exec_mfwtml(b3_kc_director_t *kc_director)
+b3_kc_director_exec_mfwtml(const b3_kc_director_t *kc_director)
 {
 	int ret;
 
@@ -747,7 +771,7 @@ b3_kc_director_exec_mfwtml(b3_kc_director_t *kc_director)
 }
 
 int
-b3_kc_director_exec_mfwtmr(b3_kc_director_t *kc_director)
+b3_kc_director_exec_mfwtmr(const b3_kc_director_t *kc_director)
 {
 	int ret;
 

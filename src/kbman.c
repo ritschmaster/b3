@@ -63,7 +63,7 @@ b3_kbman_free(b3_kbman_t *kbman)
 	kbman->kbman= NULL;
 
 	for (i = 0; i < kbman->kc_director_arr_len; i++) {
-		b3_kc_director_free(kbman->kc_director_arr[i]);
+		wbk_kc_free((wbk_kc_t *) kbman->kc_director_arr[i]);
 		kbman->kc_director_arr[i] = NULL;
 	}
 	free(kbman->kc_director_arr);
@@ -136,12 +136,12 @@ b3_kbman_exec_kc_director(b3_kbman_t *kbman, wbk_b_t *b)
 #ifdef DEBUG_ENABLED
 		char *mine;
 		char *his;
-		mine = wbk_b_to_str(b3_kc_director_get_binding(kbman->kc_director_arr[i]));
+		mine = wbk_b_to_str(wbk_kc_get_binding((wbk_kc_t *) kbman->kc_director_arr[i]));
 		his = wbk_b_to_str(b);
 		wbk_logger_log(&logger, DEBUG, "COMPARING: i = %d, %s = %s?\n", i, mine, his);
 #endif
 
-		if (wbk_b_compare(b3_kc_director_get_binding(kbman->kc_director_arr[i]), b) == 0) {
+		if (wbk_b_compare(wbk_kc_get_binding((wbk_kc_t *) kbman->kc_director_arr[i]), b) == 0) {
 			found_at = i;
 		}
 
@@ -173,5 +173,5 @@ b3_kbman_kc_director_exec_threaded(LPVOID param)
 
 	wbk_logger_log(&logger, DEBUG, "Executing key binding\n");
 
-	return b3_kc_director_exec(kc_director);
+	return wbk_kc_exec((wbk_kc_t *) kc_director);
 }
