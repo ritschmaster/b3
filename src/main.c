@@ -44,7 +44,7 @@
 
 #define B3_GETOPT_OPTIONS "dvV"
 
-#define B3_KBDAEMON_ARR_LEN 3
+#define B3_KBDAEMON_ARR_LEN 30
 
 static struct option B3_GETOPT_LONG_OPTIONS[] = {
     /*   NAME          ARGUMENT           FLAG  SHORTNAME */
@@ -352,14 +352,14 @@ window_callback(HWND window_handler, UINT msg, WPARAM wParam, LPARAM lParam)
 inline int
 kbdaemon_exec_fn(wbk_kbdaemon_t *kbdaemon, wbk_b_t *b)
 {
-	if (kbdaemon == g_kbdaemon_arr[0])
-		return b3_kbman_exec(g_kbman_arr[0], b);
-	else if (kbdaemon == g_kbdaemon_arr[1])
-		return b3_kbman_exec(g_kbman_arr[1], b);
-	else if (kbdaemon == g_kbdaemon_arr[2])
-		return b3_kbman_exec(g_kbman_arr[2], b);
-	else
-		return 1;
+	int i;
+
+	for (i = 0; i < B3_KBDAEMON_ARR_LEN; i++) {
+		if (kbdaemon == g_kbdaemon_arr[i]) {
+			return b3_kbman_exec(g_kbman_arr[i], b);
+		}
+	}
+	return 1;
 }
 
 int
