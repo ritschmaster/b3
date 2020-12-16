@@ -105,9 +105,9 @@ b3_kbman_split(b3_kbman_t *kbman, int nominator)
 			}
 		}
 
-		for (j = 0; j < kbman->kbman->kc_sys_arr_len; j++) {
+		for (j = 0; j < kbman->kbman->kc_arr_len; j++) {
 			if (j % nominator == i) {
-				b3_kbman_add_kc_sys(kbmans[i], wbk_kc_sys_clone(kbman->kbman->kc_sys_arr[j]));
+				b3_kbman_add_kc_sys(kbmans[i], wbk_kc_clone(kbman->kbman->kc_arr[j]));
 			}
 		}
 	}
