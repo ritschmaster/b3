@@ -38,6 +38,14 @@
 static wbk_logger_t logger =  { "kc_director" };
 
 /**
+ * Implementation of wbk_kc_clone().
+ *
+ * Clones a key binding command
+ */
+extern wbk_kc_t *
+b3_kc_director_clone_impl(const wbk_kc_t *kc);
+
+/**
  * Implementaiton of wbk_kc_free().
  *
  * @brief Frees a key binding command
@@ -54,6 +62,9 @@ b3_kc_director_free_impl(wbk_kc_t *kc);
  */
 static int
 b3_kc_director_exec_impl(const wbk_kc_t *kc);
+
+static DWORD WINAPI
+b3_kc_director_exec_threaded(LPVOID param);
 
 static int
 b3_kc_director_exec_cw(const b3_kc_director_t *kc_director);
@@ -155,9 +166,11 @@ b3_kc_director_new(wbk_b_t *comb, b3_director_t *director, b3_kc_director_kind_t
     memcpy(kc_director, kc, sizeof(wbk_kc_t));
     free(kc); /* Just free the top level element */
 
+    kc_director->super_kc_clone = kc_director->kc.kc_clone;
     kc_director->super_kc_free = kc_director->kc.kc_free;
     kc_director->super_kc_exec = kc_director->kc.kc_exec;
 
+    kc_director->kc.kc_clone = b3_kc_director_clone_impl;
     kc_director->kc.kc_free = b3_kc_director_free_impl;
     kc_director->kc.kc_exec = b3_kc_director_exec_impl;
 
@@ -174,14 +187,17 @@ b3_kc_director_new(wbk_b_t *comb, b3_director_t *director, b3_kc_director_kind_t
 	return kc_director;
 }
 
-b3_kc_director_t *
-b3_kc_director_clone(const b3_kc_director_t *other)
+wbk_kc_t *
+b3_kc_director_clone_impl(const wbk_kc_t *kc)
 {
-	wbk_b_t *comb;
+	const b3_kc_director_t *other;
+  wbk_b_t *comb;
 	char *data_str;
 	void *data;
 	int len;
 	b3_kc_director_t *kc_director;
+
+  other = (const b3_kc_director_t *) kc;
 
 	kc_director = NULL;
 	if (other) {
@@ -207,7 +223,7 @@ b3_kc_director_clone(const b3_kc_director_t *other)
 		kc_director = b3_kc_director_new(comb, other->director, other->kind, data);
 	}
 
-	return kc_director;
+	return (wbk_kc_t *) kc_director;
 }
 
 int
@@ -256,17 +272,29 @@ b3_kc_director_free_impl(wbk_kc_t *kc)
 int
 b3_kc_director_exec_impl(const wbk_kc_t *kc)
 {
+  CreateThread(NULL,
+               0,
+               b3_kc_director_exec_threaded,
+               kc,
+               0,
+               NULL);
+  return 0;
+}
+
+DWORD WINAPI
+b3_kc_director_exec_threaded(LPVOID param)
+{
   const b3_kc_director_t *kc_director;
 	int ret;
 
-  kc_director = (b3_kc_director_t *) kc;
+  kc_director = (const b3_kc_director_t *) param;
 
 	WaitForSingleObject(kc_director->global_mutex, INFINITE);
 
 #ifdef DEBUG_ENABLED
 	char *binding;
 
-	binding = wbk_b_to_str(wbk_kc_get_binding(kc));
+	binding = wbk_b_to_str(wbk_kc_get_binding((wbk_kc_t *) kc_director));
 	wbk_logger_log(&logger, DEBUG, "Exec binding: %s\n", binding);
 	free(binding);
 	binding = NULL;

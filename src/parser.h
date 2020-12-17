@@ -29,8 +29,8 @@
  */
 
 #include <stdio.h>
+#include <w32bindkeys/kbman.h>
 
-#include "kbman.h"
 #include "kc_director_factory.h"
 #include "director.h"
 
@@ -52,10 +52,10 @@ b3_parser_new(b3_kc_director_factory_t *kc_director_factory);
 extern int
 b3_parser_free(b3_parser_t *parser);
 
-extern b3_kbman_t *
+extern wbk_kbman_t *
 b3_parser_parse_str(b3_parser_t *parser, b3_director_t *director, const char *str);
 
-extern b3_kbman_t *
+extern wbk_kbman_t *
 b3_parser_parse_file(b3_parser_t *parser, b3_director_t *director, FILE *file);
 
 #endif // B3_PARSER_H

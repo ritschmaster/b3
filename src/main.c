@@ -29,6 +29,7 @@
 #include <w32bindkeys/kbdaemon.h>
 #include <w32bindkeys/util.h>
 #include <w32bindkeys/datafinder.h>
+#include <w32bindkeys/kbman.h>
 #include <getopt.h>
 
 #include "../config.h"
@@ -38,7 +39,6 @@
 #include "monitor_factory.h"
 #include "kc_director_factory.h"
 #include "parser.h"
-#include "kbman.h"
 #include "director.h"
 #include "win_watcher.h"
 
@@ -59,7 +59,7 @@ static const char g_szClassName[] = "myWindowClass";
 static b3_director_t *g_director;
 
 static wbk_kbdaemon_t **g_kbdaemon_arr = NULL;
-static b3_kbman_t **g_kbman_arr = NULL;
+static wbk_kbman_t **g_kbman_arr = NULL;
 
 static int
 print_version(void);
@@ -152,7 +152,7 @@ parameterized_main(void)
 	b3_kc_director_factory_t *kc_director_factory;
 	b3_parser_t *parser;
 	b3_win_watcher_t *win_watcher;
-	b3_kbman_t *g_kbman;
+	wbk_kbman_t *g_kbman;
 	int i;
 
 	error = 0;
@@ -201,9 +201,9 @@ parameterized_main(void)
 		g_kbman = b3_parser_parse_file(parser, g_director, config_file);
 
 		if (g_kbman) {
-			g_kbman_arr = b3_kbman_split(g_kbman, B3_KBDAEMON_ARR_LEN);
+			g_kbman_arr = wbk_kbman_split(g_kbman, B3_KBDAEMON_ARR_LEN);
 
-			b3_kbman_free(g_kbman);
+			wbk_kbman_free(g_kbman);
 			g_kbman = NULL;
 		} else {
 			wbk_logger_log(&logger, SEVERE, "Could not parse config file.\n");
@@ -279,7 +279,7 @@ parameterized_main(void)
 	if (g_kbman_arr) {
 		for (i = 0; i < B3_KBDAEMON_ARR_LEN; i++) {
 			if (g_kbman_arr[i]) {
-				b3_kbman_free(g_kbman_arr[i]);
+				wbk_kbman_free(g_kbman_arr[i]);
 				g_kbman_arr[i] = NULL;
 			}
 		}
@@ -356,7 +356,7 @@ kbdaemon_exec_fn(wbk_kbdaemon_t *kbdaemon, wbk_b_t *b)
 
 	for (i = 0; i < B3_KBDAEMON_ARR_LEN; i++) {
 		if (kbdaemon == g_kbdaemon_arr[i]) {
-			return b3_kbman_exec(g_kbman_arr[i], b);
+			return wbk_kbman_exec(g_kbman_arr[i], b);
 		}
 	}
 	return 1;

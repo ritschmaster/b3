@@ -70,6 +70,7 @@ typedef enum b3_kc_director_kind_e
 typedef struct b3_kc_director_s
 {
 	wbk_kc_t kc;
+  wbk_kc_t *(*super_kc_clone)(const wbk_kc_t *other);
   int (*super_kc_free)(wbk_kc_t *kc);
   int (*super_kc_exec)(const wbk_kc_t *kc);
 
@@ -100,11 +101,5 @@ typedef struct b3_kc_director_s
  */
 extern b3_kc_director_t *
 b3_kc_director_new(wbk_b_t *comb, b3_director_t *director, b3_kc_director_kind_t kind, void *data);
-
-/**
- * Clones a key binding command
- */
-extern b3_kc_director_t *
-b3_kc_director_clone(const b3_kc_director_t *other);
 
 #endif // B3_KC_DIRECTOR_H

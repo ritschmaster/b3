@@ -34,10 +34,10 @@
 
 #include <string.h>
 #include <w32bindkeys/be.h>
+#include <w32bindkeys/kbman.h>
 
 #include "kc_director_factory.h"
 #include "director.h"
-#include "kbman.h"
 #include "parser_gen.h"
 
 static wbk_mk_t

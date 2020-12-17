@@ -35,7 +35,7 @@
 #include "parser_gen.h"
 #include "lexer_gen.h"
 
-static b3_kbman_t *
+static wbk_kbman_t *
 b3_parser_parse(b3_parser_t *parser, b3_director_t *director, yyscan_t scanner);
 
 b3_parser_t *
@@ -59,12 +59,12 @@ b3_parser_free(b3_parser_t *parser)
 	return 0;
 }
 
-b3_kbman_t *
+wbk_kbman_t *
 b3_parser_parse_str(b3_parser_t *parser, b3_director_t *director, const char *str)
 {
 	yyscan_t scanner;
 	YY_BUFFER_STATE state;
-	b3_kbman_t *kbman;
+	wbk_kbman_t *kbman;
 
 	if (yylex_init(&scanner)) {
 		// couldn't initialize return NULL;
@@ -82,12 +82,12 @@ b3_parser_parse_str(b3_parser_t *parser, b3_director_t *director, const char *st
 	return kbman;
 }
 
-b3_kbman_t *
+wbk_kbman_t *
 b3_parser_parse_file(b3_parser_t *parser, b3_director_t *director, FILE *file)
 {
 	yyscan_t scanner;
 	YY_BUFFER_STATE state;
-	b3_kbman_t *kbman;
+	wbk_kbman_t *kbman;
 
 	if (yylex_init(&scanner)) {
 		// couldn't initialize return NULL;
@@ -104,15 +104,15 @@ b3_parser_parse_file(b3_parser_t *parser, b3_director_t *director, FILE *file)
 	return kbman;
 }
 
-b3_kbman_t *
+wbk_kbman_t *
 b3_parser_parse(b3_parser_t *parser, b3_director_t *director, yyscan_t scanner)
 {
-	b3_kbman_t *kbman;
+	wbk_kbman_t *kbman;
 
-	kbman = b3_kbman_new();
+	kbman = wbk_kbman_new();
 
 	if (yyparse(&(parser->kc_director_factory), &director, &kbman, scanner)) {
-		b3_kbman_free(kbman);
+		wbk_kbman_free(kbman);
 		kbman = NULL;
 	}
 

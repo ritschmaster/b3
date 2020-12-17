@@ -55,7 +55,6 @@ parser_gen.h: Makefile
 
 libb3interpreter_la_SOURCES = director.c director.h
 libb3interpreter_la_SOURCES += kc_director.c kc_director.h
-libb3interpreter_la_SOURCES += kbman.c kbman.h
 libb3interpreter_la_SOURCES += wsman.c wsman.h
 libb3interpreter_la_SOURCES += monitor.c monitor.h
 libb3interpreter_la_SOURCES += ws.c ws.h

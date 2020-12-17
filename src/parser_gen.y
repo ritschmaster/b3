@@ -37,10 +37,10 @@
 #include <string.h>
 #include <w32bindkeys/be.h>
 #include <w32bindkeys/b.h>
+#include <w32bindkeys/kbman.h>
 
 #include "kc_director_factory.h"
 #include "director.h"
-#include "kbman.h"
 #include "kc_director.h"
 #include "parser_gen.h"
 #include "lexer_gen.h"
@@ -56,7 +56,7 @@ static int
 add_to_g_ws_text(char c);
 
 static int
-add_to_kbman(b3_kbman_t *kbman);
+add_to_kbman(wbk_kbman_t *kbman);
 
 int
 add_to_g_b(wbk_mk_t modifier, char key)
@@ -94,9 +94,9 @@ add_to_g_ws_text(char new_c)
 }
 
 int
-add_to_kbman(b3_kbman_t *kbman)
+add_to_kbman(wbk_kbman_t *kbman)
 {
-	b3_kbman_add_kc_director(kbman, g_kc_director);
+	wbk_kbman_add(kbman, (wbk_kc_t *) g_kc_director);
 
 	g_b = NULL;
 	g_kc_director = NULL;
@@ -107,7 +107,7 @@ add_to_kbman(b3_kbman_t *kbman)
 }
 
 int
-yyerror(b3_kc_director_factory_t **kc_director_factory, b3_director_t **director, b3_kbman_t **kbman, yyscan_t scanner, const char *msg) {
+yyerror(b3_kc_director_factory_t **kc_director_factory, b3_director_t **director, wbk_kbman_t **kbman, yyscan_t scanner, const char *msg) {
 	fprintf(stderr, "Error: %s\n", msg);
 
 	return 0;
@@ -131,7 +131,7 @@ typedef void* yyscan_t;
 %lex-param   { yyscan_t scanner }
 %parse-param { b3_kc_director_factory_t **kc_director_factory }
 %parse-param { b3_director_t **director }
-%parse-param { b3_kbman_t **kbman }
+%parse-param { wbk_kbman_t **kbman }
 %parse-param { yyscan_t scanner }
 
 %union {
