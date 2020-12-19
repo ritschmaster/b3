@@ -4,6 +4,8 @@
 
 The following functions in the config file are fully supported:
 
+* bindsym \<KEY BINDING\> exec
+* bindsym \<KEY BINDING\> exec --no-startup-id
 * bindsym \<KEY BINDING\> kill
 * bindsym \<KEY BINDING\> fullscreen toggle
 * bindsym \<KEY BINDING\> floating toggle

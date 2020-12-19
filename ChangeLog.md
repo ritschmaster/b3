@@ -1,3 +1,23 @@
+# Release 0.5
+
+Bugfixes:
+* Windows in fullscreen are repainted when switching onto their workspace.
+* Re-drawing of moved windows does work correctly.
+* Small performance improvements.
+* If a window was closed on a workspace that was currently not visible, then the workspace was not closed. This has been fixed and such an empty workspace will be closed autmoatically.
+* If the currently focused window was in fullscreen and the focus changes to some other window on that workspace, the fullscreen window was kept in fullscreen. Actually it should have been moved to be non fullscreen.
+
+Features
+* It possible to move the focused window and to change the focused window over the monitors edge to the next monitor.
+* The mouse cursor is placed in the middle of the workspace to which the focus has moved if the focused was moved by a key combination and if the workspace is on a different monitor.
+* A man page has been added.
+* The config file can now be stored in ~/.config/b3/config and at ~/.b3/config.
+* The newest API of w32bindkeys is utilized which means that some class implementations have been updated to be fully object oriented.
+* The key command `exec` is supported.
+
+Known bugs:
+* The position of floating windows is not restored correctly when switching back to the workspace holding the floating windows.
+
 # Release 0.4
 
 Bugfixes:
