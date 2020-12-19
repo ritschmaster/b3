@@ -67,6 +67,8 @@ get_modifier(char *str)
 		modifier = SPACE;
 	} else if (strcmp(str_copy, "ctrl") == 0) {
 		modifier = CTRL;
+	} else if (strcmp(str_copy, "return") == 0) {
+	  modifier = ENTER;
 	} else if (strcmp(str_copy, "f1") == 0) {
 		modifier = F1;
 	} else if (strcmp(str_copy, "f2") == 0) {
@@ -107,7 +109,7 @@ get_modifier(char *str)
 %option reentrant noyywrap never-interactive nounistd
 %option bison-bridge
 
-MODIFIER        ([mM][oO][dD]1|[mM][oO][dD]4|[sS][hH][iI][fF][tT]|[sS][pP][aA][cC][eE]|[cC][tT][rR][lL]|[fF]([1-9]|10|11|12))
+MODIFIER        ([mM][oO][dD]1|[mM][oO][dD]4|[sS][hH][iI][fF][tT]|[sS][pP][aA][cC][eE]|[cC][tT][rR][lL]|[rR][eE][tT][uU][rR][nN]|[fF]([1-9]|10|11|12))
 KEY             [a-zA-Z0-9]
 PLUS            [+]
 BINDSYM         bindsym
@@ -122,6 +124,8 @@ RIGHT           right
 KILL            kill
 FLOATING        floating
 FULLSCREEN      fullscreen
+EXEC            exec
+NO_STARTUP_ID   --no-startup-id
 TOGGLE          toggle
 TO              to
 OUTPUT          output
@@ -147,6 +151,8 @@ EOF             \Z
 {KILL}                   { return TOKEN_KILL; }
 {FLOATING}               { return TOKEN_FLOATING; }
 {FULLSCREEN}             { return TOKEN_FULLSCREEN; }
+{EXEC}                   { return TOKEN_EXEC; }
+{NO_STARTUP_ID}          { return TOKEN_NO_STARTUP_ID; }
 {TOGGLE}                 { return TOKEN_TOGGLE; }
 {TO}                     { return TOKEN_TO; }
 {OUTPUT}                 { return TOKEN_OUTPUT; }
