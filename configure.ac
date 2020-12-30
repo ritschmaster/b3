@@ -63,5 +63,6 @@ AM_CONDITIONAL(DEBUG, test x"$debug" = x"true")
 # Checks for library functions.
 AC_CONFIG_FILES([Makefile
                  src/Makefile
+                 man/Makefile
                  tests/Makefile])
 AC_OUTPUT

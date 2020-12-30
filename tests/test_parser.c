@@ -81,7 +81,7 @@ teardown(void)
 static int
 test_parse_str_empty(void)
 {
-	b3_kbman_t *kbman;
+	wbk_kbman_t *kbman;
 
 	kbman = b3_parser_parse_str(g_parser, g_director, "");
 
@@ -89,7 +89,7 @@ test_parse_str_empty(void)
 		return 1;
 	}
 
-	b3_kbman_free(kbman);
+	wbk_kbman_free(kbman);
 
 	return 0;
 }
@@ -97,7 +97,7 @@ test_parse_str_empty(void)
 static int
 test_parse_str_none(void)
 {
-	b3_kbman_t *kbman;
+	wbk_kbman_t *kbman;
 
 	kbman = b3_parser_parse_str(g_parser, g_director, "\n \n   \n\n\t\t\n");
 
@@ -105,7 +105,7 @@ test_parse_str_none(void)
 		return 1;
 	}
 
-	b3_kbman_free(kbman);
+	wbk_kbman_free(kbman);
 
 	return 0;
 }
@@ -113,7 +113,7 @@ test_parse_str_none(void)
 static int
 test_parse_str(void)
 {
-	b3_kbman_t *kbman;
+	wbk_kbman_t *kbman;
 	char config[] = "bindsym Mod1 move up\n"
 			        "bindsym MOD4+b move left\n"
 			        "bindsym c move right\n"
@@ -125,7 +125,7 @@ test_parse_str(void)
 		return 1;
 	}
 
-	b3_kbman_free(kbman);
+	wbk_kbman_free(kbman);
 
 	return 0;
 }
@@ -135,7 +135,7 @@ test_parse_file_empty(void)
 {
 	char *filename;
 	FILE *config_file;
-	b3_kbman_t *kbman;
+	wbk_kbman_t *kbman;
 
 	filename = wbk_datafinder_gen_path(g_datafinder, "empty.config");
 	config_file = fopen(filename, "r");
@@ -147,7 +147,7 @@ test_parse_file_empty(void)
 		return 1;
 	}
 
-	b3_kbman_free(kbman);
+	wbk_kbman_free(kbman);
 
 	return 0;
 }
@@ -157,7 +157,7 @@ test_parse_file_none(void)
 {
 	char *filename;
 	FILE *config_file;
-	b3_kbman_t *kbman;
+	wbk_kbman_t *kbman;
 
 	filename = wbk_datafinder_gen_path(g_datafinder, "none.config");
 	config_file = fopen(filename, "r");
@@ -169,7 +169,7 @@ test_parse_file_none(void)
 		return 1;
 	}
 
-	b3_kbman_free(kbman);
+	wbk_kbman_free(kbman);
 
 	return 0;
 }
@@ -179,7 +179,7 @@ test_parse_file(void)
 {
 	char *filename;
 	FILE *config_file;
-	b3_kbman_t *kbman;
+	wbk_kbman_t *kbman;
 
 	filename = wbk_datafinder_gen_path(g_datafinder, "full.config");
 	config_file = fopen(filename, "r");
@@ -191,7 +191,7 @@ test_parse_file(void)
 		return 1;
 	}
 
-	b3_kbman_free(kbman);
+	wbk_kbman_free(kbman);
 
 	return 0;
 }

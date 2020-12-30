@@ -43,13 +43,22 @@
 #include "kc_director_factory.h"
 #include "director.h"
 #include "kc_director.h"
+#include "kc_exec.h"
 #include "parser_gen.h"
 #include "lexer_gen.h"
 
 static wbk_b_t *g_b = NULL;
 static wbk_kc_t *g_kc = NULL;
 static char *g_ws_text = NULL;
- static char *g_exec_text = NULL;
+static char *g_exec_text = NULL;
+static char g_word[1024];
+
+
+static char *
+add_c_to_s(char *modified_str, char new_c);
+
+char *
+add_s_to_s(char *modified_str, const char *new_s);
 
 static int
 add_to_g_b(wbk_mk_t modifier, char key);
@@ -61,7 +70,58 @@ static int
 add_to_kbman(wbk_kbman_t *kbman);
 
 static int
-add_to_g_exec_text(char c);
+add_c_to_g_exec_text(char c);
+
+static int
+add_s_to_g_exec_text(const char *s);
+
+char *
+add_c_to_s(char *modified_str, char new_c)
+{
+   int length;
+
+   if (modified_str == NULL) {
+     length = 2;
+     modified_str = malloc(sizeof(char) * length);
+   } else {
+     length = strlen(modified_str) + 1 + 1;
+     modified_str = realloc(modified_str, sizeof(char) * length);
+   }
+
+   modified_str[length - 2] = new_c;
+   modified_str[length - 1] = '\0';
+
+   return modified_str;
+}
+
+char *
+add_s_to_s(char *modified_str, const char *new_s)
+{
+   int offset;
+   int length;
+
+   offset = 0;
+   length = 0;
+
+
+   if (modified_str != NULL) {
+     offset = strlen(modified_str);
+     length += offset;
+   }
+
+   length += strlen(new_s);
+   length += 1; /** \0 */
+
+   if (modified_str) {
+     modified_str = realloc(modified_str, sizeof(char) * length);
+   } else {
+     modified_str = malloc(sizeof(char) * length);
+   }
+
+   strcpy(modified_str + offset, new_s);
+
+   return modified_str;
+}
 
 int
 add_to_g_b(wbk_mk_t modifier, char key)
@@ -82,20 +142,9 @@ add_to_g_b(wbk_mk_t modifier, char key)
 int
 add_to_g_ws_text(char new_c)
 {
-	int length;
+  g_ws_text = add_c_to_s(g_ws_text, new_c);
 
-	if (g_ws_text == NULL) {
-		length = 2;
-		g_ws_text = malloc(sizeof(char) * length);
-	} else {
-		length = strlen(g_ws_text) + 1 + 1;
-		g_ws_text = realloc(g_ws_text, sizeof(char) * length);
-	}
-
-	g_ws_text[length - 2] = new_c;
-	g_ws_text[length - 1] = '\0';
-
-	return 0;
+  return 0;
 }
 
 int
@@ -111,23 +160,21 @@ add_to_kbman(wbk_kbman_t *kbman)
 	}
 }
 
+
 int
-add_to_g_exec_text(char new_c)
+add_c_to_g_exec_text(char new_c)
  {
-   int length;
-
-   if (g_exec_text == NULL) {
-     length = 2;
-     g_exec_text = malloc(sizeof(char) * length);
-   } else {
-     length = strlen(g_exec_text) + 1 + 1;
-     g_exec_text = realloc(g_exec_text, sizeof(char) * length);
-   }
-
-   g_exec_text[length - 2] = new_c;
-   g_exec_text[length - 1] = '\0';
+   g_exec_text = add_c_to_s(g_exec_text, new_c);
 
    return 0;
+}
+
+int
+add_s_to_g_exec_text(const char *new_s)
+{
+  g_exec_text = add_s_to_s(g_exec_text, new_s);
+
+  return 0;
 }
 
 int
@@ -161,6 +208,7 @@ typedef void* yyscan_t;
 %union {
 	wbk_mk_t modifier;
 	char key;
+	char special;
 }
 
 %token <modifier>    TOKEN_MODIFIER
@@ -185,6 +233,7 @@ typedef void* yyscan_t;
 %token               TOKEN_OUTPUT
 %token               TOKEN_COMMENT
 %token               TOKEN_SPACE
+%token <special>     TOKEN_SPECIAL
 %token               TOKEN_EOL
 %token               TOKEN_EOF
 
@@ -340,23 +389,65 @@ cmd-fullscreen-toggle: TOKEN_TOGGLE
                      ;
 
 cmd-exec: TOKEN_EXEC TOKEN_SPACE TOKEN_NO_STARTUP_ID TOKEN_SPACE cmd-exec-text
-{ g_kc = (wbk_kc_t *) wbk_kc_sys_new(g_b, g_exec_text); g_exec_text = NULL; }
+{ g_kc = (wbk_kc_t *) b3_kc_exec_new(g_b, *director, ON_CURRENT_WS, g_exec_text); g_exec_text = NULL; }
 | TOKEN_EXEC TOKEN_SPACE cmd-exec-text
-{ g_kc = (wbk_kc_t *) wbk_kc_sys_new(g_b, g_exec_text); g_exec_text = NULL; } // TODO supply different implementation
+{ g_kc = (wbk_kc_t *) b3_kc_exec_new(g_b, *director, ON_START_WS, g_exec_text); g_exec_text = NULL; }
         ;
 
 cmd-exec-text: TOKEN_KEY
-             { add_to_g_exec_text($1); }
+             { add_c_to_g_exec_text($1); }
              | cmd-exec-text TOKEN_KEY[K]
-             { add_to_g_exec_text($K); }
+             { add_c_to_g_exec_text($K); }
              | TOKEN_SPACE
-             { add_to_g_exec_text(' '); }
+             { add_c_to_g_exec_text(' '); }
              | cmd-exec-text TOKEN_SPACE
-             { add_to_g_exec_text(' '); }
-             | TOKEN_PLUS
-             { add_to_g_exec_text('+'); }
-             | cmd-exec-text TOKEN_PLUS
-             { add_to_g_exec_text('+'); }
+             { add_c_to_g_exec_text(' '); }
+             | TOKEN_SPECIAL
+             { add_c_to_g_exec_text($1); }
+             | cmd-exec-text TOKEN_SPECIAL[S]
+             { add_c_to_g_exec_text($S); }
+             | word-in-text
+             { add_s_to_g_exec_text(g_word); }
+             | cmd-exec-text word-in-text
+             { add_s_to_g_exec_text(g_word); }
              ;
+
+word-in-text: TOKEN_TOGGLE
+              { strcpy(g_word, "toggle"); }
+            | TOKEN_BINDSYM
+              { strcpy(g_word, "bindsym"); }
+            | TOKEN_MOVE
+              { strcpy(g_word, "move"); }
+            | TOKEN_FOCUS
+              { strcpy(g_word, "focus"); }
+            | TOKEN_CONTAINER
+              { strcpy(g_word, "container"); }
+            | TOKEN_WORKSPACE
+              { strcpy(g_word, "workspace"); }
+            | TOKEN_UP
+              { strcpy(g_word, "up"); }
+            | TOKEN_DOWN
+              { strcpy(g_word, "down"); }
+            | TOKEN_LEFT
+              { strcpy(g_word, "left"); }
+            | TOKEN_RIGHT
+              { strcpy(g_word, "right"); }
+            | TOKEN_KILL
+              { strcpy(g_word, "kill"); }
+            | TOKEN_FLOATING
+              { strcpy(g_word, "floating"); }
+            | TOKEN_FULLSCREEN
+              { strcpy(g_word, "fullscreen"); }
+            | TOKEN_EXEC
+              { strcpy(g_word, "exec"); }
+            | TOKEN_NO_STARTUP_ID
+              { strcpy("--no-startup-id", g_word); }
+            | TOKEN_TOGGLE
+              { strcpy(g_word, "toggle"); }
+            | TOKEN_TO
+              { strcpy(g_word, "to"); }
+            | TOKEN_OUTPUT
+              { strcpy(g_word, "output"); }
+            ;
 
 %%

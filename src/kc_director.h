@@ -96,6 +96,7 @@ typedef struct b3_kc_director_s
  * @brief Creates a new key binding command
  * @param comb The binding of the key command. The object will be freed by the key binding.
  * param kind The kind of the key command.
+ * @param director The director which will be altered by this key command. It will not be freed!
  * @param data The data. It will be freed by the key binding director command!
  * @return A new key binding command or NULL if allocation failed
  */

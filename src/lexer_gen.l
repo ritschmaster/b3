@@ -131,6 +131,7 @@ TO              to
 OUTPUT          output
 COMMENT         #.*
 SPACE           [ \t]+
+SPECIAL         [!"§\$%&/{\(\[\]\)=}\?\\`´\*\+\~'#,;\.:\-_\^°\<\>\|]
 EOL             [\n]+
 EOF             \Z
 
@@ -158,6 +159,7 @@ EOF             \Z
 {OUTPUT}                 { return TOKEN_OUTPUT; }
 {COMMENT}                { return TOKEN_COMMENT; }
 {SPACE}                  { return TOKEN_SPACE; }
+{SPECIAL}                { yylval->special = yytext[0]; return TOKEN_SPECIAL; }
 {EOL}                    { return TOKEN_EOL; }
 {EOF}                    { return 0; }
 
