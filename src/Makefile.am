@@ -70,6 +70,7 @@ libb3interpreter_la_SOURCES += monitor_factory.c monitor_factory.h
 libb3interpreter_la_SOURCES += kc_director_factory.c kc_director_factory.h
 libb3interpreter_la_SOURCES += til.c til.h
 libb3interpreter_la_SOURCES += counter.c counter.h
+libb3interpreter_la_SOURCES += utils.c utils.h
 
 libb3interpreter_la_CFLAGS = $(AM_CFLAGS)
 libb3interpreter_la_CFLAGS += @collectionc_CFLAGS@

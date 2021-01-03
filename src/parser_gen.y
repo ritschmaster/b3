@@ -1,7 +1,7 @@
 /******************************************************************************
   This file is part of b3.
 
-  Copyright 2020 Richard Paul Baeck <richard.baeck@mailbox.org>
+  Copyright 2020-2021 Richard Paul Baeck <richard.baeck@mailbox.org>
 
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files (the "Software"), to deal
@@ -40,6 +40,7 @@
 #include <w32bindkeys/kc_sys.h>
 #include <w32bindkeys/kbman.h>
 
+#include "utils.h"
 #include "kc_director_factory.h"
 #include "director.h"
 #include "kc_director.h"
@@ -52,13 +53,6 @@ static wbk_kc_t *g_kc = NULL;
 static char *g_ws_text = NULL;
 static char *g_exec_text = NULL;
 static char g_word[1024];
-
-
-static char *
-add_c_to_s(char *modified_str, char new_c);
-
-char *
-add_s_to_s(char *modified_str, const char *new_s);
 
 static int
 add_to_g_b(wbk_mk_t modifier, char key);
@@ -74,54 +68,6 @@ add_c_to_g_exec_text(char c);
 
 static int
 add_s_to_g_exec_text(const char *s);
-
-char *
-add_c_to_s(char *modified_str, char new_c)
-{
-   int length;
-
-   if (modified_str == NULL) {
-     length = 2;
-     modified_str = malloc(sizeof(char) * length);
-   } else {
-     length = strlen(modified_str) + 1 + 1;
-     modified_str = realloc(modified_str, sizeof(char) * length);
-   }
-
-   modified_str[length - 2] = new_c;
-   modified_str[length - 1] = '\0';
-
-   return modified_str;
-}
-
-char *
-add_s_to_s(char *modified_str, const char *new_s)
-{
-   int offset;
-   int length;
-
-   offset = 0;
-   length = 0;
-
-
-   if (modified_str != NULL) {
-     offset = strlen(modified_str);
-     length += offset;
-   }
-
-   length += strlen(new_s);
-   length += 1; /** \0 */
-
-   if (modified_str) {
-     modified_str = realloc(modified_str, sizeof(char) * length);
-   } else {
-     modified_str = malloc(sizeof(char) * length);
-   }
-
-   strcpy(modified_str + offset, new_s);
-
-   return modified_str;
-}
 
 int
 add_to_g_b(wbk_mk_t modifier, char key)
@@ -142,7 +88,7 @@ add_to_g_b(wbk_mk_t modifier, char key)
 int
 add_to_g_ws_text(char new_c)
 {
-  g_ws_text = add_c_to_s(g_ws_text, new_c);
+  g_ws_text = b3_add_c_to_s(g_ws_text, new_c);
 
   return 0;
 }
@@ -164,7 +110,7 @@ add_to_kbman(wbk_kbman_t *kbman)
 int
 add_c_to_g_exec_text(char new_c)
  {
-   g_exec_text = add_c_to_s(g_exec_text, new_c);
+   g_exec_text = b3_add_c_to_s(g_exec_text, new_c);
 
    return 0;
 }
@@ -172,7 +118,7 @@ add_c_to_g_exec_text(char new_c)
 int
 add_s_to_g_exec_text(const char *new_s)
 {
-  g_exec_text = add_s_to_s(g_exec_text, new_s);
+  g_exec_text = b3_add_s_to_s(g_exec_text, new_s);
 
   return 0;
 }
