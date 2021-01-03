@@ -40,65 +40,7 @@
 #include "director.h"
 #include "parser_gen.h"
 
-static wbk_mk_t
-get_modifier(char *str);
 
-static wbk_mk_t
-get_modifier(char *str)
-{
-	char *str_copy;
-	int length;
-	int i;
-	wbk_mk_t modifier;
-
-	length = strlen(str) + 1;
-	str_copy = malloc(sizeof(char) * length);
-	for (i = 0; i < length; i++) {
-		str_copy[i] = tolower(str[i]);
-	}
-
-	if (strcmp(str_copy, "mod4") == 0) {
-		modifier = WIN;
-	} else if (strcmp(str_copy, "mod1") == 0) {
-		modifier = ALT;
-	} else if (strcmp(str_copy, "shift") == 0) {
-		modifier = SHIFT;
-	} else if (strcmp(str_copy, "space") == 0) {
-		modifier = SPACE;
-	} else if (strcmp(str_copy, "ctrl") == 0) {
-		modifier = CTRL;
-	} else if (strcmp(str_copy, "return") == 0) {
-	  modifier = ENTER;
-	} else if (strcmp(str_copy, "f1") == 0) {
-		modifier = F1;
-	} else if (strcmp(str_copy, "f2") == 0) {
-		modifier = F2;
-	} else if (strcmp(str_copy, "f3") == 0) {
-		modifier = F3;
-	} else if (strcmp(str_copy, "f4") == 0) {
-		modifier = F4;
-	} else if (strcmp(str_copy, "f5") == 0) {
-		modifier = F5;
-	} else if (strcmp(str_copy, "f6") == 0) {
-		modifier = F6;
-	} else if (strcmp(str_copy, "f7") == 0) {
-		modifier = F7;
-	} else if (strcmp(str_copy, "f8") == 0) {
-		modifier = F8;
-	} else if (strcmp(str_copy, "f9") == 0) {
-		modifier = F9;
-	} else if (strcmp(str_copy, "f10") == 0) {
-		modifier = F10;
-	} else if (strcmp(str_copy, "f11") == 0) {
-		modifier = F11;
-	} else if (strcmp(str_copy, "f12") == 0) {
-		modifier = F12;
-	} else {
-		modifier = NOT_A_MODIFIER;
-	}
-
-	return modifier;
-}
 
 
 %}
@@ -137,7 +79,7 @@ EOF             \Z
 
 %%
 
-{MODIFIER}               { yylval->modifier = get_modifier(yytext); return TOKEN_MODIFIER; }
+{MODIFIER}               { strcpy(yylval->modifier_str, yytext); return TOKEN_MODIFIER; }
 {KEY}                    { yylval->key = tolower(yytext[0]); return TOKEN_KEY; }
 {PLUS}                   { return TOKEN_PLUS; }
 {BINDSYM}                { return TOKEN_BINDSYM; }
