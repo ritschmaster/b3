@@ -1,7 +1,7 @@
 /******************************************************************************
   This file is part of b3.
 
-  Copyright 2020 Richard Paul Baeck <richard.baeck@mailbox.org>
+  Copyright 2020-2021 Richard Paul Baeck <richard.baeck@mailbox.org>
 
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files (the "Software"), to deal
@@ -23,49 +23,51 @@
 *******************************************************************************/
 
 /**
- * @author Richard Bäck <richard.baeck@mailbox.org>
- * @date 2020-02-27
- * @brief File contains the parser class definition
+ * @author Richard BÃ¤ck <richard.baeck@mailbox.org>
+ * @date 2020-01-03
+ * @brief File contains the rule class definition
  */
 
-#include <stdio.h>
-#include <w32bindkeys/kbman.h>
+#ifndef B3_RULE_H
+#define B3_RULE_H
 
-#include "kc_director_factory.h"
-#include "condition_factory.h"
-#include "action_factory.h"
 #include "director.h"
+#include "win.h"
+#include "condition.h"
+#include "action.h"
 
-#ifndef B3_PARSER_H
-#define B3_PARSER_H
+typedef struct b3_rule_s b3_rule_t;
 
-typedef struct b3_parser_s
+struct b3_rule_s
 {
-	b3_kc_director_factory_t *kc_director_factory;
-  b3_condition_factory_t *condition_factory;
-  b3_action_factory_t *action_factory;
-} b3_parser_t;
+  int (*rule_free)(b3_rule_t *rule);
+  int (*rule_applies)(b3_rule_t *rule, b3_director_t *director, b3_win_t *win);
+  int (*rule_exec)(b3_rule_t *rule, b3_director_t *director, b3_win_t *win);
+
+  b3_condition_t *condition;
+  b3_action_t *action;
+};
 
 /**
- * @param ws_factory A workspace factory. It will not be freed by freeing the
- * parser!
- * @param condition_factory A condition factory. It will not be freed by freeing the
- * parser!
- * @param action_factory An action factory. It will not be freed by freeing the
- * parser!
+ * @param condition The condition object will be freed by the rule object. Do not free it by yourself!
+ * @param action The action object will be freed by the rule object. Do not free it by yourself!
  */
-extern b3_parser_t *
-b3_parser_new(b3_kc_director_factory_t *kc_director_factory,
-              b3_condition_factory_t *condition_factory,
-              b3_action_factory_t *action_factory);
+extern b3_rule_t *
+b3_rule_new(b3_condition_t *condition, b3_action_t *action);
 
 extern int
-b3_parser_free(b3_parser_t *parser);
+b3_rule_free(b3_rule_t *rule);
 
-extern wbk_kbman_t *
-b3_parser_parse_str(b3_parser_t *parser, b3_director_t *director, const char *str);
+/**
+ * Checks if rule applies to director and win.
+ */
+extern int
+b3_rule_applies(b3_rule_t *rule, b3_director_t *director, b3_win_t *win);
 
-extern wbk_kbman_t *
-b3_parser_parse_file(b3_parser_t *parser, b3_director_t *director, FILE *file);
+/**
+ * Executes rule with director and win.
+ */
+extern int
+b3_rule_exec(b3_rule_t *rule, b3_director_t *director, b3_win_t *win);
 
-#endif // B3_PARSER_H
+#endif // B3_RULE_H

@@ -37,11 +37,10 @@
 #include <w32bindkeys/kbman.h>
 
 #include "kc_director_factory.h"
+#include "condition_factory.h"
+#include "action_factory.h"
 #include "director.h"
 #include "parser_gen.h"
-
-
-
 
 %}
 
@@ -54,6 +53,10 @@
 MODIFIER        ([mM][oO][dD]1|[mM][oO][dD]4|[sS][hH][iI][fF][tT]|[sS][pP][aA][cC][eE]|[cC][tT][rR][lL]|[rR][eE][tT][uU][rR][nN]|[fF]([1-9]|10|11|12))
 KEY             [a-zA-Z0-9]
 PLUS            [+]
+BRACKET_OPEN    [\[]
+BRACKET_CLOSE   [\]]
+EQUAL           [=]
+DOUBLE_QUOTES   ["]
 BINDSYM         bindsym
 MOVE            move
 FOCUS           focus
@@ -65,12 +68,15 @@ LEFT            left
 RIGHT           right
 KILL            kill
 FLOATING        floating
+ENABLE          enable
 FULLSCREEN      fullscreen
 EXEC            exec
 NO_STARTUP_ID   --no-startup-id
 TOGGLE          toggle
 TO              to
 OUTPUT          output
+FOR_WINDOW      for_window
+TITLE           title
 COMMENT         #.*
 SPACE           [ \t]+
 SPECIAL         [!"§\$%&/{\(\[\]\)=}\?\\`´\*\+\~'#,;\.:\-_\^°\<\>\|]
@@ -80,8 +86,12 @@ EOF             \Z
 %%
 
 {MODIFIER}               { strcpy(yylval->modifier_str, yytext); return TOKEN_MODIFIER; }
-{KEY}                    { yylval->key = tolower(yytext[0]); return TOKEN_KEY; }
+{KEY}                    { yylval->key = yytext[0]; return TOKEN_KEY; }
 {PLUS}                   { return TOKEN_PLUS; }
+{BRACKET_OPEN}           { return TOKEN_BRACKET_OPEN; }
+{BRACKET_CLOSE}          { return TOKEN_BRACKET_CLOSE; }
+{EQUAL}                  { return TOKEN_EQUAL; }
+{DOUBLE_QUOTES}          { return TOKEN_DOUBLE_QUOTES; }
 {BINDSYM}                { return TOKEN_BINDSYM; }
 {MOVE}                   { return TOKEN_MOVE; }
 {FOCUS}                  { return TOKEN_FOCUS; }
@@ -93,12 +103,15 @@ EOF             \Z
 {RIGHT}                  { return TOKEN_RIGHT; }
 {KILL}                   { return TOKEN_KILL; }
 {FLOATING}               { return TOKEN_FLOATING; }
+{ENABLE}                 { return TOKEN_ENABLE; }
 {FULLSCREEN}             { return TOKEN_FULLSCREEN; }
 {EXEC}                   { return TOKEN_EXEC; }
 {NO_STARTUP_ID}          { return TOKEN_NO_STARTUP_ID; }
 {TOGGLE}                 { return TOKEN_TOGGLE; }
 {TO}                     { return TOKEN_TO; }
 {OUTPUT}                 { return TOKEN_OUTPUT; }
+{FOR_WINDOW}             { return TOKEN_FOR_WINDOW; }
+{TITLE}                  { return TOKEN_TITLE; }
 {COMMENT}                { return TOKEN_COMMENT; }
 {SPACE}                  { return TOKEN_SPACE; }
 {SPECIAL}                { yylval->special = yytext[0]; return TOKEN_SPECIAL; }

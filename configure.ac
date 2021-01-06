@@ -2,7 +2,7 @@
 ################################################################################
 # This file is part of b3.
 #
-# Copyright 2020 Richard Paul Baeck <richard.baeck@mailbox.org>
+# Copyright 2020-2021 Richard Paul Baeck <richard.baeck@mailbox.org>
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -30,7 +30,7 @@ AC_INIT([b3], [0.5], [])
 AC_CONFIG_SRCDIR([src/])
 AC_CONFIG_HEADERS([config.h])
 
-AM_INIT_AUTOMAKE
+AM_INIT_AUTOMAKE(subdir-objects)
 
 # Checks for programs.
 AC_PROG_CC
@@ -44,6 +44,7 @@ LT_INIT([static])
 AC_CHECK_LIB([m], [cos])
 PKG_CHECK_MODULES([collectionc], [collectionc >= 3.14.3])
 PKG_CHECK_MODULES([libw32bindkeys], [libw32bindkeys >= 0.5])
+PKG_CHECK_MODULES([libpcre], [libpcre >= 8.44])
 
 # Checks for header files.
 

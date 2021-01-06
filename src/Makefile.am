@@ -1,7 +1,7 @@
 ################################################################################
 # This file is part of b3.
 #
-# Copyright 2020 Richard Paul Baeck <richard.baeck@mailbox.org>
+# Copyright 2020-2021 Richard Paul Baeck <richard.baeck@mailbox.org>
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -54,20 +54,29 @@ parser_gen.h: Makefile
 
 
 libb3interpreter_la_SOURCES = director.c director.h
+libb3interpreter_la_SOURCES += rule.c rule.h
+libb3interpreter_la_SOURCES += condition.c condition.h
+libb3interpreter_la_SOURCES += condition_and.c condition_and.h
+libb3interpreter_la_SOURCES += title_condition.c title_condition.h
+libb3interpreter_la_SOURCES += condition_factory.c condition_factory.h
+libb3interpreter_la_SOURCES += action.c action.h
+libb3interpreter_la_SOURCES += action_list.c action_list.h
+libb3interpreter_la_SOURCES += floating_action.c floating_action.h
+libb3interpreter_la_SOURCES += action_factory.c action_factory.h
 libb3interpreter_la_SOURCES += kc_director.c kc_director.h
+libb3interpreter_la_SOURCES += kc_director_factory.c kc_director_factory.h
 libb3interpreter_la_SOURCES += kc_exec.c kc_exec.h
-libb3interpreter_la_SOURCES += wsman.c wsman.h
-libb3interpreter_la_SOURCES += monitor.c monitor.h
 libb3interpreter_la_SOURCES += ws.c ws.h
+libb3interpreter_la_SOURCES += ws_factory.c ws_factory.h
+libb3interpreter_la_SOURCES += wsman.c wsman.h
+libb3interpreter_la_SOURCES += wsman_factory.c wsman_factory.h
+libb3interpreter_la_SOURCES += monitor.c monitor.h
+libb3interpreter_la_SOURCES += monitor_factory.c monitor_factory.h
 libb3interpreter_la_SOURCES += winman.c winman.h
 libb3interpreter_la_SOURCES += win.c win.h
+libb3interpreter_la_SOURCES += win_factory.c win_factory.h
 libb3interpreter_la_SOURCES += win_watcher.c win_watcher.h
 libb3interpreter_la_SOURCES += bar.c bar.h
-libb3interpreter_la_SOURCES += win_factory.c win_factory.h
-libb3interpreter_la_SOURCES += ws_factory.c ws_factory.h
-libb3interpreter_la_SOURCES += wsman_factory.c wsman_factory.h
-libb3interpreter_la_SOURCES += monitor_factory.c monitor_factory.h
-libb3interpreter_la_SOURCES += kc_director_factory.c kc_director_factory.h
 libb3interpreter_la_SOURCES += til.c til.h
 libb3interpreter_la_SOURCES += counter.c counter.h
 libb3interpreter_la_SOURCES += utils.c utils.h
@@ -75,6 +84,7 @@ libb3interpreter_la_SOURCES += utils.c utils.h
 libb3interpreter_la_CFLAGS = $(AM_CFLAGS)
 libb3interpreter_la_CFLAGS += @collectionc_CFLAGS@
 libb3interpreter_la_CFLAGS += @libw32bindkeys_CFLAGS@
+libb3interpreter_la_CFLAGS += @libpcre_CFLAGS@
 
 libb3interpreter_la_LDFLAGS = $(AM_LDFLAGS)
 libb3interpreter_la_LDFLAGS += -mwindows
@@ -82,6 +92,7 @@ libb3interpreter_la_LDFLAGS += -static
 
 libb3interpreter_la_LIBADD = @collectionc_LIBS@
 libb3interpreter_la_LIBADD += @libw32bindkeys_LIBS@
+libb3interpreter_la_LIBADD += @libpcre_LIBS@
 
 
 nodist_libb3parser_la_SOURCES = lexer_gen.h lexer_gen.c

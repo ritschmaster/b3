@@ -32,6 +32,7 @@
 #define B3_WSMAN_H
 
 #include <windows.h>
+#include <collectc/array.h>
 
 #include "ws_factory.h"
 

@@ -36,6 +36,7 @@ The following functions in the config file are fully supported:
 * bindsym \<KEY BINDING\> move workspace to output right
 * bindsym \<KEY BINDING\> workspace \<WORKSPACE NAME\>
 * bindsym \<KEY BINDING\> move container to workspace \<WORKSPACE NAME\>
+* for_window [title="\<REGEX\>"] floating enable
 
 ## Config: key bindings
 
@@ -49,3 +50,4 @@ The following keys are currently supported to be used within a key binding:
 * Space
 * Control
 * Shift
+* Return

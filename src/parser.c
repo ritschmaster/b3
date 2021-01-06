@@ -39,13 +39,17 @@ static wbk_kbman_t *
 b3_parser_parse(b3_parser_t *parser, b3_director_t *director, yyscan_t scanner);
 
 b3_parser_t *
-b3_parser_new(b3_kc_director_factory_t *kc_director_factory)
+b3_parser_new(b3_kc_director_factory_t *kc_director_factory,
+              b3_condition_factory_t *condition_factory,
+              b3_action_factory_t *action_factory)
 {
 	b3_parser_t *parser;
 
 	parser = malloc(sizeof(b3_parser_t));
 
 	parser->kc_director_factory = kc_director_factory;
+	parser->condition_factory = condition_factory;
+	parser->action_factory = action_factory;
 
 	return parser;
 }
@@ -54,6 +58,8 @@ extern int
 b3_parser_free(b3_parser_t *parser)
 {
 	parser->kc_director_factory = NULL;
+	parser->condition_factory = NULL;
+	parser->action_factory = NULL;
 
 	free(parser);
 	return 0;
@@ -111,7 +117,12 @@ b3_parser_parse(b3_parser_t *parser, b3_director_t *director, yyscan_t scanner)
 
 	kbman = wbk_kbman_new();
 
-	if (yyparse(&(parser->kc_director_factory), &director, &kbman, scanner)) {
+	if (yyparse(&(parser->kc_director_factory),
+              &(parser->condition_factory),
+              &(parser->action_factory),
+              &director,
+              &kbman,
+              scanner)) {
 		wbk_kbman_free(kbman);
 		kbman = NULL;
 	}

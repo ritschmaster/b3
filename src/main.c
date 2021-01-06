@@ -38,6 +38,8 @@
 #include "wsman_factory.h"
 #include "monitor_factory.h"
 #include "kc_director_factory.h"
+#include "condition_factory.h"
+#include "action_factory.h"
 #include "parser.h"
 #include "director.h"
 #include "win_watcher.h"
@@ -150,6 +152,8 @@ parameterized_main(void)
 	b3_wsman_factory_t *wsman_factory;
 	b3_monitor_factory_t *monitor_factory;
 	b3_kc_director_factory_t *kc_director_factory;
+	b3_condition_factory_t *condition_factory;
+	b3_action_factory_t *action_factory;
 	b3_parser_t *parser;
 	b3_win_watcher_t *win_watcher;
 	wbk_kbman_t *g_kbman;
@@ -162,8 +166,10 @@ parameterized_main(void)
 	wsman_factory = b3_wsman_factory_new(ws_factory);
 	monitor_factory = b3_monitor_factory_new(wsman_factory);
 	kc_director_factory = b3_kc_director_factory_new();
+	condition_factory = b3_condition_factory_new();
+	action_factory = b3_action_factory_new();
 
-	parser = b3_parser_new(kc_director_factory);
+	parser = b3_parser_new(kc_director_factory, condition_factory, action_factory);
 
 	dir = wbk_path_from_home(".b3");
 	datafinder = wbk_datafinder_new(dir);

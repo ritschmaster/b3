@@ -39,6 +39,8 @@
 #include "../src/wsman_factory.h"
 #include "../src/monitor_factory.h"
 #include "../src/kc_director_factory.h"
+#include "../src/condition_factory.h"
+#include "../src/action_factory.h"
 
 static wbk_datafinder_t *g_datafinder;
 
@@ -49,6 +51,8 @@ static b3_ws_factory_t *g_ws_factory;
 static b3_wsman_factory_t *g_wsman_factory;
 static b3_monitor_factory_t *g_monitor_factory;
 static b3_kc_director_factory_t *g_kc_director_factory;
+static b3_condition_factory_t *g_condition_factory;
+static b3_action_factory_t *g_action_factory;
 
 static void
 setup(void)
@@ -60,7 +64,9 @@ setup(void)
 	g_wsman_factory = b3_wsman_factory_new(g_ws_factory);
 	g_monitor_factory = b3_monitor_factory_new(g_wsman_factory);
 	g_kc_director_factory = b3_kc_director_factory_new();
-	g_parser = b3_parser_new(g_kc_director_factory);
+	g_condition_factory = b3_condition_factory_new();
+	g_action_factory = b3_action_factory_new();
+	g_parser = b3_parser_new(g_kc_director_factory, g_condition_factory, g_action_factory);
 	g_director = b3_director_new(g_monitor_factory);
 }
 
@@ -100,6 +106,22 @@ test_parse_str_none(void)
 	wbk_kbman_t *kbman;
 
 	kbman = b3_parser_parse_str(g_parser, g_director, "\n \n   \n\n\t\t\n");
+
+	if (kbman == NULL) {
+		return 1;
+	}
+
+	wbk_kbman_free(kbman);
+
+	return 0;
+}
+
+static int
+test_parse_str_rules(void)
+{
+	wbk_kbman_t *kbman;
+
+	kbman = b3_parser_parse_str(g_parser, g_director, "for_window [title=\".*Microsoft Teams.*\"] floating enable");
 
 	if (kbman == NULL) {
 		return 1;
@@ -175,6 +197,28 @@ test_parse_file_none(void)
 }
 
 static int
+test_parse_file_rules(void)
+{
+	char *filename;
+	FILE *config_file;
+	wbk_kbman_t *kbman;
+
+	filename = wbk_datafinder_gen_path(g_datafinder, "rules.config");
+	config_file = fopen(filename, "r");
+	kbman = b3_parser_parse_file(g_parser, g_director, config_file);
+	fclose(config_file);
+	free(filename);
+
+	if (kbman == NULL) {
+		return 1;
+	}
+
+	wbk_kbman_free(kbman);
+
+	return 0;
+}
+
+static int
 test_parse_file(void)
 {
 	char *filename;
@@ -201,9 +245,11 @@ main(void)
 {
 	b3_test(setup, teardown, test_parse_str_empty);
 	b3_test(setup, teardown, test_parse_str_none);
+	b3_test(setup, teardown, test_parse_str_rules);
 	b3_test(setup, teardown, test_parse_str);
 	b3_test(setup, teardown, test_parse_file_empty);
 	b3_test(setup, teardown, test_parse_file_none);
+	b3_test(setup, teardown, test_parse_file_rules);
 	b3_test(setup, teardown, test_parse_file);
 
 	return 0;

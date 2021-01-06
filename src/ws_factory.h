@@ -28,6 +28,8 @@
  * @brief File contains the workspace factory class definition
  */
 
+#include <collectc/array.h>
+
 #include "counter.h"
 #include "ws.h"
 

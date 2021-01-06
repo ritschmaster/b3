@@ -37,11 +37,15 @@
 
 #include "monitor.h"
 #include "ws.h"
+#include "rule.h"
 
 static wbk_logger_t logger = { "director" };
 
 static int
 b3_director_free_monitor_arr(b3_director_t *director);
+
+static int
+b3_director_free_rule_arr(b3_director_t *director);
 
 /**
  * It is only possible to set a monitor as focused, that is already available
@@ -84,6 +88,8 @@ b3_director_new(b3_monitor_factory_t *monitor_factory)
 
 	director->monitor_factory = monitor_factory;
 
+  array_new(&(director->rule_arr));
+
 	return director;
 }
 
@@ -120,6 +126,24 @@ b3_director_free_monitor_arr(b3_director_t *director)
 	director->monitor_arr = NULL;
 
 	return 0;
+}
+
+int
+b3_director_free_rule_arr(b3_director_t *director)
+{
+	ArrayIter rule_iter;
+	b3_rule_t *rule;
+
+	array_iter_init(&rule_iter, director->rule_arr);
+	while (array_iter_next(&rule_iter, (void *) &rule) != CC_ITER_END) {
+		b3_rule_free(rule);
+	}
+
+	array_destroy_cb(director->rule_arr, NULL);
+
+	director->rule_arr = NULL;
+
+  return 0;
 }
 
 int
@@ -301,33 +325,45 @@ b3_director_switch_to_ws(b3_director_t *director, const char *ws_id)
 
 	found = 0;
 	array_iter_init(&iter, director->monitor_arr);
-    while (!found && array_iter_next(&iter, (void*) &monitor) != CC_ITER_END) {
-    	if (b3_monitor_contains_ws(monitor, ws_id))	{
-    		found = 1;
-    	}
+  while (!found && array_iter_next(&iter, (void*) &monitor) != CC_ITER_END) {
+    if (b3_monitor_contains_ws(monitor, ws_id))	{
+      found = 1;
     }
+  }
 
-    if (found) {
-    	b3_director_set_focused_monitor(director, monitor);
-    }
+  if (found) {
+    b3_director_set_focused_monitor(director, monitor);
+  }
 
-	b3_monitor_set_focused_ws(director->focused_monitor, ws_id);
-	focused_win = b3_ws_get_focused_win(b3_monitor_get_focused_ws(b3_director_get_focused_monitor(director)));
+  b3_monitor_set_focused_ws(director->focused_monitor, ws_id);
+  focused_win = b3_ws_get_focused_win(b3_monitor_get_focused_ws(b3_director_get_focused_monitor(director)));
 
-    b3_director_arrange_wins(director);
+  b3_director_arrange_wins(director);
 
-    wbk_logger_log(&logger, INFO, "Switching to workspace %s.\n", ws_id);
-    if (focused_win) {
-    	wbk_logger_log(&logger, DEBUG, "Restoring focused window\n");
-    	director->ignore_set_foucsed_win = 1;
-    	b3_director_w32_set_active_window(b3_win_get_window_handler(focused_win), 0);
-    }
+  wbk_logger_log(&logger, INFO, "Switching to workspace %s.\n", ws_id);
+  if (focused_win) {
+    wbk_logger_log(&logger, DEBUG, "Restoring focused window\n");
+    director->ignore_set_foucsed_win = 1;
+    b3_director_w32_set_active_window(b3_win_get_window_handler(focused_win), 0);
+  }
 
-    b3_director_repaint_all();
+  b3_director_repaint_all();
 
-	ReleaseMutex(director->global_mutex);
+  ReleaseMutex(director->global_mutex);
 
-	return 0;
+  return 0;
+}
+
+int
+b3_director_add_rule(b3_director_t *director, b3_rule_t *rule)
+{
+	WaitForSingleObject(director->global_mutex, INFINITE);
+
+  array_add(director->rule_arr, rule);
+
+  ReleaseMutex(director->global_mutex);
+
+  return 0;
 }
 
 int
@@ -337,25 +373,33 @@ b3_director_add_win(b3_director_t *director, const char *monitor_name, b3_win_t 
 	b3_monitor_t *monitor;
 	char found;
 	int error;
+  b3_rule_t *rule;
 
 	WaitForSingleObject(director->global_mutex, INFINITE);
 
 	found = 0;
 	array_iter_init(&iter, director->monitor_arr);
-    while (!found && array_iter_next(&iter, (void*) &monitor) != CC_ITER_END) {
-    	if (strcmp(b3_monitor_get_monitor_name(monitor), monitor_name) == 0) {
-    		found = 1;
-    	}
+  while (!found && array_iter_next(&iter, (void*) &monitor) != CC_ITER_END) {
+    if (strcmp(b3_monitor_get_monitor_name(monitor), monitor_name) == 0) {
+      found = 1;
     }
+  }
 
-    error = 1;
-    if (found) {
-    	error = b3_monitor_add_win(monitor, win);
+  error = 1;
+  if (found) {
+    error = b3_monitor_add_win(monitor, win);
+
+    array_iter_init(&iter, director->rule_arr);
+    while (array_iter_next(&iter, (void*) &rule) != CC_ITER_END) {
+      if (b3_rule_applies(rule, director, win)) {
+        b3_rule_exec(rule, director, win);
+      }
     }
+  }
 
-    if (!error) {
+  if (!error) {
 		b3_director_arrange_wins(director);
-    }
+  }
 
 	ReleaseMutex(director->global_mutex);
 

@@ -42,11 +42,16 @@
 
 #include "utils.h"
 #include "kc_director_factory.h"
+#include "condition_factory.h"
+#include "action_factory.h"
 #include "director.h"
 #include "kc_director.h"
 #include "kc_exec.h"
 #include "parser_gen.h"
 #include "lexer_gen.h"
+#include "condition_and.h"
+#include "action_list.h"
+#include "rule.h"
 
 #define B3_WORD_BUFFER_LEN 256
 
@@ -54,6 +59,10 @@ static wbk_b_t *g_b = NULL;
 static wbk_kc_t *g_kc = NULL;
 static char *g_text = NULL;
 static char g_word[B3_WORD_BUFFER_LEN];
+static b3_condition_and_t *g_condition_and = NULL;
+static b3_condition_t *g_condition = NULL;
+static b3_action_list_t *g_action_list = NULL;
+static b3_action_t *g_action = NULL;
 
 static wbk_mk_t
 get_modifier(char *str);
@@ -64,7 +73,28 @@ add_to_g_b(wbk_mk_t modifier, char key);
 static int
 add_to_kbman(wbk_kbman_t *kbman);
 
+/**
+ * Adds condition to condition_and and returns condition_and. If condition_and is NULL,
+ * then a new condition and is allocated.
+ */
+static b3_condition_and_t *
+add_to_condition_and(b3_condition_factory_t *condition_factory,
+                     b3_condition_and_t *condition_and,
+                     b3_condition_t *condition);
+
+/**
+ * Adds action to action_list and returns action_list. If action_list is NULL,
+ * then a new action list is allocated.
+ */
+static b3_action_list_t *
+add_to_action_list(b3_action_factory_t *action_factory,
+                   b3_action_list_t *action_list,
+                   b3_action_t *action);
+
 static wbk_mk_t
+get_modifier(char *str);
+
+wbk_mk_t
 get_modifier(char *str)
 {
 	char *str_copy;
@@ -146,9 +176,42 @@ add_to_kbman(wbk_kbman_t *kbman)
 	g_kc = NULL;
 }
 
+b3_condition_and_t *
+add_to_condition_and(b3_condition_factory_t *condition_factory,
+                     b3_condition_and_t *condition_and,
+                     b3_condition_t *condition)
+ {
+   if (condition_and == NULL) {
+     condition_and = b3_condition_factory_create_and(condition_factory);
+   }
+
+   b3_condition_and_add(condition_and, condition);
+
+   return condition_and;
+}
+
+b3_action_list_t *
+add_to_action_list(b3_action_factory_t *action_factory,
+                   b3_action_list_t *action_list,
+                   b3_action_t *action)
+{
+  if (action_list == NULL) {
+    action_list = b3_action_factory_create_list(action_factory);
+  }
+
+  b3_action_list_add(action_list, action);
+
+  return action_list;
+}
 
 int
-yyerror(b3_kc_director_factory_t **kc_director_factory, b3_director_t **director, wbk_kbman_t **kbman, yyscan_t scanner, const char *msg) {
+yyerror(b3_kc_director_factory_t **kc_director_factory,
+        b3_condition_factory_t **condition_factory,
+        b3_action_factory_t **action_factory,
+        b3_director_t **director,
+        wbk_kbman_t **kbman,
+        yyscan_t scanner,
+        const char *msg) {
 	fprintf(stderr, "Error: %s\n", msg);
 
 	return 0;
@@ -171,6 +234,8 @@ typedef void* yyscan_t;
 %define api.pure
 %lex-param   { yyscan_t scanner }
 %parse-param { b3_kc_director_factory_t **kc_director_factory }
+%parse-param { b3_condition_factory_t **condition_factory }
+%parse-param { b3_action_factory_t **action_factory }
 %parse-param { b3_director_t **director }
 %parse-param { wbk_kbman_t **kbman }
 %parse-param { yyscan_t scanner }
@@ -185,6 +250,10 @@ typedef void* yyscan_t;
 %token <modifier_str>TOKEN_MODIFIER
 %token <key>         TOKEN_KEY
 %token               TOKEN_PLUS
+%token               TOKEN_BRACKET_OPEN
+%token               TOKEN_BRACKET_CLOSE
+%token               TOKEN_EQUAL
+%token               TOKEN_DOUBLE_QUOTES
 %token               TOKEN_BINDSYM
 %token               TOKEN_MOVE
 %token               TOKEN_FOCUS
@@ -196,12 +265,15 @@ typedef void* yyscan_t;
 %token               TOKEN_RIGHT
 %token               TOKEN_KILL
 %token               TOKEN_FLOATING
+%token               TOKEN_ENABLE
 %token               TOKEN_FULLSCREEN
 %token               TOKEN_EXEC
 %token               TOKEN_NO_STARTUP_ID
 %token               TOKEN_TOGGLE
 %token               TOKEN_TO
 %token               TOKEN_OUTPUT
+%token               TOKEN_FOR_WINDOW
+%token               TOKEN_TITLE
 %token               TOKEN_COMMENT
 %token               TOKEN_SPACE
 %token <special>     TOKEN_SPECIAL
@@ -235,8 +307,10 @@ statements:
 
 comment: TOKEN_COMMENT ; 
 
-statement: bindsym
-	 ;
+statement:
+bindsym
+| for_window 
+;
 
 bindsym: TOKEN_BINDSYM TOKEN_SPACE binding TOKEN_SPACE command
          { add_to_kbman(*kbman); }
@@ -247,9 +321,9 @@ binding: TOKEN_MODIFIER
        | TOKEN_MODIFIER TOKEN_PLUS binding
          { add_to_g_b(get_modifier($1), 0); }
        | TOKEN_KEY
-         { add_to_g_b(NOT_A_MODIFIER, $1); }
+         { add_to_g_b(NOT_A_MODIFIER, tolower($1)); }
        | TOKEN_KEY TOKEN_PLUS binding
-         { add_to_g_b(NOT_A_MODIFIER, $1); }
+         { add_to_g_b(NOT_A_MODIFIER, tolower($1)); }
        ;
 
 command: cmd-focus
@@ -359,6 +433,35 @@ cmd-exec: TOKEN_EXEC TOKEN_SPACE TOKEN_NO_STARTUP_ID TOKEN_SPACE text
         { g_kc = (wbk_kc_t *) b3_kc_exec_new(g_b, *director, ON_START_WS, g_text); g_text = NULL; }
         ;
 
+for_window:
+  TOKEN_FOR_WINDOW TOKEN_SPACE TOKEN_BRACKET_OPEN for_window-conditions TOKEN_BRACKET_CLOSE TOKEN_SPACE for_window-actions
+  { b3_director_add_rule(*director, b3_rule_new((b3_condition_t *) g_condition_and, (b3_action_t *) g_action_list)); g_condition_and = NULL; g_action_list = NULL; }
+;
+
+for_window-conditions:
+  for_window-condition
+  { g_condition_and = add_to_condition_and(*condition_factory, g_condition_and, g_condition); g_condition = NULL; }
+| for_window-conditions for_window-condition
+  { g_condition_and = add_to_condition_and(*condition_factory, g_condition_and, g_condition); g_condition = NULL; }
+;
+
+for_window-condition:
+  TOKEN_TITLE TOKEN_EQUAL TOKEN_DOUBLE_QUOTES text TOKEN_DOUBLE_QUOTES
+  { g_condition = (b3_condition_t *) b3_condition_factory_create_tc(*condition_factory, g_text); free(g_text); g_text = NULL; }
+;
+
+for_window-actions:
+  for_window-action
+  { g_action_list = add_to_action_list(*action_factory, g_action_list, g_action); g_action = NULL; }
+| for_window-actions for_window-action
+  { g_action_list = add_to_action_list(*action_factory, g_action_list, g_action); g_action = NULL; }
+;
+
+for_window-action:
+  TOKEN_FLOATING TOKEN_SPACE TOKEN_ENABLE
+  { g_action = (b3_action_t *) b3_action_factory_create_fa(*action_factory); }
+;
+
 text: TOKEN_KEY
     { g_text = b3_add_c_to_s(g_text, $1); }
     | text TOKEN_KEY[K]
@@ -368,9 +471,25 @@ text: TOKEN_KEY
     | text TOKEN_SPACE
     { g_text = b3_add_c_to_s(g_text, ' '); }
     | TOKEN_PLUS
-    { g_text = b3_add_c_to_s(g_text, ' '); }
+    { g_text = b3_add_c_to_s(g_text, '+'); }
     | text TOKEN_PLUS
-    { g_text = b3_add_c_to_s(g_text, ' '); }
+    { g_text = b3_add_c_to_s(g_text, '+'); }
+    | TOKEN_BRACKET_OPEN
+    { g_text = b3_add_c_to_s(g_text, '['); }
+    | text TOKEN_BRACKET_OPEN
+    { g_text = b3_add_c_to_s(g_text, '['); }
+    | TOKEN_BRACKET_CLOSE
+    { g_text = b3_add_c_to_s(g_text, ']'); }
+    | text TOKEN_BRACKET_CLOSE
+    { g_text = b3_add_c_to_s(g_text, ']'); }
+    | TOKEN_EQUAL
+    { g_text = b3_add_c_to_s(g_text, '='); }
+    | text TOKEN_EQUAL
+    { g_text = b3_add_c_to_s(g_text, '='); }
+    | TOKEN_DOUBLE_QUOTES
+    { g_text = b3_add_c_to_s(g_text, '"'); }
+    | text TOKEN_DOUBLE_QUOTES
+    { g_text = b3_add_c_to_s(g_text, '"'); }
     | TOKEN_SPECIAL
     { g_text = b3_add_c_to_s(g_text, $1); }
     | text TOKEN_SPECIAL[S]
@@ -407,6 +526,8 @@ word-in-text: TOKEN_MODIFIER
               { strcpy(g_word, "kill"); }
             | TOKEN_FLOATING
               { strcpy(g_word, "floating"); }
+            | TOKEN_ENABLE
+              { strcpy(g_word, "enable"); }
             | TOKEN_FULLSCREEN
               { strcpy(g_word, "fullscreen"); }
             | TOKEN_EXEC
@@ -419,6 +540,10 @@ word-in-text: TOKEN_MODIFIER
               { strcpy(g_word, "to"); }
             | TOKEN_OUTPUT
               { strcpy(g_word, "output"); }
+            | TOKEN_FOR_WINDOW
+              { strcpy(g_word, "for_window"); }
+            | TOKEN_TITLE
+              { strcpy(g_word, "title"); }
             ;
 
 %%

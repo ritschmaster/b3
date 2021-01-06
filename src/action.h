@@ -1,7 +1,7 @@
 /******************************************************************************
   This file is part of b3.
 
-  Copyright 2020 Richard Paul Baeck <richard.baeck@mailbox.org>
+  Copyright 2020-2021 Richard Paul Baeck <richard.baeck@mailbox.org>
 
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files (the "Software"), to deal
@@ -23,49 +23,35 @@
 *******************************************************************************/
 
 /**
- * @author Richard Bäck <richard.baeck@mailbox.org>
- * @date 2020-02-27
- * @brief File contains the parser class definition
+ * @author Richard BÃ¤ck <richard.baeck@mailbox.org>
+ * @date 2020-01-03
+ * @brief File contains the action class definition
  */
 
-#include <stdio.h>
-#include <w32bindkeys/kbman.h>
+#ifndef B3_ACTION_H
+#define B3_ACTION_H
 
-#include "kc_director_factory.h"
-#include "condition_factory.h"
-#include "action_factory.h"
 #include "director.h"
+#include "win.h"
 
-#ifndef B3_PARSER_H
-#define B3_PARSER_H
+typedef struct b3_action_s b3_action_t;
 
-typedef struct b3_parser_s
+struct b3_action_s
 {
-	b3_kc_director_factory_t *kc_director_factory;
-  b3_condition_factory_t *condition_factory;
-  b3_action_factory_t *action_factory;
-} b3_parser_t;
+  int (*action_free)(b3_action_t *action);
+  int (*action_exec)(b3_action_t *action, b3_director_t *director, b3_win_t *win);
+};
 
-/**
- * @param ws_factory A workspace factory. It will not be freed by freeing the
- * parser!
- * @param condition_factory A condition factory. It will not be freed by freeing the
- * parser!
- * @param action_factory An action factory. It will not be freed by freeing the
- * parser!
- */
-extern b3_parser_t *
-b3_parser_new(b3_kc_director_factory_t *kc_director_factory,
-              b3_condition_factory_t *condition_factory,
-              b3_action_factory_t *action_factory);
+extern b3_action_t *
+b3_action_new(void);
 
 extern int
-b3_parser_free(b3_parser_t *parser);
+b3_action_free(b3_action_t *action);
 
-extern wbk_kbman_t *
-b3_parser_parse_str(b3_parser_t *parser, b3_director_t *director, const char *str);
+/**
+ * Executes action with director and win.
+ */
+extern int
+b3_action_exec(b3_action_t *action, b3_director_t *director, b3_win_t *win);
 
-extern wbk_kbman_t *
-b3_parser_parse_file(b3_parser_t *parser, b3_director_t *director, FILE *file);
-
-#endif // B3_PARSER_H
+#endif // B3_ACTION_H

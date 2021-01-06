@@ -51,6 +51,11 @@ typedef struct b3_director_s
 	char ignore_set_foucsed_win;
 
 	b3_monitor_factory_t *monitor_factory;
+
+  /**
+	 * Array of b3_rule_t *
+	 */
+	Array *rule_arr;
 } b3_director_t;
 
 /**
@@ -96,6 +101,15 @@ b3_director_set_focused_monitor_by_name(b3_director_t *director, const char *mon
  */
 extern int
 b3_director_switch_to_ws(b3_director_t *director, const char *ws_id);
+
+typedef struct b3_rule_s b3_rule_t;
+
+/**
+ * @param rule The object will be freed by the director. Do not free it by yourself!
+ * @return 0 if added. Non-0 otherwise.
+ */
+extern int
+b3_director_add_rule(b3_director_t *director, b3_rule_t *rule);
 
 /**
  * @param win The object will not be freed. Free it by yourself!
