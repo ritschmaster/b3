@@ -77,6 +77,7 @@ TO              to
 OUTPUT          output
 FOR_WINDOW      for_window
 TITLE           title
+CLASS           class
 COMMENT         #.*
 SPACE           [ \t]+
 SPECIAL         [!"§\$%&/{\(\[\]\)=}\?\\`´\*\+\~'#,;\.:\-_\^°\<\>\|]
@@ -112,6 +113,7 @@ EOF             \Z
 {OUTPUT}                 { return TOKEN_OUTPUT; }
 {FOR_WINDOW}             { return TOKEN_FOR_WINDOW; }
 {TITLE}                  { return TOKEN_TITLE; }
+{CLASS}                  { return TOKEN_CLASS; }
 {COMMENT}                { return TOKEN_COMMENT; }
 {SPACE}                  { return TOKEN_SPACE; }
 {SPECIAL}                { yylval->special = yytext[0]; return TOKEN_SPECIAL; }

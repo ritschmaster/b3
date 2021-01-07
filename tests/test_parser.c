@@ -120,10 +120,13 @@ static int
 test_parse_str_rules(void)
 {
 	wbk_kbman_t *kbman;
+  char config[] = "for_window [title=\".*Microsoft Teams.*\"] floating enable\n"
+    "\t\t\n    \n"
+    "for_window [class=\"CabinetWClass\"] floating enable";
 
-	kbman = b3_parser_parse_str(g_parser, g_director, "for_window [title=\".*Microsoft Teams.*\"] floating enable");
+  kbman = b3_parser_parse_str(g_parser, g_director, config);
 
-	if (kbman == NULL) {
+  if (kbman == NULL) {
 		return 1;
 	}
 

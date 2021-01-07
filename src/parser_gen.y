@@ -274,6 +274,7 @@ typedef void* yyscan_t;
 %token               TOKEN_OUTPUT
 %token               TOKEN_FOR_WINDOW
 %token               TOKEN_TITLE
+%token               TOKEN_CLASS
 %token               TOKEN_COMMENT
 %token               TOKEN_SPACE
 %token <special>     TOKEN_SPECIAL
@@ -448,6 +449,8 @@ for_window-conditions:
 for_window-condition:
   TOKEN_TITLE TOKEN_EQUAL TOKEN_DOUBLE_QUOTES text TOKEN_DOUBLE_QUOTES
   { g_condition = (b3_condition_t *) b3_condition_factory_create_tc(*condition_factory, g_text); free(g_text); g_text = NULL; }
+| TOKEN_CLASS TOKEN_EQUAL TOKEN_DOUBLE_QUOTES text TOKEN_DOUBLE_QUOTES
+{ g_condition = (b3_condition_t *) b3_condition_factory_create_cc(*condition_factory, g_text); free(g_text); g_text = NULL; }
 ;
 
 for_window-actions:
@@ -544,6 +547,8 @@ word-in-text: TOKEN_MODIFIER
               { strcpy(g_word, "for_window"); }
             | TOKEN_TITLE
               { strcpy(g_word, "title"); }
+            | TOKEN_CLASS
+              { strcpy(g_word, "class"); }
             ;
 
 %%

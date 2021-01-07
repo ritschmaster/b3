@@ -24,50 +24,32 @@
 
 /**
  * @author Richard Bäck <richard.baeck@mailbox.org>
- * @date 2020-01-05
- * @brief File contains the condition factory class definition
+ * @date 2020-01-03
+ * @brief File contains the class condition and class definition
+ *
+ * b3_class_condition_t inherits all methods of b3_pattern_condition_t (see condition.h).
  */
 
-#ifndef B3_CONDITION_FACTORY_H
-#define B3_CONDITION_FACTORY_H
+#ifndef B3_CLASS_CONDITION_H
+#define B3_CLASS_CONDITION_H
 
-#include "condition_and.h"
-#include "class_condition.h"
-#include "title_condition.h"
+#include "pattern_condition.h"
 
-typedef struct b3_condition_factory_s b3_condition_factory_t;
+#include <pcre.h>
 
-struct b3_condition_factory_s
+#include "director.h"
+#include "win.h"
+
+typedef struct b3_class_condition_s b3_class_condition_t;
+
+struct b3_class_condition_s
 {
-  int (*condition_factory_free)(b3_condition_factory_t *condition_factory);
-  b3_condition_and_t *(*condition_factory_create_and)(b3_condition_factory_t *condition_factory);
-  b3_class_condition_t *(*condition_factory_create_cc)(b3_condition_factory_t *condition_factory, const char *pattern);
-  b3_title_condition_t *(*condition_factory_create_tc)(b3_condition_factory_t *condition_factory, const char *pattern);
+  b3_pattern_condition_t pattern_condition;
+  int (*super_condition_free)(b3_condition_t *condition);
+  int (*super_condition_applies)(b3_condition_t *condition, b3_director_t *director, b3_win_t *win);
 };
 
-extern b3_condition_factory_t *
-b3_condition_factory_new(void);
-
-extern int
-b3_condition_factory_free(b3_condition_factory_t *condition_factory);
-
-/**
- * @param A new object. Free it by yourself!
- */
-extern b3_condition_and_t *
-b3_condition_factory_create_and(b3_condition_factory_t *condition_factory);
-
-/**
- * @param A new object. Free it by yourself!
- */
 extern b3_class_condition_t *
-b3_condition_factory_create_cc(b3_condition_factory_t *condition_factory, const char *pattern);
+b3_class_condition_new(const char *pattern);
 
-/**
- * @param A new object. Free it by yourself!
- */
-extern b3_title_condition_t *
-b3_condition_factory_create_tc(b3_condition_factory_t *condition_factory, const char *pattern);
-
-
-#endif // B3_CONDITION_FACTORY_H
+#endif // B3_CLASS_CONDITION_H

@@ -39,6 +39,9 @@ b3_condition_factory_free_impl(b3_condition_factory_t *condition_factory);
 static b3_condition_and_t *
 b3_condition_factory_create_and_impl(b3_condition_factory_t *condition_factory);
 
+static b3_class_condition_t *
+b3_condition_factory_create_cc_impl(b3_condition_factory_t *condition_factory, const char *pattern);
+
 static b3_title_condition_t *
 b3_condition_factory_create_tc_impl(b3_condition_factory_t *condition_factory, const char *pattern);
 
@@ -50,8 +53,10 @@ b3_condition_factory_new(void)
   condition_factory = malloc(sizeof(b3_condition_factory_t));
 
   if (condition_factory) {
+    /** Place b3_condition_factory_t methods */
     condition_factory->condition_factory_free = b3_condition_factory_free_impl;
     condition_factory->condition_factory_create_and = b3_condition_factory_create_and_impl;
+    condition_factory->condition_factory_create_cc = b3_condition_factory_create_cc_impl;
     condition_factory->condition_factory_create_tc = b3_condition_factory_create_tc_impl;
   }
 
@@ -68,6 +73,12 @@ b3_condition_and_t *
 b3_condition_factory_create_and(b3_condition_factory_t *condition_factory)
 {
   return condition_factory->condition_factory_create_and(condition_factory);
+}
+
+b3_class_condition_t *
+b3_condition_factory_create_cc(b3_condition_factory_t *condition_factory, const char *pattern)
+{
+  return condition_factory->condition_factory_create_cc(condition_factory, pattern);
 }
 
 b3_title_condition_t *
@@ -94,12 +105,23 @@ b3_condition_factory_create_and_impl(b3_condition_factory_t *condition_factory)
   return condition_and;
 }
 
+b3_class_condition_t *
+b3_condition_factory_create_cc_impl(b3_condition_factory_t *condition_factory, const char *pattern)
+{
+  b3_class_condition_t *cc;
+
+  cc = b3_class_condition_new(pattern);
+
+  return cc;
+}
+
 b3_title_condition_t *
 b3_condition_factory_create_tc_impl(b3_condition_factory_t *condition_factory, const char *pattern)
 {
-  b3_title_condition_t *fa;
+  b3_title_condition_t *tc;
 
-  fa = b3_title_condition_new(pattern);
+  tc = b3_title_condition_new(pattern);
 
-  return fa;
+  return tc;
 }
+
