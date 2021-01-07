@@ -37,6 +37,7 @@ The following functions in the config file are fully supported:
 * bindsym \<KEY BINDING\> workspace \<WORKSPACE NAME\>
 * bindsym \<KEY BINDING\> move container to workspace \<WORKSPACE NAME\>
 * for_window [title="\<REGEX\>"] floating enable
+  * Also supports the special value `__focused__`
 
 ## Config: key bindings
 

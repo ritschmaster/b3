@@ -32,6 +32,9 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <w32bindkeys/logger.h>
+
+static wbk_logger_t logger = { "utils" };
 
 char *
 b3_add_c_to_s(char *modified_str, char new_c)
@@ -79,4 +82,53 @@ b3_add_s_to_s(char *modified_str, const char *new_s)
   strcpy(modified_str + offset, new_s);
 
   return modified_str;
+}
+
+int
+b3_compile_pattern(const char *pattern, pcre **re_compiled, pcre_extra **re_extra)
+{
+  int error;
+  const char *pcre_err_str;
+  int pcre_err_offset;
+
+  error = 0;
+
+  *re_compiled = NULL;
+  *re_extra = NULL;
+
+  if (!error) {
+    *re_compiled = pcre_compile(pattern, 0, &pcre_err_str, &pcre_err_offset, NULL);
+
+    if(*re_compiled == NULL) {
+      wbk_logger_log(&logger, SEVERE, "Could not compile '%s': %s\n", pattern, pcre_err_str);
+      error = 1;
+    }
+  }
+
+  if (!error) {
+    *re_extra = pcre_study(*re_compiled, 0, &pcre_err_str);
+
+    if (pcre_err_str) {
+      wbk_logger_log(&logger, SEVERE, "Could not study '%s': %s\n", pattern, pcre_err_str);
+      error = 2;
+    }
+  }
+
+  if (error) {
+    if (*re_compiled) {
+      pcre_free(*re_compiled);
+      *re_compiled = NULL;
+    }
+
+    if (*re_extra) {
+#ifdef PCRE_CONFIG_JIT
+      pcre_free_study(*re_extra);
+#else
+      pcre_free(*re_extra);
+#endif
+      *re_extra = NULL;
+    }
+  }
+
+  return error;
 }

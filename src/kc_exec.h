@@ -27,7 +27,7 @@
  * @date 2020-12-20
  * @brief File contains the key binding exec command class definition
  *
- * wbk_kc_exec_t inherits all methods of wkb_kc_t (see kc.h).
+ * b3_kc_exec_t inherits all methods of wkb_kc_t (see kc.h).
  */
 
 #include <w32bindkeys/kc.h>

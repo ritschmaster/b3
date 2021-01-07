@@ -26,6 +26,8 @@
  * @author Richard Bäck <richard.baeck@mailbox.org>
  * @date 2020-01-05
  * @brief File contains the floating action class definition
+ *
+ * b3_floating_action_t inherits all methods of b3_action_t (see action.h).
  */
 
 #ifndef B3_FLOATING_ACTION_H

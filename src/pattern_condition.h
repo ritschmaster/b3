@@ -24,32 +24,56 @@
 
 /**
  * @author Richard Bäck <richard.baeck@mailbox.org>
- * @date 2020-01-03
- * @brief File contains the title condition and class definition
+ * @date 2020-01-07
+ * @brief File contains the pattern condition and class definition
  *
- * b3_title_condition_t inherits all methods of b3_pattern_condition_t (see condition.h).
+ * b3_pattern_condition_t inherits all methods of b3_condition_t (see condition.h).
  */
 
-#ifndef B3_TITLE_CONDITION_H
-#define B3_TITLE_CONDITION_H
+#ifndef B3_PATTERN_CONDITION_H
+#define B3_PATTERN_CONDITION_H
 
-#include "pattern_condition.h"
+#include "condition.h"
 
 #include <pcre.h>
 
 #include "director.h"
 #include "win.h"
 
-typedef struct b3_title_condition_s b3_title_condition_t;
+/**
+ * If this special pattern is used then the title of the currently focused
+ * window is used as the pattern.
+ */
+#define B3_PATTERN_CONDITION_PATTERN_FOCUSED "__focused__"
 
-struct b3_title_condition_s
+typedef struct b3_pattern_condition_s b3_pattern_condition_t;
+
+struct b3_pattern_condition_s
 {
-  b3_pattern_condition_t pattern_condition;
+  b3_condition_t condition;
   int (*super_condition_free)(b3_condition_t *condition);
   int (*super_condition_applies)(b3_condition_t *condition, b3_director_t *director, b3_win_t *win);
+
+  pcre *(*pattern_condition_get_re_compiled)(b3_pattern_condition_t *pattern_condition);
+  pcre_extra *(*pattern_condition_get_re_extra)(b3_pattern_condition_t *pattern_condition);
+  char (*pattern_condition_get_use_focused_as_pattern)(b3_pattern_condition_t *pattern_condition);
+
+  pcre *re_compiled;
+  pcre_extra *re_extra;
+
+  char use_focused_as_pattern;
 };
 
-extern b3_title_condition_t *
-b3_title_condition_new(const char *pattern);
+extern b3_pattern_condition_t *
+b3_pattern_condition_new(const char *pattern);
 
-#endif // B3_TITLE_CONDITION_H
+extern pcre *
+b3_pattern_condition_get_re_compiled(b3_pattern_condition_t *pattern_condition);
+
+extern pcre_extra *
+b3_pattern_condition_get_re_extra(b3_pattern_condition_t *pattern_condition);
+
+extern char
+b3_pattern_condition_get_use_focused_as_pattern(b3_pattern_condition_t *pattern_condition);
+
+#endif // B3_PATTERN_CONDITION_H

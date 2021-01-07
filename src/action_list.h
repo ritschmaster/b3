@@ -26,6 +26,8 @@
  * @author Richard Bäck <richard.baeck@mailbox.org>
  * @date 2020-01-03
  * @brief File contains the action list class definition
+ *
+ * b3_action_list_t inherits all methods of b3_action_t (see action.h).
  */
 
 #ifndef B3_ACTION_LIST_H

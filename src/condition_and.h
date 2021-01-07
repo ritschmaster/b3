@@ -26,6 +26,8 @@
  * @author Richard Bäck <richard.baeck@mailbox.org>
  * @date 2020-01-03
  * @brief File contains the condition and and class definition
+ *
+ * b3_condition_and_t inherits all methods of b3_condition_t (see condition.h).
  */
 
 #ifndef B3_CONDITION_AND_H

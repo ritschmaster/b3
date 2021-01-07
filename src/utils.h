@@ -31,6 +31,8 @@
 #ifndef B3_UTILS_H
 #define B3_UTILS_H
 
+#include <pcre.h>
+
 /**
  * Adds a character to a dynamically allocated string. If the modified_str is
  * NULL, then it will be newly allocated.
@@ -52,5 +54,15 @@ b3_add_c_to_s(char *modified_str, char new_c);
  */
 extern char *
 b3_add_s_to_s(char *modified_str, const char *new_s);
+
+/**
+ * Compiles a pattern.
+ *
+ * @param re_compiled Will receive the compiled regex. Free it by yourself if non-NULL!
+ * @param re_extra Will receive the compiled extra. Free it by yourself if non-NULL!
+ * @return 0 if the compilation succeeded. Non-0 otherwise.
+ */
+extern int
+b3_compile_pattern(const char *pattern, pcre **re_compiled, pcre_extra **re_extra);
 
 #endif // B3_UTILS_H

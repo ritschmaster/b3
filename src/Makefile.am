@@ -57,6 +57,7 @@ libb3interpreter_la_SOURCES = director.c director.h
 libb3interpreter_la_SOURCES += rule.c rule.h
 libb3interpreter_la_SOURCES += condition.c condition.h
 libb3interpreter_la_SOURCES += condition_and.c condition_and.h
+libb3interpreter_la_SOURCES += pattern_condition.c pattern_condition.h
 libb3interpreter_la_SOURCES += title_condition.c title_condition.h
 libb3interpreter_la_SOURCES += condition_factory.c condition_factory.h
 libb3interpreter_la_SOURCES += action.c action.h
