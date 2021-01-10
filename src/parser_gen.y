@@ -254,6 +254,7 @@ typedef void* yyscan_t;
 %token               TOKEN_BRACKET_CLOSE
 %token               TOKEN_EQUAL
 %token               TOKEN_DOUBLE_QUOTES
+%token               TOKEN_COMMA
 %token               TOKEN_BINDSYM
 %token               TOKEN_MOVE
 %token               TOKEN_FOCUS
@@ -442,7 +443,7 @@ for_window:
 for_window-conditions:
   for_window-condition
   { g_condition_and = add_to_condition_and(*condition_factory, g_condition_and, g_condition); g_condition = NULL; }
-| for_window-conditions for_window-condition
+| for_window-conditions TOKEN_SPACE for_window-condition
   { g_condition_and = add_to_condition_and(*condition_factory, g_condition_and, g_condition); g_condition = NULL; }
 ;
 
@@ -456,7 +457,7 @@ for_window-condition:
 for_window-actions:
   for_window-action
   { g_action_list = add_to_action_list(*action_factory, g_action_list, g_action); g_action = NULL; }
-| for_window-actions for_window-action
+| for_window-actions TOKEN_COMMA TOKEN_SPACE for_window-action
   { g_action_list = add_to_action_list(*action_factory, g_action_list, g_action); g_action = NULL; }
 ;
 
@@ -492,7 +493,11 @@ text: TOKEN_KEY
     | TOKEN_DOUBLE_QUOTES
     { g_text = b3_add_c_to_s(g_text, '"'); }
     | text TOKEN_DOUBLE_QUOTES
-    { g_text = b3_add_c_to_s(g_text, '"'); }
+    { g_text = b3_add_c_to_s(g_text, ','); }
+    | TOKEN_COMMA
+    { g_text = b3_add_c_to_s(g_text, ','); }
+    | text TOKEN_COMMA
+    { g_text = b3_add_c_to_s(g_text, '='); }
     | TOKEN_SPECIAL
     { g_text = b3_add_c_to_s(g_text, $1); }
     | text TOKEN_SPECIAL[S]

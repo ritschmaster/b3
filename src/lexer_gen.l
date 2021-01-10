@@ -57,6 +57,7 @@ BRACKET_OPEN    [\[]
 BRACKET_CLOSE   [\]]
 EQUAL           [=]
 DOUBLE_QUOTES   ["]
+COMMA           [,]
 BINDSYM         bindsym
 MOVE            move
 FOCUS           focus
@@ -93,6 +94,7 @@ EOF             \Z
 {BRACKET_CLOSE}          { return TOKEN_BRACKET_CLOSE; }
 {EQUAL}                  { return TOKEN_EQUAL; }
 {DOUBLE_QUOTES}          { return TOKEN_DOUBLE_QUOTES; }
+{COMMA}                  { return TOKEN_COMMA; }
 {BINDSYM}                { return TOKEN_BINDSYM; }
 {MOVE}                   { return TOKEN_MOVE; }
 {FOCUS}                  { return TOKEN_FOCUS; }
