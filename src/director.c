@@ -909,6 +909,64 @@ b3_director_remove_empty_ws(b3_director_t *director)
 }
 
 int
+b3_director_move_win_to_ws(b3_director_t *director, b3_win_t *win, const char *ws_id)
+{
+  int error;
+  char found;
+  ArrayIter iter;
+  b3_monitor_t *monitor;
+  b3_ws_t *focused_ws;
+  b3_ws_t *ws;
+
+  error = 0;
+
+  WaitForSingleObject(director->global_mutex, INFINITE);
+
+  if (!error) {
+    focused_ws = b3_monitor_get_focused_ws(b3_director_get_focused_monitor(director));
+
+    found = 0;
+    array_iter_init(&iter, director->monitor_arr);
+    while (!found && array_iter_next(&iter, (void*) &monitor) != CC_ITER_END) {
+      ws = b3_monitor_contains_ws(monitor, ws_id);
+      if (ws) {
+        found = 1;
+      }
+    }
+
+    if (!found) {
+      error = b3_director_switch_to_ws(director, ws_id);
+
+      if (!error) {
+        found = 0;
+        array_iter_init(&iter, director->monitor_arr);
+        while (!found && array_iter_next(&iter, (void*) &monitor) != CC_ITER_END) {
+          ws = b3_monitor_contains_ws(monitor, ws_id);
+          if (ws) {
+            found = 1;
+          }
+        }
+      }
+    }
+  }
+
+  if (!error) {
+    error = b3_director_remove_win(director, win);
+  }
+
+  if (!error) {
+    b3_ws_add_win(ws, win);
+    b3_director_arrange_wins(director);
+  }
+
+  b3_director_switch_to_ws(director, b3_ws_get_name(focused_ws));
+
+	ReleaseMutex(director->global_mutex);
+
+  return error;
+}
+
+int
 b3_director_w32_set_active_window(HWND window_handler, char generate_lag)
 {
 	int error;

@@ -223,6 +223,12 @@ extern int
 b3_director_remove_empty_ws(b3_director_t *director);
 
 /**
+ * @param win A window object that is already placed within the director. The object will not be freed. Free it by yourself!
+ */
+extern int
+b3_director_move_win_to_ws(b3_director_t *director, b3_win_t *win, const char *ws_id);
+
+/**
  * @brief Set the foreground window
  */
 extern int

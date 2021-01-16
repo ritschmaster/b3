@@ -24,72 +24,77 @@
 
 /**
  * @author Richard Bäck <richard.baeck@mailbox.org>
- * @date 2020-01-05
- * @brief File contains the floating action class implementation and its private methods
+ * @date 2020-01-10
+ * @brief File contains the move window to workspace action class implementation and its private methods
  */
 
-#include "floating_action.h"
+#include "mwtw_action.h"
 
 #include <w32bindkeys/logger.h>
 
-static wbk_logger_t logger = { "floating_action" };
+static wbk_logger_t logger = { "mwtw_action" };
 
 /**
  * Implementation of b3_action_free().
  */
 static int
-b3_floating_action_free_impl(b3_action_t *action);
+b3_mwtw_action_free_impl(b3_action_t *action);
 
 /**
  * Implementation of b3_action_exec().
  */
 static int
-b3_floating_action_exec_impl(b3_action_t *action, b3_director_t *director, b3_win_t *win);
+b3_mwtw_action_exec_impl(b3_action_t *action, b3_director_t *director, b3_win_t *win);
 
-b3_floating_action_t *
-b3_floating_action_new(void)
+b3_mwtw_action_t *
+b3_mwtw_action_new(char *ws_id)
 {
   b3_action_t *action;
-  b3_floating_action_t *floating_action;
+  b3_mwtw_action_t *mwtw_action;
 
-  floating_action = malloc(sizeof(b3_floating_action_t));
+  mwtw_action = malloc(sizeof(b3_mwtw_action_t));
 
-  if (floating_action) {
+  if (mwtw_action) {
     action = b3_action_new();
-    memcpy(floating_action, action, sizeof(b3_action_t));
+    memcpy(mwtw_action, action, sizeof(b3_action_t));
     free(action); /* Just free the top level element */
 
-    floating_action->super_action_free = floating_action->action.action_free;
-    floating_action->super_action_exec = floating_action->action.action_exec;
+    mwtw_action->super_action_free = mwtw_action->action.action_free;
+    mwtw_action->super_action_exec = mwtw_action->action.action_exec;
 
-    floating_action->action.action_free = b3_floating_action_free_impl;
-    floating_action->action.action_exec = b3_floating_action_exec_impl;
+    mwtw_action->action.action_free = b3_mwtw_action_free_impl;
+    mwtw_action->action.action_exec = b3_mwtw_action_exec_impl;
+
+    mwtw_action->ws_id = ws_id;
   }
 
-  return floating_action;
+  return mwtw_action;
 }
 
 int
-b3_floating_action_free_impl(b3_action_t *action)
+b3_mwtw_action_free_impl(b3_action_t *action)
 {
-  b3_floating_action_t *floating_action;
+  b3_mwtw_action_t *mwtw_action;
 
-  floating_action = (b3_floating_action_t *) action;
+  mwtw_action = (b3_mwtw_action_t *) action;
 
-	floating_action->super_action_free(action);
+  free(mwtw_action->ws_id);
+  mwtw_action->ws_id = NULL;
+
+	mwtw_action->super_action_free(action);
 
   return 0;
 }
 
 int
-b3_floating_action_exec_impl(b3_action_t *action, b3_director_t *director, b3_win_t *win)
+b3_mwtw_action_exec_impl(b3_action_t *action, b3_director_t *director, b3_win_t *win)
 {
-  b3_floating_action_t *floating_action;
+  b3_mwtw_action_t *mwtw_action;
   int error;
 
-  floating_action = (b3_floating_action_t *) action;
+  mwtw_action = (b3_mwtw_action_t *) action;
 
-  error = b3_win_set_floating(win, 1);
+	error = b3_director_move_win_to_ws(director, win, mwtw_action->ws_id);
 
   return error;
 }

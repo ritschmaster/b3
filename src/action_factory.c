@@ -103,3 +103,13 @@ b3_action_factory_create_fa_impl(b3_action_factory_t *action_factory)
 
   return fa;
 }
+
+b3_mwtw_action_t *
+b3_action_factory_create_mwtw(b3_action_factory_t *action_factory, char *ws_id)
+{
+  b3_mwtw_action_t *mwtw;
+
+  mwtw = b3_mwtw_action_new(ws_id);
+
+  return mwtw;
+}

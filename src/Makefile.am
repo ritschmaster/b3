@@ -64,6 +64,7 @@ libb3interpreter_la_SOURCES += condition_factory.c condition_factory.h
 libb3interpreter_la_SOURCES += action.c action.h
 libb3interpreter_la_SOURCES += action_list.c action_list.h
 libb3interpreter_la_SOURCES += floating_action.c floating_action.h
+libb3interpreter_la_SOURCES += mwtw_action.c mwtw_action.h
 libb3interpreter_la_SOURCES += action_factory.c action_factory.h
 libb3interpreter_la_SOURCES += kc_director.c kc_director.h
 libb3interpreter_la_SOURCES += kc_director_factory.c kc_director_factory.h

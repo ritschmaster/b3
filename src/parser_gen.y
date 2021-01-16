@@ -314,7 +314,7 @@ bindsym
 | for_window 
 ;
 
-bindsym: TOKEN_BINDSYM TOKEN_SPACE binding TOKEN_SPACE command
+bindsym: TOKEN_BINDSYM TOKEN_SPACE binding TOKEN_SPACE bindsym-cmd
          { add_to_kbman(*kbman); }
        ;
 
@@ -328,20 +328,20 @@ binding: TOKEN_MODIFIER
          { add_to_g_b(NOT_A_MODIFIER, tolower($1)); }
        ;
 
-command: cmd-focus
-       | cmd-move
-       | cmd-workspace
-       | cmd-kill
-       | cmd-floating
-       | cmd-fullscreen
-       | cmd-exec
+bindsym-cmd: bindsym-cmd-focus
+       | bindsym-cmd-move
+       | bindsym-cmd-workspace
+       | bindsym-cmd-kill
+       | bindsym-cmd-floating
+       | bindsym-cmd-fullscreen
+       | bindsym-cmd-exec
        ;
 
-cmd-focus: TOKEN_FOCUS TOKEN_SPACE cmd-focus-direction
-         | TOKEN_FOCUS TOKEN_SPACE cmd-focus-output
+bindsym-cmd-focus: TOKEN_FOCUS TOKEN_SPACE bindsym-cmd-focus-direction
+         | TOKEN_FOCUS TOKEN_SPACE bindsym-cmd-focus-output
          ;
 
-cmd-focus-direction: TOKEN_UP
+bindsym-cmd-focus-direction: TOKEN_UP
                      { g_kc = (wbk_kc_t *) b3_kc_director_factory_create_sawu(*kc_director_factory, g_b, *director); }
 			       | TOKEN_DOWN
              { g_kc = (wbk_kc_t *) b3_kc_director_factory_create_sawd(*kc_director_factory, g_b, *director); }
@@ -351,7 +351,7 @@ cmd-focus-direction: TOKEN_UP
                    { g_kc = (wbk_kc_t *) b3_kc_director_factory_create_sawr(*kc_director_factory, g_b, *director); }
                    ;
 
-cmd-focus-output: TOKEN_OUTPUT TOKEN_SPACE TOKEN_UP
+bindsym-cmd-focus-output: TOKEN_OUTPUT TOKEN_SPACE TOKEN_UP
                   { g_kc = (wbk_kc_t *) b3_kc_director_factory_create_sfmu(*kc_director_factory, g_b, *director); }
                 | TOKEN_OUTPUT TOKEN_SPACE TOKEN_DOWN
                   { g_kc = (wbk_kc_t *) b3_kc_director_factory_create_sfmd(*kc_director_factory, g_b, *director); }
@@ -361,12 +361,12 @@ cmd-focus-output: TOKEN_OUTPUT TOKEN_SPACE TOKEN_UP
                   { g_kc = (wbk_kc_t *) b3_kc_director_factory_create_sfmr(*kc_director_factory, g_b, *director); }
                 ;
 
-cmd-move: TOKEN_MOVE TOKEN_SPACE cmd-move-direction
-        | TOKEN_MOVE TOKEN_SPACE cmd-move-container
-        | TOKEN_MOVE TOKEN_SPACE cmd-move-workspace
+bindsym-cmd-move: TOKEN_MOVE TOKEN_SPACE bindsym-cmd-move-direction
+        | TOKEN_MOVE TOKEN_SPACE bindsym-cmd-move-container
+        | TOKEN_MOVE TOKEN_SPACE bindsym-cmd-move-workspace
         ;
 
-cmd-move-direction: TOKEN_UP
+bindsym-cmd-move-direction: TOKEN_UP
                     { g_kc = (wbk_kc_t *) b3_kc_director_factory_create_mawu(*kc_director_factory, g_b, *director); }
 			      | TOKEN_DOWN
             { g_kc = (wbk_kc_t *) b3_kc_director_factory_create_mawd(*kc_director_factory, g_b, *director); }
@@ -376,11 +376,11 @@ cmd-move-direction: TOKEN_UP
                   { g_kc = (wbk_kc_t *) b3_kc_director_factory_create_mawr(*kc_director_factory, g_b, *director); }
                   ;
 
-cmd-move-container: TOKEN_CONTAINER TOKEN_SPACE TOKEN_TO TOKEN_SPACE cmd-move-container-output-direction
-                  | TOKEN_CONTAINER TOKEN_SPACE TOKEN_TO TOKEN_SPACE cmd-move-container-workspace
+bindsym-cmd-move-container: TOKEN_CONTAINER TOKEN_SPACE TOKEN_TO TOKEN_SPACE bindsym-cmd-move-container-output-direction
+                  | TOKEN_CONTAINER TOKEN_SPACE TOKEN_TO TOKEN_SPACE bindsym-cmd-move-container-workspace
                   ;
 
-cmd-move-container-output-direction: TOKEN_OUTPUT TOKEN_SPACE TOKEN_UP
+bindsym-cmd-move-container-output-direction: TOKEN_OUTPUT TOKEN_SPACE TOKEN_UP
 { g_kc = (wbk_kc_t *) b3_kc_director_factory_create_mfwtmu(*kc_director_factory, g_b, *director); }
 			                       | TOKEN_OUTPUT TOKEN_SPACE TOKEN_DOWN
                              { g_kc = (wbk_kc_t *) b3_kc_director_factory_create_mfwtmd(*kc_director_factory, g_b, *director); }
@@ -390,14 +390,14 @@ cmd-move-container-output-direction: TOKEN_OUTPUT TOKEN_SPACE TOKEN_UP
                              { g_kc = (wbk_kc_t *) b3_kc_director_factory_create_mfwtmr(*kc_director_factory, g_b, *director); }
 			                       ;
 
-cmd-move-container-workspace: TOKEN_WORKSPACE TOKEN_SPACE text
+bindsym-cmd-move-container-workspace: TOKEN_WORKSPACE TOKEN_SPACE text
 { g_kc = (wbk_kc_t *) b3_kc_director_factory_create_mawtw(*kc_director_factory, g_b, *director, g_text); free(g_text); g_text = NULL; }
 			                        ;
 
-cmd-move-workspace: TOKEN_WORKSPACE TOKEN_SPACE TOKEN_TO TOKEN_SPACE TOKEN_OUTPUT TOKEN_SPACE cmd-move-workspace-direction
+bindsym-cmd-move-workspace: TOKEN_WORKSPACE TOKEN_SPACE TOKEN_TO TOKEN_SPACE TOKEN_OUTPUT TOKEN_SPACE bindsym-cmd-move-workspace-direction
                   ;
 
-cmd-move-workspace-direction: TOKEN_UP
+bindsym-cmd-move-workspace-direction: TOKEN_UP
 			                  { g_kc = (wbk_kc_t *) b3_kc_director_factory_create_mfwu(*kc_director_factory, g_b, *director); }
 			                | TOKEN_DOWN
 			                  { g_kc = (wbk_kc_t *) b3_kc_director_factory_create_mfwd(*kc_director_factory, g_b, *director); }
@@ -407,29 +407,29 @@ cmd-move-workspace-direction: TOKEN_UP
 			                  { g_kc = (wbk_kc_t *) b3_kc_director_factory_create_mfwr(*kc_director_factory, g_b, *director); }
 			                ;
 
-cmd-workspace: TOKEN_WORKSPACE TOKEN_SPACE text
+bindsym-cmd-workspace: TOKEN_WORKSPACE TOKEN_SPACE text
 { g_kc = (wbk_kc_t *) b3_kc_director_factory_create_cw(*kc_director_factory, g_b, *director, g_text); free(g_text); g_text = NULL; }
              ;
 
-cmd-kill: TOKEN_KILL
+bindsym-cmd-kill: TOKEN_KILL
           { g_kc = (wbk_kc_t *) b3_kc_director_factory_create_caw(*kc_director_factory, g_b, *director); }
         ;
 
-cmd-floating: TOKEN_FLOATING TOKEN_SPACE cmd-floating-toggle
+bindsym-cmd-floating: TOKEN_FLOATING TOKEN_SPACE bindsym-cmd-floating-toggle
             ;
 
-cmd-floating-toggle: TOKEN_TOGGLE
+bindsym-cmd-floating-toggle: TOKEN_TOGGLE
                      { g_kc = (wbk_kc_t *) b3_kc_director_factory_create_awtf(*kc_director_factory, g_b, *director); }
                    ;
 
-cmd-fullscreen: TOKEN_FULLSCREEN TOKEN_SPACE cmd-fullscreen-toggle
+bindsym-cmd-fullscreen: TOKEN_FULLSCREEN TOKEN_SPACE bindsym-cmd-fullscreen-toggle
               ;
 
-cmd-fullscreen-toggle: TOKEN_TOGGLE
+bindsym-cmd-fullscreen-toggle: TOKEN_TOGGLE
                        { g_kc = (wbk_kc_t *) b3_kc_director_factory_create_tawf(*kc_director_factory, g_b, *director); }
                      ;
 
-cmd-exec: TOKEN_EXEC TOKEN_SPACE TOKEN_NO_STARTUP_ID TOKEN_SPACE text
+bindsym-cmd-exec: TOKEN_EXEC TOKEN_SPACE TOKEN_NO_STARTUP_ID TOKEN_SPACE text
         { g_kc = (wbk_kc_t *) b3_kc_exec_new(g_b, *director, ON_CURRENT_WS, g_text); g_text = NULL; }
         | TOKEN_EXEC TOKEN_SPACE text
         { g_kc = (wbk_kc_t *) b3_kc_exec_new(g_b, *director, ON_START_WS, g_text); g_text = NULL; }
@@ -464,6 +464,28 @@ for_window-actions:
 for_window-action:
   TOKEN_FLOATING TOKEN_SPACE TOKEN_ENABLE
   { g_action = (b3_action_t *) b3_action_factory_create_fa(*action_factory); }
+| action-command
+;
+
+action-command:
+  action-cmd-move
+;
+
+action-cmd-move:
+//  TOKEN_MOVE TOKEN_SPACE bindsym-cmd-move-direction
+  TOKEN_MOVE TOKEN_SPACE action-cmd-move-container
+  //| TOKEN_MOVE TOKEN_SPACE bindsym-cmd-move-workspace
+;
+
+action-cmd-move-container:
+// TOKEN_CONTAINER TOKEN_SPACE TOKEN_TO TOKEN_SPACE bindsym-cmd-move-container-output-direction
+  //| TOKEN_CONTAINER TOKEN_SPACE TOKEN_TO TOKEN_SPACE bindsym-cmd-move-container-workspace
+ TOKEN_CONTAINER TOKEN_SPACE TOKEN_TO TOKEN_SPACE action-cmd-move-container-workspace
+;
+
+action-cmd-move-container-workspace:
+  TOKEN_WORKSPACE TOKEN_SPACE text
+  { g_action = (b3_action_t *) b3_action_factory_create_mwtw(*action_factory, g_text); g_text = NULL; }
 ;
 
 text: TOKEN_KEY
