@@ -36,6 +36,22 @@
 
 static wbk_logger_t logger = { "win" };
 
+typedef struct b3_win_show_comm_s
+{
+  b3_win_t *win;
+  char topmost;
+} b3_win_show_comm_t;
+
+
+/**
+ * This function actually performs everything necessary to show a window.
+ *
+ * @param param Actually from type b3_win_show_comm_t *
+ */
+static DWORD WINAPI
+b3_win_show_exec(LPVOID param);
+
+
 b3_win_t *
 b3_win_new(HWND window_handler, char floating)
 {
@@ -123,51 +139,19 @@ b3_win_get_window_handler(b3_win_t *win)
 int
 b3_win_show(b3_win_t *win, char topmost)
 {
-	int error;
-	HWND insert_after;
-	RECT cur_rect;
+  b3_win_show_comm_t *comm_data;
 
-	error = 0;
+  comm_data = malloc(sizeof(b3_win_show_comm_t));
+  comm_data->win = win;
+  comm_data->topmost = topmost;
 
-	if (b3_win_get_window_handler(win) == NULL) {
-		error = 1;
-	}
-
-	insert_after = HWND_TOP;
-	if (topmost) {
-		insert_after = HWND_TOPMOST;
-	}
-
-	if (!error) {
-		SendMessage(b3_win_get_window_handler(win), WM_ENTERSIZEMOVE, (WPARAM) NULL, (LPARAM) NULL);
-
-		ShowWindow(b3_win_get_window_handler(win), SW_SHOWNOACTIVATE);
-
-    GetWindowRect(b3_win_get_window_handler(win), &cur_rect);
-    if (b3_win_get_state(win) != MAXIMIZED) {
-      if (EqualRect(&cur_rect, &(win->rect)) == 0) {
-        SetWindowPos(b3_win_get_window_handler(win),
-                     insert_after,
-                     win->rect.left,
-                     win->rect.top,
-                     win->rect.right - win->rect.left,
-                     win->rect.bottom - win->rect.top,
-                     SWP_NOACTIVATE);
-      }
-    } else {
-      SetWindowPos(b3_win_get_window_handler(win),
-                   insert_after,
-                   cur_rect.left,
-                   cur_rect.top,
-                   cur_rect.right - cur_rect.left,
-                   cur_rect.bottom - cur_rect.top,
-                   SWP_NOACTIVATE);
-    }
-
-		SendMessage(b3_win_get_window_handler(win), WM_EXITSIZEMOVE, (WPARAM) NULL, (LPARAM) NULL);
-	}
-
-	return error;
+  CreateThread(NULL,
+               0,
+               b3_win_show_exec,
+               (LPVOID) comm_data,
+               0,
+               NULL);
+  return 0;
 }
 
 int
@@ -202,4 +186,92 @@ b3_win_compare(const b3_win_t *win, const b3_win_t *other)
 	} else {
 		return 1;
 	}
+}
+
+DWORD WINAPI
+b3_win_show_exec(LPVOID param)
+{
+  /** Actual input parameters */
+  b3_win_t *win;
+  char topmost;
+
+  b3_win_show_comm_t *comm_data;
+  int error;
+	HWND insert_after;
+	RECT cur_rect;
+
+  error = 0;
+
+  if (!error) {
+    comm_data = (b3_win_show_comm_t *) param;
+    if (comm_data == NULL) {
+      wbk_logger_log(&logger, SEVERE, "Communication data is empty.\n");
+      error = 1;
+    }
+  }
+
+  if (!error) {
+    win = comm_data->win;
+    topmost = comm_data->topmost;
+
+    free(comm_data);
+    comm_data = NULL;
+  }
+
+  if (!error) {
+    if (win == NULL) {
+      wbk_logger_log(&logger, SEVERE, "Window is empty.\n");
+      error = 2;
+    }
+  }
+
+  if (!error) {
+    if (b3_win_get_window_handler(win) == NULL) {
+      wbk_logger_log(&logger, SEVERE, "Window handler is empty.\n");
+      error = 3;
+    }
+
+    insert_after = HWND_TOP;
+    if (topmost) {
+      insert_after = HWND_TOPMOST;
+    }
+  }
+
+  if (!error) {
+    Sleep(100);
+
+    if (b3_win_get_floating(win)) {
+      Sleep(1000);
+    }
+
+		SendMessage(b3_win_get_window_handler(win), WM_ENTERSIZEMOVE, (WPARAM) NULL, (LPARAM) NULL);
+
+		ShowWindow(b3_win_get_window_handler(win), SW_SHOWNOACTIVATE);
+
+    GetWindowRect(b3_win_get_window_handler(win), &cur_rect);
+    if (b3_win_get_state(win) != MAXIMIZED) {
+      if (EqualRect(&cur_rect, &(win->rect)) == 0
+          && !b3_win_get_floating(win)) {
+        SetWindowPos(b3_win_get_window_handler(win),
+                     insert_after,
+                     win->rect.left,
+                     win->rect.top,
+                     win->rect.right - win->rect.left,
+                     win->rect.bottom - win->rect.top,
+                     SWP_NOACTIVATE);
+      }
+    } else {
+      SetWindowPos(b3_win_get_window_handler(win),
+                   insert_after,
+                   cur_rect.left,
+                   cur_rect.top,
+                   cur_rect.right - cur_rect.left,
+                   cur_rect.bottom - cur_rect.top,
+                   SWP_NOACTIVATE);
+    }
+
+		SendMessage(b3_win_get_window_handler(win), WM_EXITSIZEMOVE, (WPARAM) NULL, (LPARAM) NULL);
+	}
+
+	return 0;
 }

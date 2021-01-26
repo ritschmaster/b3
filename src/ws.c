@@ -614,8 +614,6 @@ b3_ws_winman_arrange(b3_ws_t *ws, b3_winman_t *winman, Stack *area_stack)
 					next_area->top += increment;
 				}
 
-        Sleep(100);
-
 				wbk_logger_log(&logger, DEBUG,
 							   "Workspace %s - Window placing - X: %d -> %d, Y: %d -> %d\n",
 							   b3_ws_get_name(ws),
