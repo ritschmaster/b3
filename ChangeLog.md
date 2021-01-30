@@ -1,10 +1,10 @@
-# Release 0.5
+# Release 0.5 "Useable" Editon
 
 Bugfixes:
 * Windows in fullscreen are repainted when switching onto their workspace.
 * Re-drawing of moved windows does work correctly.
-* Small performance improvements.
-* If a window was closed on a workspace that was currently not visible, then the workspace was not closed. This has been fixed and such an empty workspace will be closed autmoatically.
+* Performance improvements.
+* If a window was closed on a workspace that was currently not visible, then the workspace was not closed. This has been fixed and such an empty workspace will be closed automatically.
 * If the currently focused window was in fullscreen and the focus changes to some other window on that workspace, the fullscreen window was kept in fullscreen. Actually it should have been moved to be non fullscreen.
 
 Features
@@ -14,9 +14,10 @@ Features
 * The config file can now be stored in ~/.config/b3/config and at ~/.b3/config.
 * The newest API of w32bindkeys is utilized which means that some class implementations have been updated to be fully object oriented.
 * The key command `exec` is supported.
+* The command `for_window` is introduced and partly supported. Please see the [Compatibility List](https://github.com/ritschmaster/b3/blob/master/CompatibilityList.md) for more information. Using `for_window [title=".*Microsoft Teams.*"] floating enable` will definitely benefit your experience with Microsoft Teams. :-)
 
 Known bugs:
-* The position of floating windows is not restored correctly when switching back to the workspace holding the floating windows.
+* Floating windows might not re-appear on a workspace containing only this floating window. Using the Windows taskbar it is possible to display it.
 
 # Release 0.4
 
