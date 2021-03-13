@@ -186,8 +186,9 @@ b3_director_enum_monitors(HMONITOR wmonitor, HDC hdc, LPRECT rect, LPARAM data)
 				   monitor_info.rcMonitor.bottom - monitor_info.rcMonitor.top);
 
     monitor = b3_monitor_factory_create(director->monitor_factory,
-		    		 	 	 	 	   	monitor_info.szDevice,
-									    monitor_info.rcWork);
+                                        monitor_info.szDevice,
+                                        monitor_info.rcWork,
+                                        b3_director_create_ws_switcher(director));
 
     array_add(director->monitor_arr,
 	 	      monitor);
@@ -958,6 +959,12 @@ b3_director_move_win_to_ws(b3_director_t *director, b3_win_t *win, const char *w
 	ReleaseMutex(director->global_mutex);
 
   return error;
+}
+
+b3_ws_switcher_t *
+b3_director_create_ws_switcher(b3_director_t *director)
+{
+    return (b3_ws_switcher_t *) b3_director_ws_switcher_new(director);
 }
 
 int

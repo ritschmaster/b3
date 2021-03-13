@@ -31,6 +31,7 @@
 #include <windows.h>
 
 #include "wsman.h"
+#include "ws_switcher.h"
 
 #ifndef B3_BAR_H
 #define B3_BAR_H
@@ -58,19 +59,26 @@ typedef struct b3_bar_s
 
 	b3_wsman_t *wsman;
 
+	b3_ws_switcher_t *ws_switcher;
+
 	HWND window_handler;
 
 	char focused;
 } b3_bar_t;
 
+
 /**
  * @brief Creates a new status bar
  * @param monitor_area The area used by the monitor the bar is painted on.
  * @param wsman A workspace manager object. It will not be freed by the bar.
+ * @param ws_switcher
  * @return A new status bar or NULL if allocation failed
  */
 extern b3_bar_t *
-b3_bar_new(const char *monitor_name, RECT monitor_area, b3_wsman_t *wsman);
+b3_bar_new(const char *monitor_name,
+		   RECT monitor_area,
+		   b3_wsman_t *wsman,
+		   b3_ws_switcher_t *ws_switcher);
 
 /**
  * @brief Frees a status bar
@@ -79,9 +87,15 @@ b3_bar_new(const char *monitor_name, RECT monitor_area, b3_wsman_t *wsman);
 extern int
 b3_bar_free(b3_bar_t *bar);
 
+/**
+ * Returns the accommondated area of the b3 bar relative to the Windows' screen.
+ */
 extern RECT
 b3_bar_get_area(b3_bar_t *bar);
 
+/**
+ * Returns the position of the b3 bar.
+ */
 extern b3_bar_pos_t
 b3_bar_get_position(b3_bar_t *bar);
 
@@ -96,5 +110,11 @@ b3_bar_hide(b3_bar_t *bar);
 
 extern int
 b3_bar_set_focused(b3_bar_t *bar, char focused);
+
+/**
+ * Switches to the workspace on which the user has clicked.
+ */
+extern int
+b3_bar_handle_mouse_click(b3_bar_t *bar, int x, int y);
 
 #endif // B3_BAR_H

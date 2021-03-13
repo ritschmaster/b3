@@ -1,7 +1,7 @@
 /******************************************************************************
   This file is part of b3.
 
-  Copyright 2020 Richard Paul Baeck <richard.baeck@mailbox.org>
+  Copyright 2020-2021 Richard Paul Baeck <richard.baeck@mailbox.org>
 
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files (the "Software"), to deal
@@ -58,7 +58,10 @@ b3_monitor_arrange_wins_ws_visitor(b3_ws_t *ws)
 }
 
 b3_monitor_t *
-b3_monitor_new(const char *monitor_name, RECT monitor_area, b3_wsman_factory_t *wsman_factory)
+b3_monitor_new(const char *monitor_name,
+			   RECT monitor_area,
+			   b3_wsman_factory_t *wsman_factory,
+			   b3_ws_switcher_t *ws_switcher)
 {
 	b3_monitor_t *monitor;
 	int length;
@@ -76,7 +79,7 @@ b3_monitor_new(const char *monitor_name, RECT monitor_area, b3_wsman_factory_t *
 
 	monitor->wsman = b3_wsman_factory_create(wsman_factory);
 
-	monitor->bar = b3_bar_new(monitor->monitor_name, monitor->monitor_area, monitor->wsman);
+	monitor->bar = b3_bar_new(monitor->monitor_name, monitor->monitor_area, monitor->wsman, ws_switcher);
 
 	return monitor;
 }

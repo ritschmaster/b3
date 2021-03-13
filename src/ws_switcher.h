@@ -1,7 +1,7 @@
 /******************************************************************************
   This file is part of b3.
 
-  Copyright 2020 Richard Paul Baeck <richard.baeck@mailbox.org>
+  Copyright 2020-2021 Richard Paul Baeck <richard.baeck@mailbox.org>
 
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files (the "Software"), to deal
@@ -22,44 +22,37 @@
   SOFTWARE.
 *******************************************************************************/
 
-#include "monitor_factory.h"
+/**
+ * @author Richard Bäck
+ * @date 2021-02-21
+ * @brief File contains the workspace switcher interface definition
+ *
+ * The purpose of this class is to expose a function to switch workspaces to any
+ * object. The actual object supplying the functionality is not managed by this
+ * class/objects.
+ */
 
-#include <stdlib.h>
+#ifndef B3_WS_SWITCHER_H
+#define B3_WS_SWITCHER_H
 
-b3_monitor_factory_t *
-b3_monitor_factory_new(b3_wsman_factory_t *wsman_factory)
+typedef struct b3_ws_switcher_s b3_ws_switcher_t;
+
+struct b3_ws_switcher_s
 {
-	b3_monitor_factory_t *monitor_factory;
+    int (*ws_switcher_free)(b3_ws_switcher_t *ws_switcher);
+    int (*ws_switcher_switch_to_ws)(b3_ws_switcher_t *ws_switcher, const char *ws_id);
+};
 
-	monitor_factory = malloc(sizeof(b3_monitor_factory_t));
+extern b3_ws_switcher_t *
+b3_ws_switcher_new(void);
 
-	monitor_factory->wsman_factory = wsman_factory;
+extern int
+b3_ws_switcher_free(b3_ws_switcher_t *ws_switcher);
 
-	return monitor_factory;
-}
+/**
+ * @return Non-0 if switching to the workspace failed (e.g. the monitor was not found).
+ */
+extern int
+b3_ws_switcher_switch_to_ws(b3_ws_switcher_t *ws_switcher, const char *ws_id);
 
-int
-b3_monitor_factory_free(b3_monitor_factory_t *monitor_factory)
-{
-	monitor_factory->wsman_factory = NULL;
-
-	free(monitor_factory);
-
-	return 0;
-}
-
-b3_monitor_t *
-b3_monitor_factory_create(b3_monitor_factory_t *monitor_factory,
-						  const char *monitor_name,
-						  RECT monitor_area,
-						  b3_ws_switcher_t *ws_switcher)
-{
-	b3_monitor_t *monitor;
-
-	monitor = b3_monitor_new(monitor_name,
-							 monitor_area,
-							 monitor_factory->wsman_factory,
-							 ws_switcher);
-
-	return monitor;
-}
+#endif // B3_WS_SWITCHER_H

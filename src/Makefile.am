@@ -54,6 +54,8 @@ parser_gen.h: Makefile
 
 
 libb3interpreter_la_SOURCES = director.c director.h
+libb3interpreter_la_SOURCES += ws_switcher.c ws_switcher.h
+libb3interpreter_la_SOURCES += director_ws_switcher.c director_ws_switcher.h
 libb3interpreter_la_SOURCES += rule.c rule.h
 libb3interpreter_la_SOURCES += condition.c condition.h
 libb3interpreter_la_SOURCES += condition_and.c condition_and.h

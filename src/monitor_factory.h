@@ -30,6 +30,7 @@
 
 #include "wsman_factory.h"
 #include "monitor.h"
+#include "ws_switcher.h"
 
 #ifndef B3_MONITOR_FACTORY_H
 #define B3_MONITOR_FACTORY_H
@@ -59,6 +60,9 @@ b3_monitor_factory_free(b3_monitor_factory_t *monitor_factory);
  * @return A new monitor. Free it by yourself!
  */
 extern b3_monitor_t *
-b3_monitor_factory_create(b3_monitor_factory_t *monitor_factory, const char *monitor_name, RECT monitor_area);
+b3_monitor_factory_create(b3_monitor_factory_t *monitor_factory,
+						  const char *monitor_name,
+						  RECT monitor_area,
+						  b3_ws_switcher_t *ws_switcher);
 
 #endif // B3_MONITOR_FACTORY_H

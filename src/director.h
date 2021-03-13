@@ -36,6 +36,7 @@
 
 #include "monitor_factory.h"
 #include "win.h"
+#include "director_ws_switcher.h"
 
 typedef struct b3_director_s
 {
@@ -97,7 +98,7 @@ extern int
 b3_director_set_focused_monitor_by_name(b3_director_t *director, const char *monitor_name);
 
 /**
- * @return Non-0 if the monitor was not found.
+ * @return Non-0 if switching to the workspace failed (e.g. the monitor was not found).
  */
 extern int
 b3_director_switch_to_ws(b3_director_t *director, const char *ws_id);
@@ -227,6 +228,12 @@ b3_director_remove_empty_ws(b3_director_t *director);
  */
 extern int
 b3_director_move_win_to_ws(b3_director_t *director, b3_win_t *win, const char *ws_id);
+
+/**
+ * @return Returns a new workspace switcher. Free it by yourself!
+ */
+extern b3_ws_switcher_t *
+b3_director_create_ws_switcher(b3_director_t *director);
 
 /**
  * @brief Set the foreground window

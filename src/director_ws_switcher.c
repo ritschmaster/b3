@@ -23,63 +23,49 @@
 *******************************************************************************/
 
 /**
- * @author Richard Bäck <richard.baeck@mailbox.org>
- * @date 2020-01-03
- * @brief File contains the action class implementation and its private methods
+ * @author Richard Bäck
+ * @date 2021-02-21
+ * @brief File contains the workspace switcher interface implementation and private methods
  */
 
-#include "action.h"
+#include "director_ws_switcher.h"
 
 #include <stdlib.h>
+#include <string.h>
 #include <w32bindkeys/logger.h>
 
-static wbk_logger_t logger = { "action" };
+static wbk_logger_t logger = { "director_ws_switcher" };
 
 static int
-b3_action_free_impl(b3_action_t *action);
+b3_director_ws_switcher_switch_to_ws_impl(b3_ws_switcher_t *ws_switcher, const char *ws_id);
 
-static int
-b3_action_exec_impl(b3_action_t *action, b3_director_t *director, b3_win_t *win);
-
-b3_action_t *
-b3_action_new(void)
+b3_director_ws_switcher_t *
+b3_director_ws_switcher_new(b3_director_t *director)
 {
-  b3_action_t *action;
+    b3_ws_switcher_t *ws_switcher;
+    b3_director_ws_switcher_t *director_ws_switcher;
 
-  action = malloc(sizeof(b3_action_t));
+    director_ws_switcher = malloc(sizeof(b3_director_ws_switcher_t));
 
-  if (action) {
-    action->action_free = b3_action_free_impl;
-    action->action_exec = b3_action_exec_impl;
-  }
+    if (director_ws_switcher) {
+      ws_switcher = b3_ws_switcher_new();
+      memcpy(director_ws_switcher, ws_switcher, sizeof(b3_ws_switcher_t));
+      free(ws_switcher); /* Just free the top level element */
 
-  return action;
+      director_ws_switcher->ws_switcher.ws_switcher_switch_to_ws = b3_director_ws_switcher_switch_to_ws_impl;
+
+      director_ws_switcher->director = director;
+    }
+
+    return director_ws_switcher;
 }
 
 int
-b3_action_free(b3_action_t *action)
+b3_director_ws_switcher_switch_to_ws_impl(b3_ws_switcher_t *ws_switcher, const char *ws_id)
 {
-  return action->action_free(action);
-}
+    b3_director_ws_switcher_t *director_ws_switcher;
 
-int
-b3_action_exec(b3_action_t *action, b3_director_t *director, b3_win_t *win)
-{
-  return action->action_exec(action, director, win);
-}
+    director_ws_switcher = (b3_director_ws_switcher_t *) ws_switcher;
 
-int
-b3_action_free_impl(b3_action_t *action)
-{
-  free(action);
-
-  return 0;
-}
-
-int
-b3_action_exec_impl(b3_action_t *action, b3_director_t *director, b3_win_t *win)
-{
-  wbk_logger_log(&logger, SEVERE, "Not implemented\n");
-
-  return -1;
+    return b3_director_switch_to_ws(director_ws_switcher->director, ws_id);
 }

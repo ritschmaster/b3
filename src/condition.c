@@ -30,6 +30,11 @@
 
 #include "condition.h"
 
+#include <stdlib.h>
+#include <w32bindkeys/logger.h>
+
+static wbk_logger_t logger = { "condition" };
+
 static int
 b3_condition_free_impl(b3_condition_t *condition);
 
@@ -74,5 +79,7 @@ b3_condition_free_impl(b3_condition_t *condition)
 int
 b3_condition_applies_impl(b3_condition_t *condition, b3_director_t *director, b3_win_t *win)
 {
+  wbk_logger_log(&logger, SEVERE, "Not implemented\n");
+
   return -1;
 }

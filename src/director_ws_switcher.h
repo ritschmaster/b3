@@ -1,7 +1,7 @@
 /******************************************************************************
   This file is part of b3.
 
-  Copyright 2020 Richard Paul Baeck <richard.baeck@mailbox.org>
+  Copyright 2020-2021 Richard Paul Baeck <richard.baeck@mailbox.org>
 
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files (the "Software"), to deal
@@ -22,44 +22,33 @@
   SOFTWARE.
 *******************************************************************************/
 
-#include "monitor_factory.h"
+/**
+ * @author Richard Bäck
+ * @date 2021-02-21
+ * @brief File contains the director workspace switcher interface definition
+ */
 
-#include <stdlib.h>
+#include "ws_switcher.h"
+#include "director.h"
 
-b3_monitor_factory_t *
-b3_monitor_factory_new(b3_wsman_factory_t *wsman_factory)
+#ifndef B3_DIRECTOR_WS_SWITCHER_H
+#define B3_DIRECTOR_WS_SWITCHER_H
+
+typedef struct b3_director_s b3_director_t;
+typedef struct b3_director_ws_switcher_s b3_director_ws_switcher_t;
+
+struct b3_director_ws_switcher_s
 {
-	b3_monitor_factory_t *monitor_factory;
+    b3_ws_switcher_t ws_switcher;
 
-	monitor_factory = malloc(sizeof(b3_monitor_factory_t));
+    b3_director_t *director;
+};
 
-	monitor_factory->wsman_factory = wsman_factory;
+/**
+ * @param director The director supplying the switching functionality. It will
+ * not be freed by freeing the director workspace switcher!
+ */
+extern b3_director_ws_switcher_t *
+b3_director_ws_switcher_new(b3_director_t *director);
 
-	return monitor_factory;
-}
-
-int
-b3_monitor_factory_free(b3_monitor_factory_t *monitor_factory)
-{
-	monitor_factory->wsman_factory = NULL;
-
-	free(monitor_factory);
-
-	return 0;
-}
-
-b3_monitor_t *
-b3_monitor_factory_create(b3_monitor_factory_t *monitor_factory,
-						  const char *monitor_name,
-						  RECT monitor_area,
-						  b3_ws_switcher_t *ws_switcher)
-{
-	b3_monitor_t *monitor;
-
-	monitor = b3_monitor_new(monitor_name,
-							 monitor_area,
-							 monitor_factory->wsman_factory,
-							 ws_switcher);
-
-	return monitor;
-}
+#endif // B3_DIRECTOR_WS_SWITCHER_H

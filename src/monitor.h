@@ -1,7 +1,7 @@
 /******************************************************************************
   This file is part of b3.
 
-  Copyright 2020 Richard Paul Baeck <richard.baeck@mailbox.org>
+  Copyright 2020-2021 Richard Paul Baeck <richard.baeck@mailbox.org>
 
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files (the "Software"), to deal
@@ -34,6 +34,7 @@
 #include "bar.h"
 #include "wsman_factory.h"
 #include "wsman.h"
+#include "ws_switcher.h"
 
 #ifndef B3_MONITOR_H
 #define B3_MONITOR_H
@@ -56,10 +57,14 @@ typedef struct b3_monitor_s
  * @param monitor_name A string object. It will be copied.
  * @param monitor_area The rectangle of the work area
  * @param wsman_factory A workspace manager factory object. It will not be freed by the monitor.
+ * @param ws_switcher
  * @return A new monitor object or NULL if allocation failed
  */
 extern b3_monitor_t *
-b3_monitor_new(const char *monitor_name, RECT monitor_area, b3_wsman_factory_t *wsman_factory);
+b3_monitor_new(const char *monitor_name,
+			   RECT monitor_area,
+			   b3_wsman_factory_t *wsman_factory,
+			   b3_ws_switcher_t *ws_switcher);
 
 /**
  * @brief Frees a monitor object

@@ -29,6 +29,7 @@
 #include <collectc/hashtable.h>
 #include <collectc/array.h>
 #include <windows.h>
+#include <windowsx.h>
 #include <w32bindkeys/logger.h>
 
 #include "ws.h"
@@ -41,6 +42,7 @@ static wbk_logger_t logger = { "bar" };
 typedef struct b3_bar_draw_comm_s
 {
   b3_bar_t *bar;
+  b3_ws_t *focused_ws;
   HDC hdc;
   PAINTSTRUCT ps;
   RECT rect;
@@ -48,14 +50,34 @@ typedef struct b3_bar_draw_comm_s
   HBRUSH background_brush;
   HBRUSH focused_monitor_ws_brush;
   HBRUSH focused_ws_brush;
-  b3_ws_t *focused_ws;
 } b3_bar_draw_comm_t;
+
+/**
+ * Communication structure for b3_bar_handle_mouse_click() and
+ * b3_bar_click_ws_visitor().
+ */
+typedef struct b3_bar_click_comm_s
+{
+    b3_bar_t *bar;
+    b3_ws_t *focused_ws;
+    HDC hdc;
+    RECT rect;
+    RECT text_rect;
+    int x;
+    int y;
+} b3_bar_click_comm_t;
 
 /**
  * Belongs to b3_bar_draw() and b3_bar_draw_ws_visitor(). Do not set it
  * somewhere else!
  */
 static b3_bar_draw_comm_t g_draw_comm;
+
+/**
+ * Belongs to b3_bar_click() and b3_bar_click_ws_visitor_click(). Do not set it
+ * somewhere else!
+ */
+static b3_bar_click_comm_t g_click_comm;
 
 /**
  * Creates the window that will be used to paint the status bar on.
@@ -82,8 +104,43 @@ CALLBACK b3_bar_WndProc(HWND window_handler, UINT msg, WPARAM wParam, LPARAM lPa
 static void
 b3_bar_draw_ws_visitor(b3_ws_t *ws);
 
+/**
+ * Visitor used in b3_bar_handle_mouse_click() to check if the mouse click was
+ * performed in a rectangle of/for a workspace.
+ */
+static void
+b3_bar_click_ws_visitor(b3_ws_t *ws);
+
+/**
+ * Returns the rectangle of the area accommondated by the b3 bar on the Windows'
+ * screen.
+ */
+static RECT
+b3_bar_get_canvas_area(b3_bar_t *bar);
+
+/**
+ * Returns the rectangle of the area in which the workspace info are drawn. It
+ * starts from the left.
+ *
+ * This rectangle is relative to b3_bar_get_canvas_area().
+ */
+static RECT
+b3_bar_get_workspace_area(b3_bar_t *bar);
+
+/**
+ * Returns the rectangle of the area in which one workspace name is drawn. It
+ * starts from the left.
+ *
+ * This rectangle is relative to b3_bar_get_workspace_area().
+ */
+static RECT
+b3_bar_get_workspace_text_area(b3_bar_t *bar);
+
 b3_bar_t *
-b3_bar_new(const char *monitor_name, RECT monitor_area, b3_wsman_t *wsman)
+b3_bar_new(const char *monitor_name,
+		   RECT monitor_area,
+		   b3_wsman_t *wsman,
+		   b3_ws_switcher_t *ws_switcher)
 {
 	b3_bar_t *bar;
 
@@ -99,6 +156,8 @@ b3_bar_new(const char *monitor_name, RECT monitor_area, b3_wsman_t *wsman)
 
 	bar->wsman = wsman;
 
+    bar->ws_switcher = ws_switcher;
+
 	b3_bar_create_window(bar, monitor_name);
 
 	return bar;
@@ -108,6 +167,9 @@ int
 b3_bar_free(b3_bar_t *bar)
 {
 	bar->wsman = NULL;
+
+    b3_ws_switcher_free(bar->ws_switcher);
+    bar->ws_switcher = NULL;
 
 	DestroyWindow(bar->window_handler);
 	bar->window_handler = NULL;
@@ -241,6 +303,9 @@ b3_bar_draw_ws_visitor(b3_ws_t *ws)
   SIZE text_size;
   int str_length;
 
+  /**
+   * Enlarge the rectangle to enclose the workspace's name
+   */
   GetTextExtentPoint32A(g_draw_comm.hdc, b3_ws_get_name(ws), strlen(b3_ws_get_name(ws)), &text_size);
   str_length = text_size.cx + B3_BAR_DEFAULT_PADDING_TO_FRAME;
   g_draw_comm.rect.right = g_draw_comm.rect.left + str_length + B3_BAR_DEFAULT_PADDING_TO_FRAME;
@@ -266,12 +331,17 @@ b3_bar_draw_ws_visitor(b3_ws_t *ws)
            &g_draw_comm.text_rect,
            DT_CENTER | DT_SINGLELINE | DT_VCENTER);
 
+  /**
+   * Move the rectangle for the next workspace
+   */
   g_draw_comm.rect.left = g_draw_comm.rect.right + B3_BAR_DEFAULT_PADDING_TO_NEXT_FRAME;
 }
 
 int
 b3_bar_draw(b3_bar_t *bar, HWND window_handler)
 {
+    // g_draw_comm = { 0 };
+
 	g_draw_comm.bar = bar;
 
 	g_draw_comm.focused_ws = b3_wsman_get_focused_ws(bar->wsman);
@@ -284,19 +354,12 @@ b3_bar_draw(b3_bar_t *bar, HWND window_handler)
 	g_draw_comm.focused_monitor_ws_brush = CreateSolidBrush(RGB(255, 0, 0));
 	g_draw_comm.focused_ws_brush = CreateSolidBrush(RGB(100, 100, 100));
 
-	g_draw_comm.rect.top = 0;
-	g_draw_comm.rect.bottom = bar->area.bottom - bar->area.top;
-	g_draw_comm.rect.left = 0;
-	g_draw_comm.rect.right = bar->area.right - bar->area.left;
+	g_draw_comm.rect = b3_bar_get_canvas_area(bar);
 	FillRect(g_draw_comm.hdc, &g_draw_comm.rect, g_draw_comm.background_brush);
 
-	g_draw_comm.rect.top = B3_BAR_DEFAULT_PADDING_TO_WINDOW;
-	g_draw_comm.rect.bottom = bar->area.bottom - bar->area.top - B3_BAR_DEFAULT_PADDING_TO_WINDOW;
-	g_draw_comm.rect.left = 0; /** We are drawing relative to the window! */
-	g_draw_comm.rect.right = 0; /** Will be overwritten */
+	g_draw_comm.rect = b3_bar_get_workspace_area(bar);
 
-	g_draw_comm.text_rect.top = g_draw_comm.rect.top + B3_BAR_DEFAULT_PADDING_TO_FRAME;
-	g_draw_comm.text_rect.bottom = g_draw_comm.rect.bottom - B3_BAR_DEFAULT_PADDING_TO_FRAME;
+	g_draw_comm.text_rect = b3_bar_get_workspace_text_area(bar);
 
   b3_wsman_iterate_ws_arr(bar->wsman, b3_bar_draw_ws_visitor);
 
@@ -315,6 +378,8 @@ b3_bar_WndProc(HWND window_handler, UINT msg, WPARAM wParam, LPARAM lParam)
 {
 	LRESULT CALLBACK result;
 	b3_bar_t *bar;
+    int x;
+    int y;
 
 	result = 0;
 
@@ -332,6 +397,11 @@ b3_bar_WndProc(HWND window_handler, UINT msg, WPARAM wParam, LPARAM lParam)
 				}
 			}
 			break;
+        case WM_LBUTTONDOWN:
+            x = GET_X_LPARAM(lParam);
+            y = GET_Y_LPARAM(lParam);
+            b3_bar_handle_mouse_click(bar, x, y);
+            break;
 
 		case WM_CLOSE:
 			DestroyWindow(window_handler);
@@ -342,4 +412,98 @@ b3_bar_WndProc(HWND window_handler, UINT msg, WPARAM wParam, LPARAM lParam)
 	}
 
 	return result;
+}
+
+void
+b3_bar_click_ws_visitor(b3_ws_t *ws)
+{
+    SIZE text_size;
+    int str_length;
+    POINT point;
+
+    /**
+     * Enlarge the rectangle to enclose the workspace's name
+     */
+    GetTextExtentPoint32A(g_click_comm.hdc, b3_ws_get_name(ws),
+                          strlen(b3_ws_get_name(ws)), &text_size);
+    str_length = text_size.cx + B3_BAR_DEFAULT_PADDING_TO_FRAME;
+    g_click_comm.rect.right =
+        g_click_comm.rect.left + str_length + B3_BAR_DEFAULT_PADDING_TO_FRAME;
+
+    point.x = g_click_comm.x;
+    point.y = g_click_comm.y;
+    if (PtInRect(&(g_click_comm.rect), point)) {
+        b3_ws_switcher_switch_to_ws(g_click_comm.bar->ws_switcher, b3_ws_get_name(ws));
+    }
+
+    /**
+     * Move the rectangle for the next workspace
+     */
+    g_click_comm.rect.left =
+        g_click_comm.rect.right + B3_BAR_DEFAULT_PADDING_TO_NEXT_FRAME;
+}
+int
+b3_bar_handle_mouse_click(b3_bar_t *bar, int x, int y)
+{
+    // g_click_comm = { 0 };
+
+    g_click_comm.bar = bar;
+
+    g_click_comm.focused_ws = b3_wsman_get_focused_ws(bar->wsman);
+
+    g_click_comm.hdc = GetDC(bar->window_handler);
+
+    g_click_comm.rect = b3_bar_get_canvas_area(bar);
+
+    g_click_comm.rect = b3_bar_get_workspace_area(bar);
+
+    g_click_comm.text_rect = b3_bar_get_workspace_text_area(bar);
+
+    g_click_comm.x = x;
+    g_click_comm.y = y;
+
+    b3_wsman_iterate_ws_arr(bar->wsman, b3_bar_click_ws_visitor);
+
+    ReleaseDC(bar->window_handler, g_draw_comm.hdc);
+
+    return 0;
+}
+
+RECT
+b3_bar_get_canvas_area(b3_bar_t *bar)
+{
+    RECT rect;
+
+    rect.top = 0;
+	rect.bottom = bar->area.bottom - bar->area.top;
+	rect.left = 0;
+	rect.right = bar->area.right - bar->area.left;
+
+    return rect;
+}
+
+RECT
+b3_bar_get_workspace_area(b3_bar_t *bar)
+{
+    RECT rect;
+
+    rect.top = B3_BAR_DEFAULT_PADDING_TO_WINDOW;
+	rect.bottom = bar->area.bottom - bar->area.top - B3_BAR_DEFAULT_PADDING_TO_WINDOW;
+	rect.left = 0; /** We are drawing relative to the window! */
+	rect.right = 0; /** Will be overwritten */
+
+    return rect;
+}
+
+RECT
+b3_bar_get_workspace_text_area(b3_bar_t *bar)
+{
+    RECT rect;
+
+    rect = b3_bar_get_workspace_area(bar);
+
+    rect.top = g_draw_comm.rect.top + B3_BAR_DEFAULT_PADDING_TO_FRAME;
+	rect.bottom = g_draw_comm.rect.bottom - B3_BAR_DEFAULT_PADDING_TO_FRAME;
+
+    return rect;
 }
