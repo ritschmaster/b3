@@ -250,7 +250,7 @@ test_contains_win(void)
 }
 
 static int
-test_get_rel(void)
+test_simple_get_rel(void)
 {
 	b3_win_t *win1;
 	b3_win_t *win2;
@@ -329,7 +329,7 @@ main(void)
 	b3_test(setup, teardown, test_remove_winman, "test_remove_winman");
 	b3_test(setup, teardown, test_get_parent, "test_get_parent");
 	b3_test(setup, teardown, test_contains_win, "test_contains_win");
-	b3_test(setup, teardown, test_get_rel, "test_get_rel");
+	b3_test(setup, teardown, test_simple_get_rel, "test_simple_get_rel");
 
 	return 0;
 }

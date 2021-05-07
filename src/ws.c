@@ -541,59 +541,134 @@ b3_ws_move_focused_win_impl(b3_ws_t *ws, b3_ws_move_direction_t direction)
 		}
 	} else {
 		/**
-		 * Add a new window manager
+		 * Propably add a new window manager
 		 */
 
-		error = b3_ws_split(ws, mode);
-		if (!error) {
-			error = 1;
-			container = b3_winman_get_parent(ws->winman, focused_win_container);
-			if (container) {
-				root_new = b3_winman_get_parent(ws->winman, container);
-				if (root_new == NULL) {
-					wbk_logger_log(&logger, SEVERE, "'root_new' (window manager^3 of focused window) was unexpectelty NULL.\n");
-				} else {
-
-				}
+		container = focused_win_container;
+		for (;;) {
+			root_new = b3_winman_get_parent(ws->winman, container);
+			if ((root_new && b3_winman_get_mode(root_new) == mode)
+			    || root_new == NULL) {
+				break;
 			} else {
-				wbk_logger_log(&logger, SEVERE, "'container' (window manager^2 of focused window) was unexpectelty NULL.\n");
+				container = root_new;
+			}
+		}
+
+		if (root_new == NULL) {
+			/**
+			 * There is no a parent containing the correct mode
+			 */
+			container = b3_winman_get_parent(ws->winman, root);
+			if (container) {
+				root_new = container;
+				container = b3_winman_new(mode);
+				b3_winman_add_winman(container, root);
+				b3_winman_add_winman(root_new, container);
+			} else {
+				/**
+				 * root == ws->winman!
+				 */
+				root_new = b3_winman_new(mode);
+				b3_winman_add_winman(root_new, root);
+				ws->winman = root_new;
 			}
 		}
 	}
 
-	if (root && root_new) {
-		arr_len = array_size(b3_winman_get_winman_arr(root_new));
-
+	if (root == root_new) {
 		/**
-		 * In any case root is the parent of focused_win_container
+		 * As root == root_new we can directly operate with focused_win_container.
 		 */
-		if (root == root_new) {
-			container = focused_win_container;
-		} else {
-			/**
-			 * root_new is the parent of the parent of root.
-			 */
-			container = root;
-		}
-
+		arr_len = array_size(b3_winman_get_winman_arr(root_new));
 		for (i = 0; i < arr_len; i++) {
 			array_get_at(b3_winman_get_winman_arr(root_new), i, (void *) &winman_iter);
-			if (winman_iter == container) {
+			if (winman_iter == focused_win_container) {
 				array_remove_at(b3_winman_get_winman_arr(root_new), i, NULL);
 				if (get == PREVIOUS) {
 					i--;
 				} else if (get == NEXT) {
 					i++;
 				}
+
+				if (i < 0) {
+					i = 0;
+				} else if (i >= arr_len) {
+					i = arr_len;
+				}
+
 				array_add_at(b3_winman_get_winman_arr(root_new),
-							 container,
+							 focused_win_container,
 							 i);
 
 				error = 0;
 				i = arr_len;
 			}
 		}
+	} else if (b3_winman_get_parent(ws->winman, root) == root_new) {
+		/**
+		 * root_new is the parent of the parent of root.
+		 *
+		 * Therefore we first have to remove focused_win_container from root.
+		 */
+		arr_len = array_size(b3_winman_get_winman_arr(root));
+		for (i = 0; i < arr_len; i++) {
+			array_get_at(b3_winman_get_winman_arr(root), i, (void *) &winman_iter);
+			if (winman_iter == focused_win_container) {
+				array_remove_at(b3_winman_get_winman_arr(root), i, NULL);
+				i = arr_len;
+			}
+		}
+
+		/**
+		 * Now we can place focused_win_container before/after the position
+		 * of root in root_new.
+		 */
+		arr_len = array_size(b3_winman_get_winman_arr(root_new));
+		for (i = 0; i < arr_len; i++) {
+			array_get_at(b3_winman_get_winman_arr(root_new), i, (void *) &winman_iter);
+			if (winman_iter == root) {
+				if (get == PREVIOUS) {
+					i--;
+				} else if (get == NEXT) {
+					i++;
+				}
+
+				if (i < 0) {
+					i = 0;
+				} else if (i >= arr_len) {
+					i = arr_len;
+				}
+
+				array_add_at(b3_winman_get_winman_arr(root_new),
+							 focused_win_container,
+							 i);
+
+				i = arr_len;
+			}
+		}
+
+		error = 0;
+	} else {
+		/**
+		 * root_new is NO ancestor of root.
+		 *
+		 * Therefore we first have to remove focused_win_container from root.
+		 */
+		arr_len = array_size(b3_winman_get_winman_arr(root));
+		for (i = 0; i < arr_len; i++) {
+			array_get_at(b3_winman_get_winman_arr(root), i, (void *) &winman_iter);
+			if (winman_iter == focused_win_container) {
+				array_remove_at(b3_winman_get_winman_arr(root), i, NULL);
+				i = arr_len;
+			}
+		}
+
+		b3_winman_add_winman(root_new, focused_win_container);
+
+		error = 0;
 	}
+
 
 	return error;
 }
@@ -882,14 +957,14 @@ b3_ws_arrange_wins_visitor(b3_winman_t *winman, void *data)
 			child_area->right = my_area->right;
 
 			if (b3_winman_get_mode(winman) == HORIZONTAL) {
-				my_area->right = my_area->left + increment;
-				my_area->left += increment;
+				child_area->right = my_area->left + increment;
+				child_area->left += increment;
 			} else if (b3_winman_get_mode(winman) == VERTICAL) {
-				my_area->bottom = my_area->top + increment;
-				my_area->top += increment;
+				child_area->bottom = my_area->top + increment;
+				child_area->top += increment;
 			}
 
-			stack_push(area_stack, (void *) my_area);
+			stack_push(area_stack, (void *) child_area);
 		}
 	} else {
 		/**

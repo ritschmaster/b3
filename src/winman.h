@@ -140,6 +140,7 @@ b3_winman_get_winman_arr(b3_winman_t *winman);
 
 /**
  * Sets the window instance to the window manger.
+
  *
  * @param win Will be stored within the window manager. The object will not be
  * freed, free it by yourself!
@@ -151,7 +152,7 @@ b3_winman_set_win(b3_winman_t *winman, b3_win_t *win);
 /**
   * Get the windows of the window manager.
   *
-  * @return A pointer to the window. Free that memory only if you then call
+kk  * @return A pointer to the window. Free that memory only if you then call
   * b3_winman_set_win(winman, NULL)!
   */
 extern b3_win_t *

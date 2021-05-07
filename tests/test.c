@@ -73,7 +73,7 @@ b3_test_check_void(void *act, void *exp, char *msg)
 		error = 0;
 	} else {
 		error = 1;
-		wbk_logger_log(&logger, SEVERE, "act(%p) != exp(%p): %s\n", act, exp, msg);
+		wbk_logger_log(&logger, SEVERE, "exp(%p) != act(%p): %s\n", exp, act, msg);
 	}
 
 	return error;
