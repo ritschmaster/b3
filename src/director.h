@@ -113,7 +113,7 @@ extern int
 b3_director_add_rule(b3_director_t *director, b3_rule_t *rule);
 
 /**
- * @param win The object will not be freed. Free it by yourself!
+ * @param win The object will be freed by the director.
  * @return 0 if added. Non-0 otherwise.
  */
 extern int

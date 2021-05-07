@@ -275,7 +275,7 @@ b3_kc_director_exec_impl(const wbk_kc_t *kc)
   CreateThread(NULL,
                0,
                b3_kc_director_exec_threaded,
-               kc,
+               (const LPVOID) kc,
                0,
                NULL);
   return 0;

@@ -115,7 +115,7 @@ extern b3_wsman_t *
 b3_monitor_get_wsman(b3_monitor_t *monitor);
 
 /**
- * @param win The object will not be freed. Free it by yourself!
+ * @param win The object will be freed by the monitor.
  * @return 0 if added. Non-0 otherwise.
  */
 extern int

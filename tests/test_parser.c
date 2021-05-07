@@ -246,14 +246,14 @@ test_parse_file(void)
 int
 main(void)
 {
-	b3_test(setup, teardown, test_parse_str_empty);
-	b3_test(setup, teardown, test_parse_str_none);
-	b3_test(setup, teardown, test_parse_str_rules);
-	b3_test(setup, teardown, test_parse_str);
-	b3_test(setup, teardown, test_parse_file_empty);
-	b3_test(setup, teardown, test_parse_file_none);
-	b3_test(setup, teardown, test_parse_file_rules);
-	b3_test(setup, teardown, test_parse_file);
+	b3_test(setup, teardown, test_parse_str_empty, "test_parse_str_empty");
+	b3_test(setup, teardown, test_parse_str_none, "test_parse_str_none");
+	b3_test(setup, teardown, test_parse_str_rules, "test_parse_str_rules");
+	b3_test(setup, teardown, test_parse_str, "test_parse_str");
+	b3_test(setup, teardown, test_parse_file_empty, "test_parse_file_empty");
+	b3_test(setup, teardown, test_parse_file_none, "test_parse_file_none");
+	b3_test(setup, teardown, test_parse_file_rules, "test_parse_file_rules");
+	b3_test(setup, teardown, test_parse_file, "test_parse_file");
 
 	return 0;
 }

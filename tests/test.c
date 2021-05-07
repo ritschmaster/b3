@@ -31,9 +31,14 @@
 #include "test.h"
 
 #include <stdlib.h>
+#include <stdio.h>
+#include <w32bindkeys/logger.h>
+
+static wbk_logger_t logger = { "test" };
 
 void
-b3_test(void (*setup)(void), void (*teardown)(void), int (*test_fn)(void))
+b3_test(void (*setup)(void), void (*teardown)(void),
+		int (*test_fn)(void), char *test_name)
 {
 	int error;
 
@@ -44,6 +49,7 @@ b3_test(void (*setup)(void), void (*teardown)(void), int (*test_fn)(void))
 	teardown();
 
 	if (error) {
+		fprintf(stdout, "Failed: %s\n", test_name);
 		exit(error);
 	}
 }
@@ -56,4 +62,19 @@ b3_test_empty_setup(void)
 void
 b3_test_empty_teardown(void)
 {
+}
+
+int
+b3_test_check_void(void *act, void *exp, char *msg)
+{
+	int error;
+
+	if (act == exp) {
+		error = 0;
+	} else {
+		error = 1;
+		wbk_logger_log(&logger, SEVERE, "act(%p) != exp(%p): %s\n", act, exp, msg);
+	}
+
+	return error;
 }

@@ -598,7 +598,7 @@ b3_director_move_active_win(b3_director_t *director, b3_ws_move_direction_t dire
 	focused_win = b3_ws_get_focused_win(b3_monitor_get_focused_ws(director->focused_monitor));
 	if (focused_win) {
 		if (b3_win_get_state(focused_win) != MAXIMIZED) {
-			error = b3_ws_move_active_win(b3_monitor_get_focused_ws(director->focused_monitor),
+			error = b3_ws_move_focused_win(b3_monitor_get_focused_ws(director->focused_monitor),
 										   direction);
       if (!error) {
         b3_director_arrange_wins(director);
@@ -631,8 +631,9 @@ b3_director_set_active_win_by_direction(b3_director_t *director, b3_ws_move_dire
 	WaitForSingleObject(director->global_mutex, INFINITE);
 
 	error = 1;
-	win = b3_ws_get_win(b3_monitor_get_focused_ws(director->focused_monitor),
-		  			    direction);
+	win = b3_ws_get_win_rel_to_focused_win(b3_monitor_get_focused_ws(director->focused_monitor),
+                                           direction,
+                                           1);
 	if (win) {
     	b3_win_set_state(b3_ws_get_focused_win(b3_monitor_get_focused_ws(director->focused_monitor)), NORMAL);
     	b3_ws_set_focused_win(b3_monitor_get_focused_ws(director->focused_monitor),

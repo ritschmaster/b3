@@ -32,13 +32,17 @@
 #define B3_TEST_H
 
 extern void
-b3_test(void (*setup)(void), void (*teardown)(void), int (*test_fn)(void));
+b3_test(void (*setup)(void), void (*teardown)(void),
+        int (*test_fn)(void), char *test_name);
 
 extern void
 b3_test_empty_setup(void);
 
 extern void
 b3_test_empty_teardown(void);
+
+extern int
+b3_test_check_void(void *act, void *exp, char *msg);
 
 #endif // B3_TEST_H
 

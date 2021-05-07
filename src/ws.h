@@ -32,6 +32,7 @@
 #define B3_WS_H
 
 #include <collectc/array.h>
+#include <windows.h>
 
 #include "til.h"
 #include "counter.h"
@@ -46,16 +47,58 @@ typedef enum b3_ws_move_direction_s
 	RIGHT
 } b3_ws_move_direction_t;
 
-typedef struct b3_ws_s
-{
+typedef struct b3_ws_s b3_ws_t;
+
+struct b3_ws_s {
+	int (*b3_ws_free)(b3_ws_t *ws);
+	int (*b3_ws_set_name)(b3_ws_t *ws, const char *name);
+	const char* (*b3_ws_get_name)(b3_ws_t *ws);
+	b3_win_t * (*b3_ws_get_focused_win)(b3_ws_t *ws);
+	int (*b3_ws_set_focused_win)(b3_ws_t *ws, const b3_win_t *win);
+	int (*b3_ws_add_win)(b3_ws_t *ws, b3_win_t *win);
+	int (*b3_ws_remove_win)(b3_ws_t *ws, const b3_win_t *win);
+	int (*b3_ws_split)(b3_ws_t *ws, b3_winman_mode_t mode);
+	int (*b3_ws_move_focused_win)(b3_ws_t *ws, b3_ws_move_direction_t direction);
+	int (*b3_ws_toggle_floating_win)(b3_ws_t *ws, const b3_win_t *win);
+	int (*b3_ws_minimize_wins)(b3_ws_t *ws);
+	b3_win_t *(*b3_ws_contains_win)(b3_ws_t *ws, const b3_win_t *win);
+	int (*b3_ws_is_empty)(b3_ws_t *ws);
+	b3_win_t * (*b3_ws_get_win_rel_to_focused_win)(b3_ws_t *ws,
+												   b3_ws_move_direction_t direction,
+												   char rolling);
+	int (*b3_ws_arrange_wins)(b3_ws_t *ws, RECT monitor_area);
+
 	b3_winman_t *winman;
 
 	b3_til_mode_t mode;
 
 	char *name;
 
+	/**
+	 * The currently focused window of the workspace.
+	 */
 	b3_win_t *focused_win;
-} b3_ws_t;
+
+	/**
+	 * Array of b3_win_t *
+	 *
+	 * Stack containing the previously focused windows. If a window is removed,
+	 * then it is also removed from the previously focused windows.
+	 *
+	 * It also only contains windows that are actually managed by one of the
+	 * following members:
+	 * - floating_win_arr
+	 * - winman
+	 */
+	Array *previously_focused_win_arr;
+
+	/**
+	 * Array of b3_win_t *
+	 *
+	 * Array containing the floating windows.
+	 */
+	Array *floating_win_arr;
+};
 
 /**
  * @brief Creates a new workspace object
@@ -72,19 +115,34 @@ b3_ws_new(const char *name);
 extern int
 b3_ws_free(b3_ws_t *ws);
 
-/**
- * @brief Get the amount of windows of the workspace
- */
 extern int
-b3_ws_get_win_amount(b3_ws_t *ws);
+b3_ws_set_name(b3_ws_t *ws, const char *name);
+
+extern const char*
+b3_ws_get_name(b3_ws_t *ws);
 
 /**
- * Place a new window in the workspace. Depending on whether there is already a
- * focused window, the new window will be placed either in the focused window's
- * window manager or in the first found window manager.
+ * Returns the currently focused window. No window can only be focused if the
+ * workspace generall contains no windows.
  *
- * @param win Will be stored within the workspace. The object will not be freed,
- * free it by yourself!
+ * @return The currently focused window of the monitor. If no window is focused,
+ * then NULL is returned. Do not free it!
+ */
+extern b3_win_t *
+b3_ws_get_focused_win(b3_ws_t *ws);
+
+/**
+ * @param win The window to focus
+ * @param 0 if the setting was successful. Non-0 otherwise (e.g. the passed window is not within the workspace).
+ */
+extern int
+b3_ws_set_focused_win(b3_ws_t *ws, const b3_win_t *win);
+
+/**
+ * Place a new window in the workspace.
+ *
+ * @param win Will be stored within the workspace. The object will not be freed
+ * by the workspace.
  * @return 0 if added. Non-0 otherwise.
  */
 extern int
@@ -101,13 +159,46 @@ b3_ws_add_win(b3_ws_t *ws, b3_win_t *win);
 extern int
 b3_ws_remove_win(b3_ws_t *ws, const b3_win_t *win);
 
+/**
+ * Add a split (= new window manager of parameter mode) above the window manager
+ * of the focused window.
+ *
+ * @param mode The mode of the split (new window manager).
+ * @return 0 if the vertical split was successful. Non-0 otherwise.
+ */
 extern int
-b3_ws_arrange_wins(b3_ws_t *ws, RECT monitor_area);
+b3_ws_split(b3_ws_t *ws, b3_winman_mode_t mode);
 
-int
+/**
+ * Moves the currently focused window of the workspace in the parameter
+ * direction.
+ *
+ * @return 0 if the moving was successful. Non-0 otherwise:
+ * - 1 - Critical error indicating that the workspace is corrupted
+ * - 2 - End of workspace in the selected direction was reached
+ */
+extern int
+b3_ws_move_focused_win(b3_ws_t *ws, b3_ws_move_direction_t direction);
+
+/**
+ * Toggles the state floating state of the currently focused window of the
+ * workspace.
+ *
+ * @return 0 if it was possible to toggle the window. Non-0 otherwise (e.g. when
+ * it is not managed by this workspace).
+ */
+extern int
+b3_ws_toggle_floating_win(b3_ws_t *ws, const b3_win_t *win);
+
+/**
+ * Minimizes all windows on the workspace
+ */
+extern int
 b3_ws_minimize_wins(b3_ws_t *ws);
 
 /**
+ * Searches for a window stored within the workspace.
+ *
  * @return The window instance stored in the workspace - if found. NULL
  * otherwise. Do not free the returned window!
  */
@@ -115,64 +206,32 @@ extern b3_win_t *
 b3_ws_contains_win(b3_ws_t *ws, const b3_win_t *win);
 
 /**
- * @return 0 if it was possible to toggle the window. Non-0 otherwise (e.g. when it is not managed).
+ * @return 1 if the workspace contains no window.
  */
 extern int
-b3_ws_active_win_toggle_floating(b3_ws_t *ws, const b3_win_t *win);
+b3_ws_is_empty(b3_ws_t *ws);
 
 /**
-  * @brief Get the tiling mode of the workspace
-  * @return The tiling mode of the workspace
-  */
-extern b3_til_mode_t
-b3_ws_get_mode(b3_ws_t *ws);
-
-/**
-  * @brief Set the tiling mode
-  * @return Non-0 if the setting failed
-  */
-extern int
-b3_ws_set_mode(b3_ws_t *ws, b3_til_mode_t mode);
-
-extern int
-b3_ws_set_name(b3_ws_t *ws, const char *name);
-
-extern const char*
-b3_ws_get_name(b3_ws_t *ws);
-
-/**
- * @return The currently focused window of the monitor. If no window is focused,
- * then NULL is returned. Do not free it!
- */
-extern b3_win_t *
-b3_ws_get_focused_win(b3_ws_t *win);
-
-/**
- * @param win The window to focus
- * @param 0 if the setting was successful. Non-0 otherwise (e.g. the passed window is not within the workspace).
- */
-extern int
-b3_ws_set_focused_win(b3_ws_t *ws, const b3_win_t *win);
-
-/**
- * @return 0 if the moving was successful. Non-0 otherwise:
- * - 1 - Critical error indicating that the workspace is corrupted
- * - 2 - End of workspace in the selected direction was reached
- */
-extern int
-b3_ws_move_active_win(b3_ws_t *ws, b3_ws_move_direction_t direction);
-
-/**
- * @return Non-0 if any window is currently maximized. 0 otherwise.
- */
-extern int
-b3_ws_any_win_has_state(b3_ws_t *ws, b3_win_state_t state);
-
-/**
+ * Returns the window in direction next to the focused window.
+ *
+ * @param rolling If non-0, then the window starting from the other end of the
+ * window manager is used
  * @return The window in the direction next to the focused window. If not found
  * then NULL. Do not free it!
  */
 extern b3_win_t *
-b3_ws_get_win(b3_ws_t *ws, b3_ws_move_direction_t direction);
+b3_ws_get_win_rel_to_focused_win(b3_ws_t *ws,
+								 b3_ws_move_direction_t direction,
+								 char rolling);
+
+/**
+ * Arrange the windows on the workspace to the given area.
+ *
+ * @param ws The workspace to arrange the windows on.
+ * @param monitor_area The available space on which the windows should be
+ * arranged on.
+ */
+extern int
+b3_ws_arrange_wins(b3_ws_t *ws, RECT monitor_area);
 
 #endif // B3_WS_H

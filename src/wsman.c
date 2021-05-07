@@ -221,7 +221,10 @@ b3_wsman_set_focused_ws(b3_wsman_t *wsman, const char *ws_id)
 			ws = b3_wsman_add(wsman, ws_id);
 		}
 
-		if (b3_ws_get_win_amount(old_focused_ws) <= 0) {
+		if (b3_ws_get_focused_win(old_focused_ws) == NULL) {
+            /**
+             * Old focused workspace has no windows left. Therefore remove it.
+             */
 			b3_wsman_remove(wsman, b3_ws_get_name(old_focused_ws));
 			b3_ws_factory_remove(wsman->ws_factory, b3_ws_get_name(old_focused_ws));
 		}
@@ -291,7 +294,8 @@ b3_wsman_any_win_has_state(b3_wsman_t *wsman, b3_win_state_t state)
 
   WaitForSingleObject(wsman->global_mutex, INFINITE);
 
-  any_has_state = b3_ws_any_win_has_state(b3_wsman_get_focused_ws(wsman), state);
+  // TODO:
+  //any_has_state = b3_ws_any_win_has_state(b3_wsman_get_focused_ws(wsman), state);
 
 	ReleaseMutex(wsman->global_mutex);
 
@@ -312,7 +316,7 @@ b3_wsman_remove_empty_ws(b3_wsman_t *wsman)
   while (i < len) {
     array_get_at(b3_wsman_get_ws_arr(wsman), i, (void *) &ws);
 
-    if (b3_wsman_get_focused_ws(wsman) != ws && b3_ws_get_win_amount(ws) <= 0) {
+    if (b3_wsman_get_focused_ws(wsman) != ws && b3_ws_get_focused_win(ws) == NULL) {
 			b3_wsman_remove(wsman, b3_ws_get_name(ws));
 			b3_ws_factory_remove(wsman->ws_factory, b3_ws_get_name(ws));
       ws = NULL;
