@@ -923,6 +923,7 @@ b3_ws_arrange_wins_visitor(b3_winman_t *winman, void *data)
 {
 	Stack *area_stack;
 	b3_win_t *my_win;
+	int current_pos;
 	int increment;
 	int size;
 	int i;
@@ -942,29 +943,37 @@ b3_ws_arrange_wins_visitor(b3_winman_t *winman, void *data)
 		 */
 
 		size = array_size(b3_winman_get_winman_arr(winman));
-
-		if (b3_winman_get_mode(winman) == HORIZONTAL) {
-			increment = (my_area->right - my_area->left) / size;
-		} else if (b3_winman_get_mode(winman) == VERTICAL) {
-			increment = (my_area->bottom - my_area->top) / size;
-		}
-
-		for (i = 0; i < size; i++) {
-			child_area = malloc(sizeof(RECT));
-			child_area->top = my_area->top;
-			child_area->bottom = my_area->bottom;
-			child_area->left = my_area->left;
-			child_area->right = my_area->right;
-
+		if (size > 0) {
 			if (b3_winman_get_mode(winman) == HORIZONTAL) {
-				child_area->right = my_area->left + increment;
-				child_area->left += increment;
+				increment = (my_area->right - my_area->left) / size;
 			} else if (b3_winman_get_mode(winman) == VERTICAL) {
-				child_area->bottom = my_area->top + increment;
-				child_area->top += increment;
+				increment = (my_area->bottom - my_area->top) / size;
 			}
 
-			stack_push(area_stack, (void *) child_area);
+			if (b3_winman_get_mode(winman) == HORIZONTAL) {
+				current_pos = my_area->left - increment;
+			} else if (b3_winman_get_mode(winman) == VERTICAL) {
+				current_pos = my_area->top - increment;
+			}
+
+			for (i = 0; i < size; i++) {
+				child_area = malloc(sizeof(RECT));
+				child_area->top = my_area->top;
+				child_area->bottom = my_area->bottom;
+				child_area->left = my_area->left;
+				child_area->right = my_area->right;
+
+				current_pos += increment;
+				if (b3_winman_get_mode(winman) == HORIZONTAL) {
+					child_area->left = increment;
+					child_area->right = child_area->left + increment;
+				} else if (b3_winman_get_mode(winman) == VERTICAL) {
+					child_area->top = increment;
+					child_area->bottom = child_area->top + increment;
+				}
+
+				stack_push(area_stack, (void *) child_area);
+			}
 		}
 	} else {
 		/**
