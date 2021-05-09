@@ -135,6 +135,16 @@ extern int
 b3_monitor_remove_empty_ws(b3_monitor_t *monitor);
 
 /**
+ * Toggles the state floating state of the currently focused window of the
+ * workspace.
+ *
+ * @return 0 if it was possible to toggle the window. Non-0 otherwise (e.g. when
+ * it is not managed by this workspace).
+ */
+extern int
+b3_monitor_toggle_floating_win(b3_monitor_t *monitor, b3_win_t *win);
+
+/**
  * @return The workspace the window is placed on or NULL if it cannot be found.
  * Do not free it!
  */

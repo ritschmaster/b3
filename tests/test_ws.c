@@ -1035,6 +1035,49 @@ test_complex_move(void)
 		}
 	}
 
+	if (!error) {
+		b3_ws_remove_win(ws, win4);
+
+		error = check_winman_arr(ws->winman, "VLHLL");
+		//error = check_winman_arr(ws->winman, "HLVLHLL"); // TODO
+
+		if (!error) {
+			memset(win_arr_exp, 0, ARR_LEN);
+			win_arr_exp[0] = win2;
+			win_arr_exp[1] = win1;
+			win_arr_exp[2] = win3;
+
+			error = check_win_arr(ws->winman, win_arr_exp);
+		}
+
+		if (error) {
+			wbk_logger_log(&logger, SEVERE, "Failed removing focused window\n");
+		}
+	}
+
+	if (!error) {
+		b3_ws_set_focused_win(ws, win3);
+		b3_ws_move_focused_win(ws, RIGHT);
+		b3_ws_move_focused_win(ws, RIGHT);
+		b3_ws_move_focused_win(ws, RIGHT);
+
+		error = check_winman_arr(ws->winman, "VLHLL");
+		//error = check_winman_arr(ws->winman, "HLVLHLL"); // TODO
+
+		if (!error) {
+			memset(win_arr_exp, 0, ARR_LEN);
+			win_arr_exp[0] = win2;
+			win_arr_exp[1] = win1;
+			win_arr_exp[2] = win3;
+
+			error = check_win_arr(ws->winman, win_arr_exp);
+		}
+
+		if (error) {
+			wbk_logger_log(&logger, SEVERE, "Failed moving 'win3' to right*3\n");
+		}
+	}
+
 	b3_ws_free(ws);
 	b3_win_free(win1);
 	b3_win_free(win2);

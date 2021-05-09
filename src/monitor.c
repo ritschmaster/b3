@@ -23,6 +23,7 @@
 *******************************************************************************/
 
 #include "monitor.h"
+#include "ws.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -218,6 +219,13 @@ int
 b3_monitor_remove_empty_ws(b3_monitor_t *monitor)
 {
     return b3_wsman_remove_empty_ws(monitor->wsman);
+}
+
+int
+b3_monitor_toggle_floating_win(b3_monitor_t *monitor, b3_win_t *win)
+{
+	return b3_ws_toggle_floating_win(b3_monitor_get_focused_ws(monitor),
+									 win);
 }
 
 b3_ws_t *

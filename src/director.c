@@ -504,9 +504,8 @@ b3_director_active_win_toggle_floating(b3_director_t *director)
 	toggle_failed = 1;
     active_win = b3_monitor_get_focused_win(director->focused_monitor);
 	if (active_win) {
-		b3_win_set_floating(active_win,
-							!b3_win_get_floating(active_win));
-		toggle_failed = 0;
+		toggle_failed = b3_monitor_toggle_floating_win(director->focused_monitor,
+                                                       active_win);
 		if (!toggle_failed) {
 			wbk_logger_log(&logger, INFO, "Activated window toggled floating\n");
 			b3_monitor_arrange_wins(director->focused_monitor);

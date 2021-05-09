@@ -81,7 +81,7 @@ static int
 b3_ws_add_win_impl(b3_ws_t *ws, b3_win_t *win);
 
 static int
-b3_ws_remove_win_impl(b3_ws_t *ws, const b3_win_t *win);
+b3_ws_remove_win_impl(b3_ws_t *ws, b3_win_t *win);
 
 static int
 b3_ws_split_impl(b3_ws_t *ws, b3_winman_mode_t mode);
@@ -90,7 +90,7 @@ static int
 b3_ws_move_focused_win_impl(b3_ws_t *ws, b3_ws_move_direction_t direction);
 
 static int
-b3_ws_toggle_floating_win_impl(b3_ws_t *ws, const b3_win_t *win);
+b3_ws_toggle_floating_win_impl(b3_ws_t *ws, b3_win_t *win);
 
 /**
  * @param data Must be actually of type b3_ws_toggle_floating_visitor_t *
@@ -215,7 +215,7 @@ b3_ws_add_win(b3_ws_t *ws, b3_win_t *win)
 }
 
 int
-b3_ws_remove_win(b3_ws_t *ws, const b3_win_t *win)
+b3_ws_remove_win(b3_ws_t *ws, b3_win_t *win)
 {
 	return ws->b3_ws_remove_win(ws, win);
 }
@@ -239,7 +239,7 @@ b3_ws_move_focused_win(b3_ws_t *ws, b3_ws_move_direction_t direction)
 }
 
 int
-b3_ws_toggle_floating_win(b3_ws_t *ws, const b3_win_t *win)
+b3_ws_toggle_floating_win(b3_ws_t *ws, b3_win_t *win)
 {
 	return ws->b3_ws_toggle_floating_win(ws, win);
 }
@@ -388,7 +388,7 @@ b3_ws_add_win_impl(b3_ws_t *ws, b3_win_t *win)
 }
 
 int
-b3_ws_remove_win_impl(b3_ws_t *ws, const b3_win_t *win)
+b3_ws_remove_win_impl(b3_ws_t *ws, b3_win_t *win)
 {
 	int error;
 	b3_winman_t *winman;
@@ -420,7 +420,7 @@ b3_ws_remove_win_impl(b3_ws_t *ws, const b3_win_t *win)
 					 */
 					array_iter_init(&iter, ws->previously_focused_win_arr);
 					while (array_iter_next(&iter, (void*) &win_iter) != CC_ITER_END) {
-						if (b3_win_compare(win_iter, win) == 0) {
+						if (win_iter == win) {
 							array_iter_remove(&iter, NULL);
 						}
 					}
@@ -437,7 +437,6 @@ b3_ws_remove_win_impl(b3_ws_t *ws, const b3_win_t *win)
 						b3_ws_set_focused_win(ws, new_focused_win);
 					}
 
-					b3_win_free(b3_winman_get_win(winman));
 					b3_winman_free(winman);
 					error = 0;
 				}
@@ -594,7 +593,7 @@ b3_ws_move_focused_win_impl(b3_ws_t *ws, b3_ws_move_direction_t direction)
 				if (i < 0) {
 					i = 0;
 				} else if (i >= arr_len) {
-					i = arr_len;
+					i = arr_len - 1;
 				}
 
 				array_add_at(b3_winman_get_winman_arr(root_new),
@@ -674,7 +673,7 @@ b3_ws_move_focused_win_impl(b3_ws_t *ws, b3_ws_move_direction_t direction)
 }
 
 int
-b3_ws_toggle_floating_win_impl(b3_ws_t *ws, const b3_win_t *win)
+b3_ws_toggle_floating_win_impl(b3_ws_t *ws, b3_win_t *win)
 {
 	int error;
 	b3_winman_t *container;
@@ -953,7 +952,7 @@ b3_ws_arrange_wins_visitor(b3_winman_t *winman, void *data)
 			if (b3_winman_get_mode(winman) == HORIZONTAL) {
 				current_pos = my_area->right;
 			} else if (b3_winman_get_mode(winman) == VERTICAL) {
-				current_pos = my_area->top;
+				current_pos = my_area->bottom;
 			}
 
 			/**

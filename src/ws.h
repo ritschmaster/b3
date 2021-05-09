@@ -56,10 +56,10 @@ struct b3_ws_s {
 	b3_win_t * (*b3_ws_get_focused_win)(b3_ws_t *ws);
 	int (*b3_ws_set_focused_win)(b3_ws_t *ws, const b3_win_t *win);
 	int (*b3_ws_add_win)(b3_ws_t *ws, b3_win_t *win);
-	int (*b3_ws_remove_win)(b3_ws_t *ws, const b3_win_t *win);
+	int (*b3_ws_remove_win)(b3_ws_t *ws, b3_win_t *win);
 	int (*b3_ws_split)(b3_ws_t *ws, b3_winman_mode_t mode);
 	int (*b3_ws_move_focused_win)(b3_ws_t *ws, b3_ws_move_direction_t direction);
-	int (*b3_ws_toggle_floating_win)(b3_ws_t *ws, const b3_win_t *win);
+	int (*b3_ws_toggle_floating_win)(b3_ws_t *ws, b3_win_t *win);
 	int (*b3_ws_minimize_wins)(b3_ws_t *ws);
 	b3_win_t *(*b3_ws_contains_win)(b3_ws_t *ws, const b3_win_t *win);
 	int (*b3_ws_is_empty)(b3_ws_t *ws);
@@ -153,11 +153,13 @@ b3_ws_add_win(b3_ws_t *ws, b3_win_t *win);
  * then the currently focused window will point to the next found one according
  * to the window manager.
  *
- * @param win The object will not be freed.
+ * @param win The window must already be within the workspace. The object will
+ * not be freed.
+ *
  * @return 0 if removed. Non-0 otherwise.
  */
 extern int
-b3_ws_remove_win(b3_ws_t *ws, const b3_win_t *win);
+b3_ws_remove_win(b3_ws_t *ws, b3_win_t *win);
 
 /**
  * Add a split (= new window manager of parameter mode) above the window manager
@@ -188,7 +190,7 @@ b3_ws_move_focused_win(b3_ws_t *ws, b3_ws_move_direction_t direction);
  * it is not managed by this workspace).
  */
 extern int
-b3_ws_toggle_floating_win(b3_ws_t *ws, const b3_win_t *win);
+b3_ws_toggle_floating_win(b3_ws_t *ws, b3_win_t *win);
 
 /**
  * Minimizes all windows on the workspace
