@@ -844,6 +844,13 @@ test_complex_win_rel(void)
 
 	if (!error) {
 		b3_ws_set_focused_win(ws, win1);
+		found = b3_ws_get_win_rel_to_focused_win(ws, LEFT, 0);
+		error = b3_test_check_void(found, NULL, "Failed LEFT");
+		b3_ws_set_focused_win(ws, win3);
+	}
+
+	if (!error) {
+		b3_ws_set_focused_win(ws, win1);
 		found = b3_ws_get_win_rel_to_focused_win(ws, LEFT, 1);
 		error = b3_test_check_void(found, win4, "Failed rolling LEFT");
 		b3_ws_set_focused_win(ws, win3);
@@ -852,6 +859,13 @@ test_complex_win_rel(void)
 	if (!error) {
 		found = b3_ws_get_win_rel_to_focused_win(ws, RIGHT, 0);
 		error = b3_test_check_void(found, win4, "Failed RIGHT");
+	}
+
+	if (!error) {
+		b3_ws_set_focused_win(ws, win4);
+		found = b3_ws_get_win_rel_to_focused_win(ws, RIGHT, 0);
+		error = b3_test_check_void(found, NULL, "Failed RIGHT");
+		b3_ws_set_focused_win(ws, win3);
 	}
 
 	if (!error) {
@@ -867,8 +881,22 @@ test_complex_win_rel(void)
 	}
 
 	if (!error) {
+		b3_ws_set_focused_win(ws, win2);
+		found = b3_ws_get_win_rel_to_focused_win(ws, DOWN, 0);
+		error = b3_test_check_void(found, NULL, "Failed DOWN");
+		b3_ws_set_focused_win(ws, win3);
+	}
+
+	if (!error) {
 		found = b3_ws_get_win_rel_to_focused_win(ws, DOWN, 1);
 		error = b3_test_check_void(found, win2, "Failed rolling DOWN");
+	}
+
+	if (!error) {
+		b3_ws_set_focused_win(ws, win2);
+		found = b3_ws_get_win_rel_to_focused_win(ws, UP, 0);
+		error = b3_test_check_void(found, win3, "Failed UP");
+		b3_ws_set_focused_win(ws, win3);
 	}
 
 	if (!error) {
@@ -953,7 +981,57 @@ test_complex_move(void)
 		}
 
 		if (error) {
-			wbk_logger_log(&logger, SEVERE, "Failed UP^2\n");
+			wbk_logger_log(&logger, SEVERE, "Failed UP*2\n");
+		}
+	}
+
+	if (!error) {
+		b3_ws_set_focused_win(ws, win4);
+		b3_ws_move_focused_win(ws, LEFT);
+		b3_ws_move_focused_win(ws, LEFT);
+
+		error = check_winman_arr(ws->winman, "VLHLLL");
+
+		if (!error) {
+			memset(win_arr_exp, 0, ARR_LEN);
+			win_arr_exp[0] = win2;
+			win_arr_exp[1] = win4;
+			win_arr_exp[2] = win1;
+			win_arr_exp[3] = win3;
+
+			error = check_win_arr(ws->winman, win_arr_exp);
+		}
+
+		if (error) {
+			wbk_logger_log(&logger, SEVERE, "Failed LEFT*2\n");
+		}
+	}
+
+
+	if (!error) {
+		b3_ws_move_focused_win(ws, LEFT);
+
+		error = check_winman_arr(ws->winman, "VLHLLL");
+		//error = check_winman_arr(ws->winman, "HLVLHLL"); // TODO
+
+		if (!error) {
+			memset(win_arr_exp, 0, ARR_LEN);
+			win_arr_exp[0] = win2;
+			win_arr_exp[1] = win4;
+			win_arr_exp[2] = win1;
+			win_arr_exp[3] = win3;
+
+			//TODO
+			//win_arr_exp[0] = win4;
+			//win_arr_exp[1] = win2;
+			//win_arr_exp[2] = win1;
+			//win_arr_exp[3] = win3;
+
+			error = check_win_arr(ws->winman, win_arr_exp);
+		}
+
+		if (error) {
+			wbk_logger_log(&logger, SEVERE, "Failed LEFT*3\n");
 		}
 	}
 

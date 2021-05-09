@@ -907,7 +907,7 @@ b3_ws_arrange_wins_impl(b3_ws_t *ws, RECT monitor_area)
 	my_area->bottom = monitor_area.bottom;
 	my_area->left = monitor_area.left;
 	my_area->right = monitor_area.right;
-	stack_push(area_stack, (void *) &monitor_area);
+	stack_push(area_stack, my_area);
 
 	b3_winman_traverse(ws->winman,
 						b3_ws_arrange_wins_visitor,
@@ -951,10 +951,17 @@ b3_ws_arrange_wins_visitor(b3_winman_t *winman, void *data)
 			}
 
 			if (b3_winman_get_mode(winman) == HORIZONTAL) {
-				current_pos = my_area->left - increment;
+				current_pos = my_area->right;
 			} else if (b3_winman_get_mode(winman) == VERTICAL) {
-				current_pos = my_area->top - increment;
+				current_pos = my_area->top;
 			}
+
+			/**
+			 * The right/top most areas have to be added first, since the stack
+			 * later will be popped the other way around. Thus start from
+			 * left/bottom would place the windows in the reverse (wrong) order
+			 * on the screen.
+			 */
 
 			for (i = 0; i < size; i++) {
 				child_area = malloc(sizeof(RECT));
@@ -963,12 +970,12 @@ b3_ws_arrange_wins_visitor(b3_winman_t *winman, void *data)
 				child_area->left = my_area->left;
 				child_area->right = my_area->right;
 
-				current_pos += increment;
+				current_pos -= increment;
 				if (b3_winman_get_mode(winman) == HORIZONTAL) {
-					child_area->left = increment;
+					child_area->left = current_pos;
 					child_area->right = child_area->left + increment;
 				} else if (b3_winman_get_mode(winman) == VERTICAL) {
-					child_area->top = increment;
+					child_area->top = current_pos;
 					child_area->bottom = child_area->top + increment;
 				}
 
