@@ -12,14 +12,16 @@ __b__(aeck's implementation of i) __3__ (wm for Windows)
 
 1. Head over to the [Release](https://github.com/ritschmaster/b3/releases) page and download the latest binary zip file.
 2. Decompress it somwhere
-3. Execute `b3.exe`
+3. Copy the `example.config` to `bin` (See [FAQ](#faq) if you want to personalize the configuration))
+4. Execute `b3.exe`
 
 ### Using source code releases
 
 1. Head over to the [Release](https://github.com/ritschmaster/b3/releases) page and download the latest source zip file.
 2. Decompress it somwhere
 3. See [Compiling](#Compiling)
-4. Execute `b3.exe`
+4. Copy the `example.config` to `bin` (See [FAQ](#faq) if you want to personalize the configuration))
+5. Execute `b3.exe`
 
 ## FAQ
 
