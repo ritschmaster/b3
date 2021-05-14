@@ -46,7 +46,11 @@ See [here](https://github.com/ritschmaster/b3/blob/master/CompatibilityList.md).
 
 ### I need a default configuration
 
-Since version 0.4 a default config file is included in the [release zip](https://github.com/ritschmaster/b3/releases). There is also an example configuration available at `tests/full.config` (please place it as `config` in the same directory as `b3.exe` to use it).
+A default config file is included in the [release zip](https://github.com/ritschmaster/b3/releases). There is also an example configuration available at `tests/full.config` (please place it as `config` in the same directory as `b3.exe` to use it).
+
+For more information on where the configuration file can be placed please see the included man page. In a release it can be viewed using
+
+    man /path/b3/share/man/man1/b3.1
 
 ### Are there known limitations?
 
