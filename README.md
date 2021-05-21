@@ -2,7 +2,6 @@
 
 ![GitHub](https://img.shields.io/github/license/ritschmaster/b3)
 [![Telegram chat](https://img.shields.io/badge/chat-%40b3__dev-%2335ADE1?logo=telegram)](https://t.me/b3_dev)
-[![Join the chat at https://gitter.im/b3wm/community](https://badges.gitter.im/b3wm/community.svg)](https://gitter.im/b3wm/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 ![GitHub All Releases](https://img.shields.io/github/downloads/ritschmaster/b3/total)
 
 __b__(aeck's implementation of i) __3__ (wm for Windows)
