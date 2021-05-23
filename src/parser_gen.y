@@ -35,6 +35,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <w32bindkeys/logger.h>
 #include <w32bindkeys/be.h>
 #include <w32bindkeys/b.h>
 #include <w32bindkeys/kc_sys.h>
@@ -54,6 +55,8 @@
 #include "rule.h"
 
 #define B3_WORD_BUFFER_LEN 256
+
+static wbk_logger_t logger = { "parser_gen" };
 
 static wbk_b_t *g_b = NULL;
 static wbk_kc_t *g_kc = NULL;
@@ -212,7 +215,7 @@ yyerror(b3_kc_director_factory_t **kc_director_factory,
         wbk_kbman_t **kbman,
         yyscan_t scanner,
         const char *msg) {
-	fprintf(stderr, "Error: %s\n", msg);
+  wbk_logger_log(&logger, SEVERE, "Error during parsing the configuration file: %s\n", msg);
 
 	return 0;
 }
@@ -269,6 +272,7 @@ typedef void* yyscan_t;
 %token               TOKEN_ENABLE
 %token               TOKEN_FULLSCREEN
 %token               TOKEN_EXEC
+%token               TOKEN_SPLIT
 %token               TOKEN_NO_STARTUP_ID
 %token               TOKEN_TOGGLE
 %token               TOKEN_TO
@@ -335,6 +339,7 @@ bindsym-cmd: bindsym-cmd-focus
        | bindsym-cmd-floating
        | bindsym-cmd-fullscreen
        | bindsym-cmd-exec
+       | bindsym-cmd-split
        ;
 
 bindsym-cmd-focus: TOKEN_FOCUS TOKEN_SPACE bindsym-cmd-focus-direction
@@ -434,6 +439,27 @@ bindsym-cmd-exec: TOKEN_EXEC TOKEN_SPACE TOKEN_NO_STARTUP_ID TOKEN_SPACE text
         | TOKEN_EXEC TOKEN_SPACE text
         { g_kc = (wbk_kc_t *) b3_kc_exec_new(g_b, *director, ON_START_WS, g_text); g_text = NULL; }
         ;
+
+bindsym-cmd-split: TOKEN_SPLIT TOKEN_SPACE TOKEN_KEY
+{
+  char msg[256];
+
+  switch($3) {
+  case 'h':
+    g_kc = (wbk_kc_t *) b3_kc_director_factory_create_sh(*kc_director_factory, g_b, *director);
+    break;
+
+  case 'v':
+    g_kc = (wbk_kc_t *) b3_kc_director_factory_create_sv(*kc_director_factory, g_b, *director);
+    break;
+
+  default:
+      sprintf(msg, "Unexpected token: %c", $3);
+      yyerror(*kc_director_factory, *condition_factory, *action_factory, *director, *kbman, scanner, msg);
+      YYERROR;
+  }
+}
+                  ;
 
 for_window:
   TOKEN_FOR_WINDOW TOKEN_SPACE TOKEN_BRACKET_OPEN for_window-conditions TOKEN_BRACKET_CLOSE TOKEN_SPACE for_window-actions

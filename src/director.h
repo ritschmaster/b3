@@ -230,6 +230,14 @@ extern int
 b3_director_move_win_to_ws(b3_director_t *director, b3_win_t *win, const char *ws_id);
 
 /**
+ * Splits the focused window of the focused workspace in the direction mode.
+ *
+ * @return 0 if the split was successful. Non-0 otherwise.
+ */
+extern int
+b3_director_split(b3_director_t *director, b3_winman_mode_t mode);
+
+/**
  * @return Returns a new workspace switcher. Free it by yourself!
  */
 extern b3_ws_switcher_t *

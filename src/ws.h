@@ -166,7 +166,7 @@ b3_ws_remove_win(b3_ws_t *ws, b3_win_t *win);
  * of the focused window.
  *
  * @param mode The mode of the split (new window manager).
- * @return 0 if the vertical split was successful. Non-0 otherwise.
+ * @return 0 if the split was successful. Non-0 otherwise.
  */
 extern int
 b3_ws_split(b3_ws_t *ws, b3_winman_mode_t mode);

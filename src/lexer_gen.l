@@ -72,6 +72,7 @@ FLOATING        floating
 ENABLE          enable
 FULLSCREEN      fullscreen
 EXEC            exec
+SPLIT           split
 NO_STARTUP_ID   --no-startup-id
 TOGGLE          toggle
 TO              to
@@ -109,6 +110,7 @@ EOF             \Z
 {ENABLE}                 { return TOKEN_ENABLE; }
 {FULLSCREEN}             { return TOKEN_FULLSCREEN; }
 {EXEC}                   { return TOKEN_EXEC; }
+{SPLIT}                  { return TOKEN_SPLIT; }
 {NO_STARTUP_ID}          { return TOKEN_NO_STARTUP_ID; }
 {TOGGLE}                 { return TOKEN_TOGGLE; }
 {TO}                     { return TOKEN_TO; }

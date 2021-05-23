@@ -406,3 +406,29 @@ b3_kc_director_factory_create_mfwtmr(b3_kc_director_factory_t *kc_director_facto
 	return mawr;
 
 }
+
+b3_kc_director_t *
+b3_kc_director_factory_create_sh(b3_kc_director_factory_t *kc_director_factory,
+								 wbk_b_t *comb,
+								 b3_director_t *director)
+{
+	b3_kc_director_t *sh;
+
+	sh = b3_kc_director_new(comb, director, SPLIT_H, NULL);
+
+	return sh;
+
+}
+
+b3_kc_director_t *
+b3_kc_director_factory_create_sv(b3_kc_director_factory_t *kc_director_factory,
+								 wbk_b_t *comb,
+								 b3_director_t *director)
+{
+	b3_kc_director_t *sv;
+
+	sv = b3_kc_director_new(comb, director, SPLIT_V, NULL);
+
+	return sv;
+
+}

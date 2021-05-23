@@ -34,6 +34,8 @@ The following functions in the config file are fully supported:
 * bindsym \<KEY BINDING\> move workspace to output up
 * bindsym \<KEY BINDING\> move workspace to output right
 * bindsym \<KEY BINDING\> move workspace to output right
+* bindsym \<KEY BINDING\> split h
+* bindsym \<KEY BINDING\> split v
 * bindsym \<KEY BINDING\> workspace \<WORKSPACE NAME\>
 * bindsym \<KEY BINDING\> move container to workspace \<WORKSPACE NAME\>
 * for_window [title="\<REGEX\>"] floating enable

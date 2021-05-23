@@ -33,6 +33,7 @@
 #include <w32bindkeys/logger.h>
 #include <windows.h>
 
+#include "director.h"
 #include "monitor.h"
 
 static wbk_logger_t logger =  { "kc_director" };
@@ -143,6 +144,12 @@ b3_kc_director_exec_mfwtml(const b3_kc_director_t *kc_director);
 
 static int
 b3_kc_director_exec_mfwtmr(const b3_kc_director_t *kc_director);
+
+static int
+b3_kc_director_exec_sh(const b3_kc_director_t *kc_director);
+
+static int
+b3_kc_director_exec_sv(const b3_kc_director_t *kc_director);
 
 /**
  * Position the cursor in the middle of the monitor.
@@ -404,6 +411,14 @@ b3_kc_director_exec_threaded(LPVOID param)
 	case MOVE_FOCUSED_WINDOW_TO_MONITOR_RIGHT:
 		ret = b3_kc_director_exec_mfwtmr(kc_director);
 		break;
+
+  case SPLIT_H:
+    ret = b3_kc_director_exec_sh(kc_director);
+    break;
+
+  case SPLIT_V:
+    ret = b3_kc_director_exec_sv(kc_director);
+    break;
 
 	default:
 		ret = -1;
@@ -806,6 +821,26 @@ b3_kc_director_exec_mfwtmr(const b3_kc_director_t *kc_director)
 	ret = b3_director_move_focused_win_to_monitor_by_dir(kc_director->director, RIGHT);
 
 	return ret;
+}
+
+int
+b3_kc_director_exec_sh(const b3_kc_director_t *kc_director)
+{
+	int error;
+
+  error = b3_director_split(kc_director->director, HORIZONTAL);
+
+	return error;
+}
+
+int
+b3_kc_director_exec_sv(const b3_kc_director_t *kc_director)
+{
+	int error;
+
+  error = b3_director_split(kc_director->director, VERTICAL);
+
+	return error;
 }
 
 int

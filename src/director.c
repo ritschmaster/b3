@@ -961,6 +961,36 @@ b3_director_move_win_to_ws(b3_director_t *director, b3_win_t *win, const char *w
   return error;
 }
 
+int
+b3_director_split(b3_director_t *director, b3_winman_mode_t mode)
+{
+  int error;
+  char found;
+  ArrayIter iter;
+  b3_monitor_t *monitor;
+  b3_ws_t *focused_ws;
+  b3_ws_t *ws;
+
+  error = 0;
+
+  WaitForSingleObject(director->global_mutex, INFINITE);
+
+  if (!error) {
+      focused_ws = b3_monitor_get_focused_ws(b3_director_get_focused_monitor(director));
+      if (focused_ws == NULL) {
+          error = 1;
+      }
+  }
+
+  if (!error) {
+      error = b3_ws_split(focused_ws, mode);
+  }
+
+  ReleaseMutex(director->global_mutex);
+
+  return error;
+}
+
 b3_ws_switcher_t *
 b3_director_create_ws_switcher(b3_director_t *director)
 {
