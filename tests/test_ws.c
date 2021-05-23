@@ -123,7 +123,7 @@ check_win_arr(b3_winman_t *winman, b3_win_t **win_arr_exp)
 {
 	int error;
 
-	memset(g_win_arr, 0, ARR_LEN);
+	memset(g_win_arr, 0, ARR_LEN * sizeof(b3_win_t *));
 	g_win_arr_i = 0;
 	b3_winman_traverse(winman, win_visitor, NULL);
 	error = memcmp(g_win_arr, win_arr_exp, ARR_LEN);
@@ -150,6 +150,8 @@ test_set_name(void)
 	b3_ws_t *ws;
 
 	ws = b3_ws_new("test");
+
+	error = 0;
 
 	if (!error) {
 		error = strcmp(b3_ws_get_name(ws), "test");
@@ -269,7 +271,7 @@ test_vsplit(void)
 	error = check_winman_arr(ws->winman, "HVLLLL");
 
 	if (!error) {
-		memset(win_arr_exp, 0, ARR_LEN);
+		memset(win_arr_exp, 0, ARR_LEN * sizeof(b3_win_t *));
 		win_arr_exp[0] = win1;
 		win_arr_exp[1] = win2;
 		win_arr_exp[2] = win3;
@@ -330,7 +332,7 @@ int error;
 	b3_win_t *win2;
 	b3_win_t *win3;
 	b3_win_t *win4;
-	b3_win_t *win_arr_exp[ARR_LEN];
+	//b3_win_t *win_arr_exp[ARR_LEN]; //TODO
 
 	win1 = b3_win_new((HWND) 1, 0);
 	win2 = b3_win_new((HWND) 2, 0);
@@ -386,6 +388,8 @@ test_simple_remove_win(void)
 	b3_ws_add_win(ws, win4);
 
 	b3_ws_remove_win(ws, win4);
+
+	error = 0;
 
 	if (!error) {
 		error = check_winman_arr(ws->winman, "HLLL");
@@ -472,7 +476,7 @@ test_complex_remove_win(void)
 	b3_win_t *win2;
 	b3_win_t *win3;
 	b3_win_t *win4;
-	b3_win_t *win_arr_exp[ARR_LEN];
+	//b3_win_t *win_arr_exp[ARR_LEN]; // TODO
 
 	win1 = b3_win_new((HWND) 1, 0);
 	win2 = b3_win_new((HWND) 2, 0);
@@ -523,7 +527,7 @@ test_remove_win_all(void)
 	b3_win_t *win2;
 	b3_win_t *win3;
 	b3_win_t *win4;
-	char winman_arr_exp[ARR_LEN];
+	//char winman_arr_exp[ARR_LEN]; // TODO
 	b3_win_t *win_arr_exp[ARR_LEN];
 
 	win1 = b3_win_new((HWND) 1, 0);
@@ -549,7 +553,7 @@ test_remove_win_all(void)
 	}
 
 	if (!error) {
-		memset(win_arr_exp, 0, ARR_LEN);
+		memset(win_arr_exp, 0, ARR_LEN * sizeof(b3_win_t *));
 
 		error = check_win_arr(ws->winman, win_arr_exp);
 	}
@@ -568,7 +572,7 @@ test_floating_simple(void)
 	b3_win_t *win2;
 	b3_win_t *win3;
 	b3_win_t *win4;
-	char winman_arr_exp[ARR_LEN];
+	//char winman_arr_exp[ARR_LEN]; // TODO
 	b3_win_t *win_arr_exp[ARR_LEN];
 
 	win1 = b3_win_new((HWND) 1, 0);
@@ -586,7 +590,7 @@ test_floating_simple(void)
 	error = check_winman_arr(ws->winman, "HLLL");
 
 	if (!error) {
-		memset(win_arr_exp, 0, ARR_LEN);
+		memset(win_arr_exp, 0, ARR_LEN * sizeof(b3_win_t *));
 		win_arr_exp[0] = win1;
 		win_arr_exp[1] = win3;
 		win_arr_exp[2] = win4;
@@ -612,7 +616,7 @@ test_floating_complex(void)
 	b3_win_t *win2;
 	b3_win_t *win3;
 	b3_win_t *win4;
-	char winman_arr_exp[ARR_LEN];
+	//char winman_arr_exp[ARR_LEN]; // TODO
 	b3_win_t *win_arr_exp[ARR_LEN];
 
 	win1 = b3_win_new((HWND) 1, 0);
@@ -632,7 +636,7 @@ test_floating_complex(void)
 	error = check_winman_arr(ws->winman, "HLLL");
 
 	if (!error) {
-		memset(win_arr_exp, 0, ARR_LEN);
+		memset(win_arr_exp, 0, ARR_LEN * sizeof(b3_win_t *));
 		win_arr_exp[0] = win1;
 		win_arr_exp[1] = win3;
 		win_arr_exp[2] = win2;
@@ -659,8 +663,6 @@ test_simple_win_rel(void)
 	b3_win_t *win3;
 	b3_win_t *win4;
 	b3_win_t *found;
-	char winman_arr_exp[ARR_LEN];
-	b3_win_t *win_arr_exp[ARR_LEN];
 
 	win1 = b3_win_new((HWND) 1, 0);
 	win2 = b3_win_new((HWND) 2, 0);
@@ -738,7 +740,6 @@ test_simple_move(void)
 	b3_win_t *win2;
 	b3_win_t *win3;
 	b3_win_t *win4;
-	char winman_arr_exp[ARR_LEN];
 	b3_win_t *win_arr_exp[ARR_LEN];
 
 	win1 = b3_win_new((HWND) 1, 0);
@@ -760,7 +761,7 @@ test_simple_move(void)
 		error = check_winman_arr(ws->winman, "VHLLLL");
 
 		if (!error) {
-			memset(win_arr_exp, 0, ARR_LEN);
+			memset(win_arr_exp, 0, ARR_LEN * sizeof(b3_win_t *));
 			win_arr_exp[0] = win1;
 			win_arr_exp[1] = win3;
 			win_arr_exp[2] = win4;
@@ -781,7 +782,7 @@ test_simple_move(void)
 		error = check_winman_arr(ws->winman, "VHLLLL");
 
 		if (!error) {
-			memset(win_arr_exp, 0, ARR_LEN);
+			memset(win_arr_exp, 0, ARR_LEN * sizeof(b3_win_t *));
 			win_arr_exp[0] = win3;
 			win_arr_exp[1] = win1;
 			win_arr_exp[2] = win4;
@@ -814,8 +815,6 @@ test_complex_win_rel(void)
 	b3_win_t *win3;
 	b3_win_t *win4;
 	b3_win_t *found;
-	char winman_arr_exp[ARR_LEN];
-	b3_win_t *win_arr_exp[ARR_LEN];
 
 	win1 = b3_win_new((HWND) 1, 0);
 	win2 = b3_win_new((HWND) 2, 0);
@@ -928,7 +927,6 @@ test_complex_move(void)
 	b3_win_t *win2;
 	b3_win_t *win3;
 	b3_win_t *win4;
-	char winman_arr_exp[ARR_LEN];
 	b3_win_t *win_arr_exp[ARR_LEN];
 
 	win1 = b3_win_new((HWND) 1, 0);
@@ -951,7 +949,7 @@ test_complex_move(void)
 		error = check_winman_arr(ws->winman, "VHLLLL");
 
 		if (!error) {
-			memset(win_arr_exp, 0, ARR_LEN);
+			memset(win_arr_exp, 0, ARR_LEN * sizeof(b3_win_t *));
 			win_arr_exp[0] = win1;
 			win_arr_exp[1] = win3;
 			win_arr_exp[2] = win4;
@@ -971,7 +969,7 @@ test_complex_move(void)
 		error = check_winman_arr(ws->winman, "VLHLLL");
 
 		if (!error) {
-			memset(win_arr_exp, 0, ARR_LEN);
+			memset(win_arr_exp, 0, ARR_LEN * sizeof(b3_win_t *));
 			win_arr_exp[0] = win2;
 			win_arr_exp[1] = win1;
 			win_arr_exp[2] = win3;
@@ -986,6 +984,15 @@ test_complex_move(void)
 	}
 
 	if (!error) {
+		b3_ws_set_focused_win(ws, win2);
+			wbk_logger_log(&logger, DEBUG, "ok\n");
+		if (b3_ws_get_win_rel_to_focused_win(ws, DOWN, 0) != win4) {
+			wbk_logger_log(&logger, SEVERE, "Failed retrieving down of 'win2'\n");
+			error = 1;
+		}
+	}
+
+	if (!error) {
 		b3_ws_set_focused_win(ws, win4);
 		b3_ws_move_focused_win(ws, LEFT);
 		b3_ws_move_focused_win(ws, LEFT);
@@ -993,7 +1000,7 @@ test_complex_move(void)
 		error = check_winman_arr(ws->winman, "VLHLLL");
 
 		if (!error) {
-			memset(win_arr_exp, 0, ARR_LEN);
+			memset(win_arr_exp, 0, ARR_LEN * sizeof(b3_win_t *));
 			win_arr_exp[0] = win2;
 			win_arr_exp[1] = win4;
 			win_arr_exp[2] = win1;
@@ -1015,7 +1022,7 @@ test_complex_move(void)
 		//error = check_winman_arr(ws->winman, "HLVLHLL"); // TODO
 
 		if (!error) {
-			memset(win_arr_exp, 0, ARR_LEN);
+			memset(win_arr_exp, 0, ARR_LEN * sizeof(b3_win_t *));
 			win_arr_exp[0] = win2;
 			win_arr_exp[1] = win4;
 			win_arr_exp[2] = win1;
@@ -1042,7 +1049,7 @@ test_complex_move(void)
 		//error = check_winman_arr(ws->winman, "HLVLHLL"); // TODO
 
 		if (!error) {
-			memset(win_arr_exp, 0, ARR_LEN);
+			memset(win_arr_exp, 0, ARR_LEN * sizeof(b3_win_t *));
 			win_arr_exp[0] = win2;
 			win_arr_exp[1] = win1;
 			win_arr_exp[2] = win3;
@@ -1065,7 +1072,7 @@ test_complex_move(void)
 		//error = check_winman_arr(ws->winman, "HLVLHLL"); // TODO
 
 		if (!error) {
-			memset(win_arr_exp, 0, ARR_LEN);
+			memset(win_arr_exp, 0, ARR_LEN * sizeof(b3_win_t *));
 			win_arr_exp[0] = win2;
 			win_arr_exp[1] = win1;
 			win_arr_exp[2] = win3;
@@ -1097,7 +1104,6 @@ test_simple_arrange(void)
 	b3_win_t *win2;
 	b3_win_t *win3;
 	b3_win_t *win4;
-	char winman_arr_exp[ARR_LEN];
 	b3_win_t *win_arr_exp[ARR_LEN];
 
 	monitor_area.top = 0;
@@ -1122,7 +1128,7 @@ test_simple_arrange(void)
 	error = check_winman_arr(ws->winman, "HLLLL");
 
 	if (!error) {
-		memset(win_arr_exp, 0, ARR_LEN);
+		memset(win_arr_exp, 0, ARR_LEN * sizeof(b3_win_t *));
 		win_arr_exp[0] = win1;
 		win_arr_exp[1] = win2;
 		win_arr_exp[2] = win3;
@@ -1150,7 +1156,6 @@ test_complex_arrange(void)
 	b3_win_t *win2;
 	b3_win_t *win3;
 	b3_win_t *win4;
-	char winman_arr_exp[ARR_LEN];
 	b3_win_t *win_arr_exp[ARR_LEN];
 
 	monitor_area.top = 0;
@@ -1177,7 +1182,7 @@ test_complex_arrange(void)
 	error = check_winman_arr(ws->winman, "HLLVL");
 
 	if (!error) {
-		memset(win_arr_exp, 0, ARR_LEN);
+		memset(win_arr_exp, 0, ARR_LEN * sizeof(b3_win_t *));
 		win_arr_exp[0] = win1;
 		win_arr_exp[1] = win3;
 		win_arr_exp[2] = win2;
