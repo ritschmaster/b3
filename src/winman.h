@@ -193,7 +193,7 @@ b3_winman_contains_win(b3_winman_t *winman, const b3_win_t *win);
  * parameter root.
  *
  * The window manager given by the parameter winman must be already available
- * in the window manager give by the parameter root (reference check).
+ * in the window manager given by the parameter root (reference check).
  *
  * @param rolling If non-0, then the window starting from the other end of the
  * window manager is used

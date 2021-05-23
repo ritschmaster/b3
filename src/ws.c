@@ -92,12 +92,6 @@ b3_ws_move_focused_win_impl(b3_ws_t *ws, b3_ws_move_direction_t direction);
 static int
 b3_ws_toggle_floating_win_impl(b3_ws_t *ws, b3_win_t *win);
 
-/**
- * @param data Must be actually of type b3_ws_toggle_floating_visitor_t *
- */
-static void
-b3_ws_toggle_floating_win_visitor(b3_winman_t *winman, void *data);
-
 static int
 b3_ws_minimize_wins_impl(b3_ws_t *ws);
 
@@ -789,10 +783,6 @@ b3_ws_get_win_rel_to_focused_win_impl(b3_ws_t *ws,
 	b3_winman_t *focused_win_container;
 	b3_winman_t *container;
 	b3_winman_t *parent;
-	ArrayIter child_iter;
-	b3_winman_t *winman_child;
-	ArrayIter previous_iter;
-	b3_win_t *previous_win;
 	b3_ws_find_last_previous_t find_last_previous;
 
 	found = NULL;
@@ -813,10 +803,12 @@ b3_ws_get_win_rel_to_focused_win_impl(b3_ws_t *ws,
 
 	focused_win_container = b3_winman_contains_win(ws->winman, b3_ws_get_focused_win(ws));
 	if (focused_win_container) {
+		parent = focused_win_container;
+		container = focused_win_container;
+		while (container) {
 		/**
 		 * Go up from container to search for a node having the needed mode
 		 */
-		container = focused_win_container;
 		for (;;) {
 			parent = b3_winman_get_parent(ws->winman, container);
 			if ((parent && b3_winman_get_mode(parent) == mode)
@@ -832,10 +824,29 @@ b3_ws_get_win_rel_to_focused_win_impl(b3_ws_t *ws,
 			 * We now have the correct root node in variable parent. Lets switch to
 			 * the one we look for.
 			 */
-			parent = b3_winman_get_winman_rel_to_winman(parent,
-														container,
-														child_to_get,
-														rolling);
+			container = b3_winman_get_winman_rel_to_winman(parent,
+														   container,
+														   child_to_get,
+														   rolling);
+
+			if (container) {
+				/**
+				 * We are done.
+				 */
+				parent = container;
+				container = NULL;
+			} else {
+				/**
+				 * Maybe one of higher nodes does match our orientation too. Then we will utilize that node instead.
+				 */
+				container = parent;
+			}
+		} else {
+			/**
+			 * Exit the loop if we cannot find the correct parent
+		     */
+			container = NULL;
+		}
 		}
 
 		/**

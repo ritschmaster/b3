@@ -82,7 +82,7 @@ test_simple_tree(void)
 	b3_winman_add_winman(inner, b3_winman_new(VERTICAL));
 	b3_winman_add_winman(inner, b3_winman_new(VERTICAL));
 
-	memset(g_arr, 0, ARR_LEN);
+	memset(g_arr, 0, ARR_LEN * sizeof(char));
 	g_arr_i = 0;
 	b3_winman_traverse(root, visitor, NULL);
 
@@ -119,8 +119,10 @@ test_remove_winman(void)
 
 	b3_winman_add_winman(inner, b3_winman_new(VERTICAL));
 
+	error = 0;
+
 	if (!error) {
-		memset(g_arr, 0, ARR_LEN);
+		memset(g_arr, 0, ARR_LEN * sizeof(char));
 		g_arr_i = 0;
 		b3_winman_traverse(root, visitor, NULL);
 		error = strcmp(g_arr, "IILLILILLL");
@@ -131,14 +133,14 @@ test_remove_winman(void)
 	}
 
 	if (!error) {
-		memset(g_arr, 0, ARR_LEN);
+		memset(g_arr, 0, ARR_LEN * sizeof(char));
 		g_arr_i = 0;
 		b3_winman_traverse(root, visitor, NULL);
 		error = strcmp(g_arr, "IILLILL");
 	}
 
 	if (!error) {
-		memset(g_arr, 0, ARR_LEN);
+		memset(g_arr, 0, ARR_LEN * sizeof(char));
 		g_arr_i = 0;
 		b3_winman_traverse(winman_to_remove, visitor, NULL);
 		error = strcmp(g_arr, "ILL");

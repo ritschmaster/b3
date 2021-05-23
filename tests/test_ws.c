@@ -324,7 +324,7 @@ int error;
 }
 
 static int
-test_complex_split(void)
+test_complex_split_1(void)
 {
 int error;
 	b3_ws_t *ws;
@@ -361,6 +361,87 @@ int error;
 	b3_win_free(win2);
 	b3_win_free(win3);
 	b3_win_free(win4);
+
+	return error;
+}
+
+static int
+test_complex_split_2(void)
+{
+	int error;
+	b3_ws_t *ws;
+	b3_win_t *win1;
+	b3_win_t *win2;
+	b3_win_t *win3;
+	b3_win_t *win_arr_exp[ARR_LEN];
+
+	win1 = b3_win_new((HWND) 1, 0);
+	win2 = b3_win_new((HWND) 2, 0);
+	win3 = b3_win_new((HWND) 3, 0);
+
+	ws = b3_ws_new("test");           /** H */
+	b3_ws_add_win(ws, win1);          /** HL */
+	b3_ws_add_win(ws, win2);          /** HLL*/
+	b3_ws_set_focused_win(ws, win1);
+	b3_ws_split(ws, HORIZONTAL);      /** HHLL */
+
+	error = 0;
+
+	if (!error) {
+		error = check_winman_arr(ws->winman, "HLHL");
+
+		if (!error) {
+			memset(win_arr_exp, 0, ARR_LEN * sizeof(b3_win_t *));
+			win_arr_exp[0] = win2;
+			win_arr_exp[1] = win1;
+
+			error = check_win_arr(ws->winman, win_arr_exp);
+		}
+
+		if (error) {
+			wbk_logger_log(&logger, SEVERE, "Failed splitting horizontally.\n");
+		}
+	}
+
+	if (!error) {
+		b3_ws_add_win(ws, win3);          /** HLHLL */
+
+		error = check_winman_arr(ws->winman, "HLHLL");
+
+		if (!error) {
+			memset(win_arr_exp, 0, ARR_LEN * sizeof(b3_win_t *));
+			win_arr_exp[0] = win2;
+			win_arr_exp[1] = win1;
+			win_arr_exp[2] = win3;
+
+			error = check_win_arr(ws->winman, win_arr_exp);
+		}
+
+		if (error) {
+			wbk_logger_log(&logger, SEVERE, "Failed adding 'win3'.\n");
+		}
+	}
+
+	if (!error) {
+		b3_ws_set_focused_win(ws, win2);
+		if (b3_ws_get_win_rel_to_focused_win(ws, RIGHT, 0) != win3) {
+			error = 1;
+			wbk_logger_log(&logger, SEVERE, "Failed getting RIGHT of win2.\n");
+		}
+	}
+
+	if (!error) {
+		b3_ws_set_focused_win(ws, win1);
+		if (b3_ws_get_win_rel_to_focused_win(ws, LEFT, 0) != win2) {
+			error = 1;
+			wbk_logger_log(&logger, SEVERE, "Failed getting LEFT of win1.\n");
+		}
+	}
+
+	b3_ws_free(ws);
+	b3_win_free(win1);
+	b3_win_free(win2);
+	b3_win_free(win3);
 
 	return error;
 }
@@ -917,9 +998,8 @@ test_complex_win_rel(void)
 	return error;
 }
 
-
 static int
-test_complex_move(void)
+test_complex_move_1(void)
 {
 	int error;
 	b3_ws_t *ws;
@@ -985,7 +1065,6 @@ test_complex_move(void)
 
 	if (!error) {
 		b3_ws_set_focused_win(ws, win2);
-			wbk_logger_log(&logger, DEBUG, "ok\n");
 		if (b3_ws_get_win_rel_to_focused_win(ws, DOWN, 0) != win4) {
 			wbk_logger_log(&logger, SEVERE, "Failed retrieving down of 'win2'\n");
 			error = 1;
@@ -1093,6 +1172,7 @@ test_complex_move(void)
 
 	return error;
 }
+
 
 static int
 test_simple_arrange(void)
@@ -1207,7 +1287,8 @@ main(void)
 	b3_test(setup, teardown, test_set_focused_win, "test_set_focused_win");
 	b3_test(setup, teardown, test_vsplit, "test_vsplit");
 	b3_test(setup, teardown, test_hsplit, "test_hsplit");
-	b3_test(setup, teardown, test_complex_split, "test_complex_split");
+	b3_test(setup, teardown, test_complex_split_1, "test_complex_split_1");
+	b3_test(setup, teardown, test_complex_split_2, "test_complex_split_2");
 	b3_test(setup, teardown, test_simple_remove_win, "test_simple_remove_win");
 	b3_test(setup, teardown, test_remove_win_after_changed_focus, "test_remove_win_after_changed_focus");
 	b3_test(setup, teardown, test_complex_remove_win, "test_complex_remove_win");
@@ -1217,7 +1298,7 @@ main(void)
 	b3_test(setup, teardown, test_simple_win_rel, "test_simple_win_rel");
 	b3_test(setup, teardown, test_simple_move, "test_simple_move");
 	b3_test(setup, teardown, test_complex_win_rel, "test_complex_win_rel");
-	b3_test(setup, teardown, test_complex_move, "test_complex_move");
+	b3_test(setup, teardown, test_complex_move_1, "test_complex_move_1");
 	//b3_test(setup, teardown, test_simple_arrange, "test_simple_arrange");
 	//b3_test(setup, teardown, test_complex_arrange, "test_complex_arrange");
 
