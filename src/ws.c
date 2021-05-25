@@ -114,6 +114,11 @@ static void
 b3_ws_is_empty_visitor(b3_winman_t *winman, void *data);
 
 static b3_win_t *
+b3_ws_get_win_rel_to_focused_win_impl_internal(b3_ws_t *ws,
+											   b3_ws_move_direction_t direction,
+											   char rolling);
+
+static b3_win_t *
 b3_ws_get_win_rel_to_focused_win_impl(b3_ws_t *ws,
 									  b3_ws_move_direction_t direction,
 									  char rolling);
@@ -773,9 +778,9 @@ b3_ws_is_empty_visitor(b3_winman_t *winman, void *data)
 }
 
 b3_win_t *
-b3_ws_get_win_rel_to_focused_win_impl(b3_ws_t *ws,
-									  b3_ws_move_direction_t direction,
-									  char rolling)
+b3_ws_get_win_rel_to_focused_win_impl_internal(b3_ws_t *ws,
+											   b3_ws_move_direction_t direction,
+											   char rolling)
 {
 	b3_win_t *found;
 	b3_winman_mode_t mode;
@@ -864,6 +869,29 @@ b3_ws_get_win_rel_to_focused_win_impl(b3_ws_t *ws,
 							 (void *) &found);
 			}
 		}
+	}
+
+	return found;
+}
+
+b3_win_t *
+b3_ws_get_win_rel_to_focused_win_impl(b3_ws_t *ws,
+									  b3_ws_move_direction_t direction,
+									  char rolling)
+{
+	b3_win_t *found;
+
+	found = NULL;
+
+	if (rolling) {
+		/**
+		 * First try finding the window without using the rolling flag.
+		 */
+		found = b3_ws_get_win_rel_to_focused_win_impl_internal(ws, direction, 0);
+	}
+
+	if (found == NULL) {
+		found = b3_ws_get_win_rel_to_focused_win_impl_internal(ws, direction, rolling);
 	}
 
 	return found;
