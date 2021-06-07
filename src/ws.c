@@ -319,6 +319,11 @@ b3_ws_set_focused_win_impl(b3_ws_t *ws, const b3_win_t *win)
 {
 	b3_winman_t *winman;
 	int error;
+	int i;
+	int j;
+	int len;
+	b3_win_t *a;
+	b3_win_t *b;
 
 	error = 1;
 	if (win) {
@@ -326,6 +331,24 @@ b3_ws_set_focused_win_impl(b3_ws_t *ws, const b3_win_t *win)
 		if (winman) {
 			if (ws->focused_win) {
 				array_add(ws->previously_focused_win_arr, ws->focused_win);
+
+				/**
+				 * Remove all duplicates
+				 */
+				len = array_size(ws->previously_focused_win_arr);
+				for (i = 0; i < len; i++) {
+					array_get_at(ws->previously_focused_win_arr, i, (void *) &a);
+					for (j = i + 1; j < len; j++) {
+						array_get_at(ws->previously_focused_win_arr, j, (void *) &b);
+						if (a == b) {
+							array_remove_at(ws->previously_focused_win_arr, j, NULL);
+							j--;
+							len--;
+						} else {
+							j = len;
+						}
+					}
+				}
 			}
 			ws->focused_win = b3_winman_get_win(winman);
 			error = 0;
@@ -398,46 +421,83 @@ b3_ws_remove_win_impl(b3_ws_t *ws, b3_win_t *win)
 
 	error = 1;
 
-	array_iter_init(&iter, ws->floating_win_arr);
-	while (error && array_iter_next(&iter, (void*) &win_iter) != CC_ITER_END) {
-		if (b3_win_compare(win_iter, win) == 0) {
-			array_iter_remove(&iter, NULL);
-			error = 0;
-		}
-	}
+	winman = b3_winman_contains_win(ws->winman, win);
+	if (winman) {
+		root = b3_winman_get_parent(ws->winman, winman);
+		if (root) {
+			error = b3_winman_remove_winman(root, winman);
+			if (!error) {
+				/**
+				 * Remove all occurrences of win in ws->floating_win_arr
+				 */
+				array_iter_init(&iter, ws->floating_win_arr);
+				while (error && array_iter_next(&iter, (void*) &win_iter) != CC_ITER_END) {
+					if (b3_win_compare(win_iter, win) == 0) {
+						array_iter_remove(&iter, NULL);
+					}
+				}
 
-	if (error) {
-		winman = b3_winman_contains_win(ws->winman, win);
-		if (winman) {
-			root = b3_winman_get_parent(ws->winman, winman);
-			if (root) {
-				error = b3_winman_remove_winman(root, winman);
-				if (!error) {
+				/**
+				 * Remove all occurrences of win in ws->previously_focused_win_arr.
+				 */
+				array_iter_init(&iter, ws->previously_focused_win_arr);
+				while (array_iter_next(&iter, (void*) &win_iter) != CC_ITER_END) {
+					if (b3_win_compare(win_iter, win) == 0) {
+						array_iter_remove(&iter, NULL);
+					}
+				}
+
+				/**
+				 * Set new focused window
+				 */
+				if (b3_ws_get_focused_win(ws)
+					&& b3_win_compare(b3_ws_get_focused_win(ws), win) == 0) {
+					new_focused_win = NULL;
+
+					if (array_size(ws->previously_focused_win_arr)) {
+						array_remove_last(ws->previously_focused_win_arr, (void *) &new_focused_win);
+					}
+
+					b3_ws_set_focused_win(ws, new_focused_win);
+
 					/**
-					 * Remove all occurrences of win in
-					 * ws->previously_focused_win_arr.
+					 * Again remove all occurrences of win in in
+					 * ws->previously_focused_win_arr since b3_ws_set_focused_win_impl() added new_focused_win again.
 					 */
 					array_iter_init(&iter, ws->previously_focused_win_arr);
 					while (array_iter_next(&iter, (void*) &win_iter) != CC_ITER_END) {
-						if (win_iter == win) {
+						if (b3_win_compare(win_iter, win) == 0) {
 							array_iter_remove(&iter, NULL);
 						}
 					}
+				}
 
-					/**
-					 * Set new focused window
-					 */
-					if (b3_win_compare(b3_ws_get_focused_win(ws),
-									   win) == 0) {
-						new_focused_win = NULL;
-						if (array_size(ws->previously_focused_win_arr) > 0) {
-							array_remove_last(ws->previously_focused_win_arr, (void *) &new_focused_win);
+				b3_winman_free(winman);
+				error = 0;
+
+				/**
+				 * Remove all parent window managers that are now empty
+				 */
+				while (root && root != ws->winman) {
+					if (array_size(b3_winman_get_winman_arr(root)) <= 0) {
+						winman = root;
+						root = b3_winman_get_parent(ws->winman, winman);
+						if (b3_winman_remove_winman(root, winman)) {
+							wbk_logger_log(&logger, SEVERE, "Unexpected error in workspace. Please contact the project maintainer(s)!\n");
+
+							/**
+							 * Exit the loop
+							 */
+							root = NULL;
+						} else {
+							b3_winman_free(winman);
 						}
-						b3_ws_set_focused_win(ws, new_focused_win);
+					} else {
+						/**
+						 * Exit the loop
+						 */
+						root = NULL;
 					}
-
-					b3_winman_free(winman);
-					error = 0;
 				}
 			}
 		}
@@ -755,7 +815,6 @@ b3_ws_is_empty_impl(b3_ws_t *ws)
 	number = 0;
 
 	b3_winman_traverse(ws->winman, b3_ws_is_empty_visitor, &number);
-
 	if (number > 0) {
 		number = 0;
 	} else {
