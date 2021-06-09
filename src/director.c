@@ -632,7 +632,7 @@ b3_director_set_active_win_by_direction(b3_director_t *director, b3_ws_move_dire
 	error = 1;
 	win = b3_ws_get_win_rel_to_focused_win(b3_monitor_get_focused_ws(director->focused_monitor),
                                            direction,
-                                           1);
+                                           0);
 	if (win) {
     	b3_win_set_state(b3_ws_get_focused_win(b3_monitor_get_focused_ws(director->focused_monitor)), NORMAL);
     	b3_ws_set_focused_win(b3_monitor_get_focused_ws(director->focused_monitor),
@@ -640,12 +640,31 @@ b3_director_set_active_win_by_direction(b3_director_t *director, b3_ws_move_dire
 		director->ignore_set_foucsed_win = 1;
 		b3_director_w32_set_active_window(b3_win_get_window_handler(win), 1);
 		b3_director_arrange_wins(director);
+        error = 0;
 	} else {
-    /**
-     * Try changing to the other monitor then
-     */
-    error = b3_director_set_focused_monitor_by_direction(director, direction);
-  }
+        /**
+         * Try changing to the other monitor then
+         */
+        error = b3_director_set_focused_monitor_by_direction(director, direction);
+
+        if (error) {
+            /**
+             * Try changing using rolling then
+             */
+            win = b3_ws_get_win_rel_to_focused_win(b3_monitor_get_focused_ws(director->focused_monitor),
+                                                   direction,
+                                                   1);
+            if (win) {
+                b3_win_set_state(b3_ws_get_focused_win(b3_monitor_get_focused_ws(director->focused_monitor)), NORMAL);
+                b3_ws_set_focused_win(b3_monitor_get_focused_ws(director->focused_monitor),
+                                      win);
+                director->ignore_set_foucsed_win = 1;
+                b3_director_w32_set_active_window(b3_win_get_window_handler(win), 1);
+                b3_director_arrange_wins(director);
+                error = 0;
+            }
+        }
+    }
 
 	ReleaseMutex(director->global_mutex);
 
