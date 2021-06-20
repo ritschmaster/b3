@@ -258,16 +258,58 @@ b3_win_show_exec(LPVOID param)
                      win->rect.top,
                      win->rect.right - win->rect.left,
                      win->rect.bottom - win->rect.top,
-                     SWP_NOACTIVATE);
+                     SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED);
+        SetWindowPos(b3_win_get_window_handler(win),
+                     insert_after,
+                     win->rect.left,
+                     win->rect.top,
+                     win->rect.right - win->rect.left,
+                     win->rect.bottom - win->rect.top,
+                     SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED);
+        SetWindowPos(b3_win_get_window_handler(win),
+                     insert_after,
+                     win->rect.left,
+                     win->rect.top,
+                     win->rect.right - win->rect.left,
+                     win->rect.bottom - win->rect.top,
+                     SWP_NOACTIVATE | SWP_FRAMECHANGED);
+        SetWindowPos(b3_win_get_window_handler(win),
+                     insert_after,
+                     win->rect.left,
+                     win->rect.top,
+                     win->rect.right - win->rect.left,
+                     win->rect.bottom - win->rect.top,
+                     SWP_NOACTIVATE | SWP_FRAMECHANGED);
       }
     } else {
+      SetWindowPos(b3_win_get_window_handler(win),
+                   insert_after,
+                   win->rect.left,
+                   win->rect.top,
+                   win->rect.right - win->rect.left,
+                   win->rect.bottom - win->rect.top,
+                   SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED);
+      SetWindowPos(b3_win_get_window_handler(win),
+                   insert_after,
+                   win->rect.left,
+                   win->rect.top,
+                   win->rect.right - win->rect.left,
+                   win->rect.bottom - win->rect.top,
+                   SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED);
       SetWindowPos(b3_win_get_window_handler(win),
                    insert_after,
                    cur_rect.left,
                    cur_rect.top,
                    cur_rect.right - cur_rect.left,
                    cur_rect.bottom - cur_rect.top,
-                   SWP_NOACTIVATE);
+                   SWP_NOACTIVATE | SWP_FRAMECHANGED);
+      SetWindowPos(b3_win_get_window_handler(win),
+                   insert_after,
+                   cur_rect.left,
+                   cur_rect.top,
+                   cur_rect.right - cur_rect.left,
+                   cur_rect.bottom - cur_rect.top,
+                   SWP_NOACTIVATE | SWP_FRAMECHANGED);
     }
 
 		SendMessage(b3_win_get_window_handler(win), WM_EXITSIZEMOVE, (WPARAM) NULL, (LPARAM) NULL);
