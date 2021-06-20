@@ -85,11 +85,24 @@ int
 b3_floating_action_exec_impl(b3_action_t *action, b3_director_t *director, b3_win_t *win)
 {
   b3_floating_action_t *floating_action;
+  ArrayIter iter;
+  b3_monitor_t *monitor_iter;
+  b3_ws_t *found_ws;
   int error;
 
   floating_action = (b3_floating_action_t *) action;
 
-  error = b3_win_set_floating(win, 1);
+  error = 1;
+
+  found_ws = NULL;
+  array_iter_init(&iter, b3_director_get_monitor_arr(director));
+  while (found_ws == NULL && array_iter_next(&iter, (void*) &monitor_iter) != CC_ITER_END) {
+    found_ws = b3_monitor_find_win(monitor_iter, win);
+  }
+
+  if (found_ws) {
+    error = b3_ws_toggle_floating_win(found_ws, win);
+  }
 
   return error;
 }

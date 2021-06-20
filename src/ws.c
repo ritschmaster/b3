@@ -322,36 +322,53 @@ b3_ws_set_focused_win_impl(b3_ws_t *ws, const b3_win_t *win)
 	int i;
 	int j;
 	int len;
+	ArrayIter iter;
+	b3_win_t *win_iter;
+	b3_win_t *new_focused_win;
 	b3_win_t *a;
 	b3_win_t *b;
 
 	error = 1;
 	if (win) {
-		winman = b3_winman_contains_win(ws->winman, win);
-		if (winman) {
+		new_focused_win = NULL;
+		if (win->floating) {
+			array_iter_init(&iter, ws->floating_win_arr);
+			while (error && array_iter_next(&iter, (void*) &win_iter) != CC_ITER_END) {
+				if (b3_win_compare(win_iter, win) == 0) {
+					new_focused_win = win_iter;
+				}
+			}
+		} else {
+			winman = b3_winman_contains_win(ws->winman, win);
+			if (winman) {
+				new_focused_win = b3_winman_get_win(winman);
+			}
+		}
+
+		if (new_focused_win) {
+			error = 0;
 			if (ws->focused_win) {
 				array_add(ws->previously_focused_win_arr, ws->focused_win);
+			}
+			ws->focused_win = new_focused_win;
 
-				/**
-				 * Remove all duplicates
-				 */
-				len = array_size(ws->previously_focused_win_arr);
-				for (i = 0; i < len; i++) {
-					array_get_at(ws->previously_focused_win_arr, i, (void *) &a);
-					for (j = i + 1; j < len; j++) {
-						array_get_at(ws->previously_focused_win_arr, j, (void *) &b);
-						if (a == b) {
-							array_remove_at(ws->previously_focused_win_arr, j, NULL);
-							j--;
-							len--;
-						} else {
-							j = len;
-						}
+			/**
+			 * Remove all duplicates
+			 */
+			len = array_size(ws->previously_focused_win_arr);
+			for (i = 0; i < len; i++) {
+				array_get_at(ws->previously_focused_win_arr, i, (void *) &a);
+				for (j = i + 1; j < len; j++) {
+					array_get_at(ws->previously_focused_win_arr, j, (void *) &b);
+					if (a == b) {
+						array_remove_at(ws->previously_focused_win_arr, j, NULL);
+						j--;
+						len--;
+					} else {
+						j = len;
 					}
 				}
 			}
-			ws->focused_win = b3_winman_get_win(winman);
-			error = 0;
 		}
 	} else if (b3_ws_is_empty(ws)) {
 		ws->focused_win = NULL;
@@ -421,84 +438,101 @@ b3_ws_remove_win_impl(b3_ws_t *ws, b3_win_t *win)
 
 	error = 1;
 
-	winman = b3_winman_contains_win(ws->winman, win);
-	if (winman) {
-		root = b3_winman_get_parent(ws->winman, winman);
-		if (root) {
-			error = b3_winman_remove_winman(root, winman);
-			if (!error) {
-				/**
-				 * Remove all occurrences of win in ws->floating_win_arr
-				 */
-				array_iter_init(&iter, ws->floating_win_arr);
-				while (error && array_iter_next(&iter, (void*) &win_iter) != CC_ITER_END) {
-					if (b3_win_compare(win_iter, win) == 0) {
-						array_iter_remove(&iter, NULL);
-					}
+	winman = NULL;
+	root = NULL;
+	new_focused_win = NULL;
+
+	array_iter_init(&iter, ws->floating_win_arr);
+	while (error && array_iter_next(&iter, (void*) &win_iter) != CC_ITER_END) {
+		if (b3_win_compare(win_iter, win) == 0) {
+			error = 0;
+		}
+	}
+
+	if (error) {
+		winman = b3_winman_contains_win(ws->winman, win);
+		if (winman) {
+			root = b3_winman_get_parent(ws->winman, winman);
+			if (root) {
+				error = b3_winman_remove_winman(root, winman);
+			}
+		}
+	}
+
+
+	if (!error) {
+		/**
+		 * Remove all occurrences of win in ws->floating_win_arr
+		 */
+		array_iter_init(&iter, ws->floating_win_arr);
+		while (error && array_iter_next(&iter, (void*) &win_iter) != CC_ITER_END) {
+			if (b3_win_compare(win_iter, win) == 0) {
+				array_iter_remove(&iter, NULL);
+			}
+		}
+
+		/**
+		 * Remove all occurrences of win in ws->previously_focused_win_arr.
+		 */
+		array_iter_init(&iter, ws->previously_focused_win_arr);
+		while (array_iter_next(&iter, (void*) &win_iter) != CC_ITER_END) {
+			if (b3_win_compare(win_iter, win) == 0) {
+				array_iter_remove(&iter, NULL);
+			}
+		}
+
+		/**
+		 * Set new focused window
+		 */
+		if (b3_ws_get_focused_win(ws)
+			&& b3_win_compare(b3_ws_get_focused_win(ws), win) == 0) {
+			new_focused_win = NULL;
+
+			if (array_size(ws->previously_focused_win_arr)) {
+				array_remove_last(ws->previously_focused_win_arr, (void *) &new_focused_win);
+			}
+
+			b3_ws_set_focused_win(ws, new_focused_win);
+
+			/**
+			 * Again remove all occurrences of win in in
+			 * ws->previously_focused_win_arr since b3_ws_set_focused_win_impl() added new_focused_win again.
+			 */
+			array_iter_init(&iter, ws->previously_focused_win_arr);
+			while (array_iter_next(&iter, (void*) &win_iter) != CC_ITER_END) {
+				if (b3_win_compare(win_iter, win) == 0) {
+					array_iter_remove(&iter, NULL);
 				}
+			}
+		}
 
-				/**
-				 * Remove all occurrences of win in ws->previously_focused_win_arr.
-				 */
-				array_iter_init(&iter, ws->previously_focused_win_arr);
-				while (array_iter_next(&iter, (void*) &win_iter) != CC_ITER_END) {
-					if (b3_win_compare(win_iter, win) == 0) {
-						array_iter_remove(&iter, NULL);
-					}
-				}
+		if (winman) {
+			b3_winman_free(winman);
+		}
+		error = 0;
 
-				/**
-				 * Set new focused window
-				 */
-				if (b3_ws_get_focused_win(ws)
-					&& b3_win_compare(b3_ws_get_focused_win(ws), win) == 0) {
-					new_focused_win = NULL;
-
-					if (array_size(ws->previously_focused_win_arr)) {
-						array_remove_last(ws->previously_focused_win_arr, (void *) &new_focused_win);
-					}
-
-					b3_ws_set_focused_win(ws, new_focused_win);
+		/**
+		 * Remove all parent window managers that are now empty
+		 */
+		while (root && root != ws->winman) {
+			if (array_size(b3_winman_get_winman_arr(root)) <= 0) {
+				winman = root;
+				root = b3_winman_get_parent(ws->winman, winman);
+				if (b3_winman_remove_winman(root, winman)) {
+					wbk_logger_log(&logger, SEVERE, "Unexpected error in workspace. Please contact the project maintainer(s)!\n");
 
 					/**
-					 * Again remove all occurrences of win in in
-					 * ws->previously_focused_win_arr since b3_ws_set_focused_win_impl() added new_focused_win again.
+					 * Exit the loop
 					 */
-					array_iter_init(&iter, ws->previously_focused_win_arr);
-					while (array_iter_next(&iter, (void*) &win_iter) != CC_ITER_END) {
-						if (b3_win_compare(win_iter, win) == 0) {
-							array_iter_remove(&iter, NULL);
-						}
-					}
+					root = NULL;
+				} else {
+					b3_winman_free(winman);
 				}
-
-				b3_winman_free(winman);
-				error = 0;
-
+			} else {
 				/**
-				 * Remove all parent window managers that are now empty
+				 * Exit the loop
 				 */
-				while (root && root != ws->winman) {
-					if (array_size(b3_winman_get_winman_arr(root)) <= 0) {
-						winman = root;
-						root = b3_winman_get_parent(ws->winman, winman);
-						if (b3_winman_remove_winman(root, winman)) {
-							wbk_logger_log(&logger, SEVERE, "Unexpected error in workspace. Please contact the project maintainer(s)!\n");
-
-							/**
-							 * Exit the loop
-							 */
-							root = NULL;
-						} else {
-							b3_winman_free(winman);
-						}
-					} else {
-						/**
-						 * Exit the loop
-						 */
-						root = NULL;
-					}
-				}
+				root = NULL;
 			}
 		}
 	}
@@ -553,7 +587,8 @@ b3_ws_move_focused_win_impl(b3_ws_t *ws, b3_ws_move_direction_t direction)
 	container = NULL;
 	root = NULL;
 	root_new = NULL;
-
+	// TODO: return an error on edge of the screen to allow moving a winodw to
+	// the next monitor
 	if (direction == LEFT) {
 		mode = HORIZONTAL;
 		get = PREVIOUS;
@@ -735,38 +770,27 @@ int
 b3_ws_toggle_floating_win_impl(b3_ws_t *ws, b3_win_t *win)
 {
 	int error;
-	b3_winman_t *container;
 	b3_win_t *my_win;
-	ArrayIter iter;
 
 	error = 1;
-	container = b3_winman_contains_win(ws->winman, win);
-	if (container) {
-		/**
-		 * Remove the window from the tree (and later add it to the floating
-		 * windows).
-		 */
-		my_win = b3_winman_get_win(container);
-		b3_ws_remove_win(ws, win);
-		b3_win_set_floating(my_win, 1);
-		error = 0;
-	} else {
-		/**
-		 * Remove it from the floating windows (and later add the window to the tree).
-		 */
-		array_iter_init(&iter, ws->floating_win_arr);
-		while (error && array_iter_next(&iter, (void*) &my_win) != CC_ITER_END) {
-			if (b3_win_compare(my_win, win) == 0) {
-				array_iter_remove(&iter, NULL);
-				error = 0;
 
+	my_win = b3_ws_contains_win(ws, win);
+	if (my_win) {
+		/**
+		 * Remove the window from the tree/floating windows (and later add it to
+		 * the floating windows/tree).
+		 */
+		error = b3_ws_remove_win(ws, my_win);
+
+		if (!error) {
+			if (b3_win_get_floating(my_win)) {
 				b3_win_set_floating(my_win, 0);
+			} else {
+				b3_win_set_floating(my_win, 1);
 			}
-		}
-	}
 
-	if (!error) {
-		error = b3_ws_add_win(ws, my_win);
+			error = b3_ws_add_win(ws, my_win);
+		}
 	}
 
 	return error;
@@ -797,11 +821,20 @@ b3_ws_contains_win_impl(b3_ws_t *ws, const b3_win_t *win)
 {
 	b3_winman_t *container;
 	b3_win_t *found;
+	ArrayIter iter;
+	b3_win_t *win_iter;
 
 	found = NULL;
 	container = b3_winman_contains_win(ws->winman, win);
 	if (container) {
 		found = b3_winman_get_win(container);
+	} else {
+		array_iter_init(&iter, ws->floating_win_arr);
+		while (found == NULL && array_iter_next(&iter, (void*) &win_iter) != CC_ITER_END) {
+			if (b3_win_compare(win_iter, win) == 0) {
+				found = win_iter;
+			}
+		}
 	}
 
 	return found;
@@ -814,11 +847,16 @@ b3_ws_is_empty_impl(b3_ws_t *ws)
 
 	number = 0;
 
-	b3_winman_traverse(ws->winman, b3_ws_is_empty_visitor, &number);
+	number = array_size(ws->floating_win_arr);
 	if (number > 0) {
 		number = 0;
 	} else {
-		number = 1;
+		b3_winman_traverse(ws->winman, b3_ws_is_empty_visitor, &number);
+		if (number > 0) {
+			number = 0;
+		} else {
+			number = 1;
+		}
 	}
 
 	return number;
@@ -990,6 +1028,9 @@ b3_ws_find_last_previous_visitor(b3_winman_t *winman, void *data)
 int
 b3_ws_arrange_wins_impl(b3_ws_t *ws, RECT monitor_area)
 {
+	ArrayIter iter;
+	b3_win_t *win_iter;
+
 	/**
 	 * Stack of RECT *
 	 */
@@ -1011,6 +1052,15 @@ b3_ws_arrange_wins_impl(b3_ws_t *ws, RECT monitor_area)
 						area_stack);
 
 	stack_destroy(area_stack);
+
+	/*
+	 * Now show all floating windows.
+	 */
+	Sleep(200);
+	array_iter_init(&iter, ws->floating_win_arr);
+	while (array_iter_next(&iter, (void*) &win_iter) != CC_ITER_END) {
+		b3_win_show(win_iter, 1);
+	}
 
 	return 0;
 }

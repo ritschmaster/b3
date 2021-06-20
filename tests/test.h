@@ -44,6 +44,9 @@ b3_test_empty_teardown(void);
 extern int
 b3_test_check_void(void *act, void *exp, char *msg);
 
+extern int
+b3_test_check_int(int act, int exp, char *msg);
+
 #endif // B3_TEST_H
 
 

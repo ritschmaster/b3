@@ -78,3 +78,18 @@ b3_test_check_void(void *act, void *exp, char *msg)
 
 	return error;
 }
+
+int
+b3_test_check_int(int act, int exp, char *msg)
+{
+	int error;
+
+	if (act == exp) {
+		error = 0;
+	} else {
+		error = 1;
+		wbk_logger_log(&logger, SEVERE, "exp(%d) != act(%d): %s\n", exp, act, msg);
+	}
+
+	return error;
+}

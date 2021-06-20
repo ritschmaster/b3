@@ -725,6 +725,30 @@ test_floating_complex(void)
 		error = check_win_arr(ws->winman, win_arr_exp);
 	}
 
+	if (!error) {
+		error = b3_test_check_int(b3_ws_set_focused_win(ws, win4), 0, "Setting 'win4' returned unexpected error code.");
+	}
+
+	if (!error) {
+		error = b3_test_check_void(b3_ws_get_focused_win(ws), win4, "Setting 'win4' failed.");
+	}
+
+	if (!error) {
+		error = b3_test_check_int(b3_ws_set_focused_win(ws, win1), 0, "Setting 'win1' returned unexpected error code.");
+	}
+
+	if (!error) {
+		error = b3_test_check_void(b3_ws_get_focused_win(ws), win1, "Setting 'win1' failed.");
+	}
+
+	if (!error) {
+		error = b3_test_check_int(b3_ws_set_focused_win(ws, win2), 0, "Setting 'win2' returned unexpected error code.");
+	}
+
+	if (!error) {
+		error = b3_test_check_void(b3_ws_get_focused_win(ws), win2, "Setting 'win2' failed.");
+	}
+
 	b3_ws_free(ws);
 	b3_win_free(win1);
 	b3_win_free(win2);
