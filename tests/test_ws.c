@@ -1197,6 +1197,59 @@ test_complex_move_1(void)
 	return error;
 }
 
+static int
+test_compled_remove_and_add(void)
+{
+	int error;
+	b3_ws_t *ws;
+	RECT monitor_area;
+	b3_win_t *win1;
+	b3_win_t *win2;
+	b3_win_t *win3;
+	b3_win_t *win4;
+	b3_win_t *win_arr_exp[ARR_LEN];
+
+	monitor_area.top = 0;
+	monitor_area.bottom = 1080;
+	monitor_area.left = 0;
+	monitor_area.right = 1920;
+
+	win1 = b3_win_new((HWND) 1, 0);
+	win2 = b3_win_new((HWND) 2, 0);
+	win3 = b3_win_new((HWND) 3, 0);
+	win4 = b3_win_new((HWND) 4, 0);
+
+	ws = b3_ws_new("test");              /** H */
+	b3_ws_add_win(ws, win1);             /** HL */
+	b3_ws_add_win(ws, win2);             /** HLL*/
+	b3_ws_set_focused_win(ws, win2);
+	b3_ws_toggle_floating_win(ws, win2); /** HL */
+	b3_ws_remove_win(ws, win2);          /** HL */
+	b3_ws_remove_win(ws, win1);          /** H */
+	b3_ws_add_win(ws, win2);             /** H */
+	b3_ws_toggle_floating_win(ws, win2); /** HL */
+	b3_ws_remove_win(ws, win2);          /** H */
+	b3_ws_add_win(ws, win1);             /** HL */
+	b3_ws_add_win(ws, win2);             /** HLL*/
+
+	error = check_winman_arr(ws->winman, "HLL");
+
+	if (!error) {
+		memset(win_arr_exp, 0, ARR_LEN * sizeof(b3_win_t *));
+		win_arr_exp[0] = win1;
+		win_arr_exp[1] = win2;
+
+		error = check_win_arr(ws->winman, win_arr_exp);
+	}
+
+	b3_ws_free(ws);
+	b3_win_free(win1);
+	b3_win_free(win2);
+	b3_win_free(win3);
+	b3_win_free(win4);
+
+	return error;
+}
 
 static int
 test_simple_arrange(void)
@@ -1323,6 +1376,8 @@ main(void)
 	b3_test(setup, teardown, test_simple_move, "test_simple_move");
 	b3_test(setup, teardown, test_complex_win_rel, "test_complex_win_rel");
 	b3_test(setup, teardown, test_complex_move_1, "test_complex_move_1");
+	b3_test(setup, teardown, test_compled_remove_and_add, "test_complex_remove_and_add");
+
 	//b3_test(setup, teardown, test_simple_arrange, "test_simple_arrange");
 	//b3_test(setup, teardown, test_complex_arrange, "test_complex_arrange");
 

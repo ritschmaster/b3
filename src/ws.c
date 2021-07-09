@@ -170,6 +170,7 @@ b3_ws_new(const char *name)
 		ws->mode = DEFAULT;
 		b3_ws_set_name(ws, name);
 		ws->focused_win = NULL;
+		ws->focused_win_tree = NULL;
 		array_new(&(ws->previously_focused_win_arr));
 		array_new(&(ws->floating_win_arr));
 	}
@@ -331,17 +332,26 @@ b3_ws_set_focused_win_impl(b3_ws_t *ws, const b3_win_t *win)
 	error = 1;
 	if (win) {
 		new_focused_win = NULL;
-		if (win->floating) {
-			array_iter_init(&iter, ws->floating_win_arr);
-			while (error && array_iter_next(&iter, (void*) &win_iter) != CC_ITER_END) {
-				if (b3_win_compare(win_iter, win) == 0) {
-					new_focused_win = win_iter;
-				}
+		ws->focused_win_tree = NULL;
+
+		/**
+		 * Search in the floating windows.
+		 */
+		array_iter_init(&iter, ws->floating_win_arr);
+		while (new_focused_win == NULL && array_iter_next(&iter, (void*) &win_iter) != CC_ITER_END) {
+			if (b3_win_compare(win_iter, win) == 0) {
+				new_focused_win = win_iter;
 			}
-		} else {
+		}
+
+		/**
+		 * Search in the window tree.
+		 */
+		if (new_focused_win == NULL) {
 			winman = b3_winman_contains_win(ws->winman, win);
 			if (winman) {
 				new_focused_win = b3_winman_get_win(winman);
+				ws->focused_win_tree = new_focused_win;
 			}
 		}
 
@@ -372,6 +382,7 @@ b3_ws_set_focused_win_impl(b3_ws_t *ws, const b3_win_t *win)
 		}
 	} else if (b3_ws_is_empty(ws)) {
 		ws->focused_win = NULL;
+		ws->focused_win_tree = NULL;
 		error = 0;
 	}
 
@@ -390,6 +401,7 @@ b3_ws_add_win_impl(b3_ws_t *ws, b3_win_t *win)
 
 	if (b3_win_get_floating(win)) {
 		array_add(ws->floating_win_arr, win);
+		b3_ws_set_focused_win(ws, win);
 		error = 0;
 	} else {
 		winman = b3_winman_contains_win(ws->winman, win);
@@ -398,28 +410,33 @@ b3_ws_add_win_impl(b3_ws_t *ws, b3_win_t *win)
 			 * Window was not yet added
 			 */
 
-			focused_win = b3_ws_get_focused_win(ws);
+			focused_win = ws->focused_win_tree;
 			if (focused_win) {
 				/**
 				 * There is at least one window already in the workspace
 				 */
 				winman = b3_winman_contains_win(ws->winman, focused_win);
-				winman = b3_winman_get_parent(ws->winman, winman);
+
+				if (winman) {
+					winman = b3_winman_get_parent(ws->winman, winman);
+					error = 0;
+				}
 			} else {
 				/**
 				 * The new window is the first window in the workspace
 				 */
 				winman = ws->winman;
+				error = 0;
 			}
 
-			winman_for_win = b3_winman_new(UNSPECIFIED);
-			b3_winman_set_win(winman_for_win, win);
+			if (!error) {
+				winman_for_win = b3_winman_new(UNSPECIFIED);
+				b3_winman_set_win(winman_for_win, win);
 
-			b3_winman_add_winman(winman, winman_for_win);
+				b3_winman_add_winman(winman, winman_for_win);
 
-			b3_ws_set_focused_win(ws, win);
-
-			error = 0;
+				b3_ws_set_focused_win(ws, win);
+			}
 		}
 	}
 
@@ -445,6 +462,7 @@ b3_ws_remove_win_impl(b3_ws_t *ws, b3_win_t *win)
 	array_iter_init(&iter, ws->floating_win_arr);
 	while (error && array_iter_next(&iter, (void*) &win_iter) != CC_ITER_END) {
 		if (b3_win_compare(win_iter, win) == 0) {
+			array_iter_remove(&iter, NULL);
 			error = 0;
 		}
 	}
@@ -459,18 +477,7 @@ b3_ws_remove_win_impl(b3_ws_t *ws, b3_win_t *win)
 		}
 	}
 
-
 	if (!error) {
-		/**
-		 * Remove all occurrences of win in ws->floating_win_arr
-		 */
-		array_iter_init(&iter, ws->floating_win_arr);
-		while (error && array_iter_next(&iter, (void*) &win_iter) != CC_ITER_END) {
-			if (b3_win_compare(win_iter, win) == 0) {
-				array_iter_remove(&iter, NULL);
-			}
-		}
-
 		/**
 		 * Remove all occurrences of win in ws->previously_focused_win_arr.
 		 */
@@ -509,7 +516,6 @@ b3_ws_remove_win_impl(b3_ws_t *ws, b3_win_t *win)
 		if (winman) {
 			b3_winman_free(winman);
 		}
-		error = 0;
 
 		/**
 		 * Remove all parent window managers that are now empty
@@ -790,6 +796,11 @@ b3_ws_toggle_floating_win_impl(b3_ws_t *ws, b3_win_t *win)
 			}
 
 			error = b3_ws_add_win(ws, my_win);
+			if (error) {
+				wbk_logger_log(&logger, SEVERE, "Re-adding 'my_win' to workspace. This might cause a memory leak.\n");
+			}
+		} else {
+			wbk_logger_log(&logger, SEVERE, "Failed removing 'my_win' from workspace. This might cause a memory leak.\n");
 		}
 	}
 
@@ -799,9 +810,18 @@ b3_ws_toggle_floating_win_impl(b3_ws_t *ws, b3_win_t *win)
 int
 b3_ws_minimize_wins_impl(b3_ws_t *ws)
 {
+	ArrayIter iter;
+	b3_win_t *win_iter;
+
 	b3_winman_traverse(ws->winman,
 						b3_ws_minimize_wins_visitor,
-						NULL);
+					   NULL);
+
+	array_iter_init(&iter, ws->floating_win_arr);
+	while (array_iter_next(&iter, (void*) &win_iter) != CC_ITER_END) {
+		b3_win_minimize(win_iter);
+	}
+
 	return 0;
 }
 

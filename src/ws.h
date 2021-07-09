@@ -75,9 +75,15 @@ struct b3_ws_s {
 	char *name;
 
 	/**
-	 * The currently focused window of the workspace.
+	 * The currently focused window of the workspace. It does not care if the
+	 * focused window is floating or not.
 	 */
 	b3_win_t *focused_win;
+
+	/**
+	 * The currently focused window of the workspace that is not floating.
+	 */
+	b3_win_t *focused_win_tree;
 
 	/**
 	 * Array of b3_win_t *
