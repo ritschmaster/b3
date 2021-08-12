@@ -75,6 +75,9 @@ b3_winman_get_winman_rel_to_winman_impl(b3_winman_t *root,
 										char rolling);
 
 static int
+b3_winman_is_empty_impl(b3_winman_t *root, char check_deeply);
+
+static int
 b3_winman_reorg_impl(b3_winman_t *winman);
 
 b3_winman_t *
@@ -97,6 +100,7 @@ b3_winman_new(b3_winman_mode_t mode)
 		winman->b3_winman_get_parent = b3_winman_get_parent_impl;
 		winman->b3_winman_contains_win = b3_winman_contains_win_impl;
 		winman->b3_winman_get_winman_rel_to_winman = b3_winman_get_winman_rel_to_winman_impl;
+		winman->b3_winman_is_empty = b3_winman_is_empty_impl;
 		winman->b3_winman_reorg = b3_winman_reorg_impl;
 
 		array_new(&(winman->winman_arr));
@@ -176,6 +180,12 @@ b3_winman_get_winman_rel_to_winman(b3_winman_t *root,
 								   char rolling)
 {
 	return root->b3_winman_get_winman_rel_to_winman(root, winman, direction, rolling);
+}
+
+int
+b3_winman_is_empty(b3_winman_t *root, char check_deeply)
+{
+	return root->b3_winman_is_empty(root, check_deeply);
 }
 
 int
@@ -382,9 +392,46 @@ b3_winman_get_winman_rel_to_winman_impl(b3_winman_t *root,
 }
 
 int
+b3_winman_is_empty_impl(b3_winman_t *root, char check_deeply)
+{
+	int is_empty;
+	ArrayIter iter;
+	b3_winman_t *winman_iter;
+
+	is_empty = 0;
+
+	if (b3_winman_get_win(root) == NULL) {
+		is_empty = 1;
+		array_iter_init(&iter, b3_winman_get_winman_arr(root));
+		while (is_empty && array_iter_next(&iter, (void*) &winman_iter) != CC_ITER_END) {
+			if (b3_winman_get_win(winman_iter)) {
+				is_empty = 0;
+			} else if (check_deeply) {
+				is_empty = b3_winman_is_empty(winman_iter, check_deeply);
+			}
+		}
+	}
+
+	return is_empty;
+}
+
+int
 b3_winman_reorg_impl(b3_winman_t *winman)
 {
 	int error;
-	// TODO
+	ArrayIter iter;
+	b3_winman_t *winman_iter;
+
+	error = 0;
+
+	array_iter_init(&iter, b3_winman_get_winman_arr(winman));
+	while (!error && array_iter_next(&iter, (void*) &winman_iter) != CC_ITER_END) {
+		if (b3_winman_is_empty(winman_iter, 1)) {
+			array_iter_remove(&iter, NULL);
+		} else {
+			error = b3_winman_reorg(winman_iter);
+		}
+	}
+
 	return error;
 }

@@ -67,6 +67,7 @@ struct b3_winman_s {
 													   b3_winman_t *winman,
 													   b3_winman_get_rel_t direction,
 													   char rolling);
+	int (*b3_winman_is_empty)(b3_winman_t *root, char check_deep);
 	int (*b3_winman_reorg)(b3_winman_t *winman);
 
 	/**
@@ -207,7 +208,19 @@ b3_winman_get_winman_rel_to_winman(b3_winman_t *root,
 								   char rolling);
 
 /**
- * Re-organize the window manager tree internally.  */
+ * If root does not contain any window manager containing a window, then root is empty.
+ *
+ * @param root The window manager to check for emptiness.
+ * @param check_deeply If non-0, then the tree is checked deeply. Otherwise only
+ * the first level of root is checked.
+ * @return Non-0 if root contains any window manager containing a window.
+ */
+extern int
+b3_winman_is_empty(b3_winman_t *root, char check_deeply);
+
+/**
+ * Re-organize the window manager tree internally by removing empty subtrees.
+ */
 extern int
 b3_winman_reorg(b3_winman_t *winman);
 

@@ -543,6 +543,10 @@ b3_ws_remove_win_impl(b3_ws_t *ws, b3_win_t *win)
 		}
 	}
 
+	if (!error) {
+		b3_winman_reorg(ws->winman);
+	}
+
 	return error;
 }
 
@@ -768,6 +772,9 @@ b3_ws_move_focused_win_impl(b3_ws_t *ws, b3_ws_move_direction_t direction)
 		error = 0;
 	}
 
+	if (!error) {
+		b3_winman_reorg(ws->winman);
+	}
 
 	return error;
 }
