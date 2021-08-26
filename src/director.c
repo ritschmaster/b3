@@ -455,9 +455,9 @@ b3_director_set_active_win(b3_director_t *director, b3_win_t *win)
 	b3_win_t *found_win;
 	int ret;
 
+	if (!director->ignore_set_foucsed_win) {
 	WaitForSingleObject(director->global_mutex, INFINITE);
 
-	if (!director->ignore_set_foucsed_win) {
 		found = 0;
 		array_iter_init(&iter, director->monitor_arr);
 		while (!found && array_iter_next(&iter, (void*) &monitor) != CC_ITER_END) {
@@ -483,11 +483,10 @@ b3_director_set_active_win(b3_director_t *director, b3_win_t *win)
 			wbk_logger_log(&logger, SEVERE, "Failed updating active window: activated window is unknown\n");
 			ret = 1;
 		}
+        ReleaseMutex(director->global_mutex);
 	} else {
 		director->ignore_set_foucsed_win = 0;
 	}
-
-	ReleaseMutex(director->global_mutex);
 
 	return ret;
 }
@@ -1021,40 +1020,30 @@ b3_director_create_ws_switcher(b3_director_t *director)
 int
 b3_director_w32_set_active_window(HWND window_handler, char generate_lag)
 {
-	int error;
-	int i;
-	DWORD this_tid;
-	DWORD foreground_tid;
+	int error ;
+    RECT window_rect;
+    POINT point_bak;
+    POINT point;
+    INPUT input = { 0 };
 
-	error = 0;
+    error = 0;
 
-	foreground_tid = GetCurrentThreadId();
-	this_tid = GetWindowThreadProcessId(GetForegroundWindow(), 0);
+    GetWindowRect(window_handler, &window_rect);
+    point.x = window_rect.left + 1;
+    point.y = window_rect.top + 1;
 
-	if(this_tid != foreground_tid) {
-		AttachThreadInput(this_tid, foreground_tid, TRUE);
-		AllowSetForegroundWindow(ASFW_ANY);
-	}
+    GetCursorPos(&point_bak);
+    SetCursorPos(point.x, point.y);
 
-	/**
-	 * For some reason the WIN32 API needs to be spammed to actually update
-	 * the focus.
-	 */
-	int upper;
-	upper = 1;
-	if (generate_lag) {
-		upper = 10000;
-	}
-	for (i = 0; i < upper && GetActiveWindow() != window_handler; i++) {
-		SetForegroundWindow(window_handler);
-		SetActiveWindow(window_handler);
-		SetFocus(window_handler);
-		Sleep(0.5);
-	}
+    input.type = INPUT_MOUSE;
 
-	if(this_tid != foreground_tid) {
-		AttachThreadInput(this_tid, foreground_tid, FALSE);
-	}
+    input.mi.dwFlags = MOUSEEVENTF_LEFTDOWN;
+    SendInput(1, &input, sizeof(INPUT));
+
+    input.mi.dwFlags = MOUSEEVENTF_LEFTUP;
+    SendInput(1, &input, sizeof(INPUT));
+
+    SetCursorPos(point_bak.x, point_bak.y);
 
 	return error;
 }

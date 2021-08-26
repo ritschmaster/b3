@@ -49,6 +49,15 @@ typedef struct b3_director_s
 	 */
 	Array *monitor_arr;
 
+	/**
+	 * The director will receive messages from the WIN32 API that a new/other
+	 * window has been focused. If this flag is non-0 then such messages will
+	 * be ignored.
+	 *
+	 * This features is needed as the director himself might cause such update
+	 * of the focused window. If the corresponding messages from the WIN32 API
+	 * are not ignored in such cases, then an infinite recursion occurs.
+	 */
 	char ignore_set_foucsed_win;
 
 	b3_monitor_factory_t *monitor_factory;
