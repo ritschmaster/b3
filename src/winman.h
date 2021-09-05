@@ -69,6 +69,7 @@ struct b3_winman_s {
 													   char rolling);
 	int (*b3_winman_is_empty)(b3_winman_t *root, char check_deep);
 	int (*b3_winman_reorg)(b3_winman_t *winman);
+	b3_win_t *(*b3_winman_get_maximized)(b3_winman_t *winman);
 
 	/**
 	 * Array of b3_winman_t
@@ -223,5 +224,11 @@ b3_winman_is_empty(b3_winman_t *root, char check_deeply);
  */
 extern int
 b3_winman_reorg(b3_winman_t *winman);
+
+/**
+ * @return NULL if no window is maxmized. Otherwise the maximized window is returned.
+ */
+extern b3_win_t *
+b3_winman_get_maximized(b3_winman_t *winman);
 
 #endif // B3_WINMAN_H

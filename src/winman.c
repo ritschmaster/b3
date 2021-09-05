@@ -80,6 +80,9 @@ b3_winman_is_empty_impl(b3_winman_t *root, char check_deeply);
 static int
 b3_winman_reorg_impl(b3_winman_t *winman);
 
+static b3_win_t *
+b3_winman_get_maximized_impl(b3_winman_t *winman);
+
 b3_winman_t *
 b3_winman_new(b3_winman_mode_t mode)
 {
@@ -102,6 +105,7 @@ b3_winman_new(b3_winman_mode_t mode)
 		winman->b3_winman_get_winman_rel_to_winman = b3_winman_get_winman_rel_to_winman_impl;
 		winman->b3_winman_is_empty = b3_winman_is_empty_impl;
 		winman->b3_winman_reorg = b3_winman_reorg_impl;
+		winman->b3_winman_get_maximized = b3_winman_get_maximized_impl;
 
 		array_new(&(winman->winman_arr));
 		winman->win = NULL;
@@ -192,6 +196,12 @@ int
 b3_winman_reorg(b3_winman_t *winman)
 {
 	return winman->b3_winman_reorg(winman);
+}
+
+b3_win_t *
+b3_winman_get_maximized(b3_winman_t *winman)
+{
+	return winman->b3_winman_get_maximized(winman);
 }
 
 int
@@ -434,4 +444,27 @@ b3_winman_reorg_impl(b3_winman_t *winman)
 	}
 
 	return error;
+}
+
+b3_win_t *
+b3_winman_get_maximized_impl(b3_winman_t *winman)
+{
+	b3_win_t *maximized;
+	ArrayIter iter;
+	b3_winman_t *winman_iter;
+
+	wbk_logger_log(&logger, SEVERE, ">>>\n");
+	maximized = b3_winman_get_win(winman);
+	if (maximized) {
+		if (b3_win_get_state(maximized) != MAXIMIZED) {
+			maximized = NULL;
+		}
+	} else {
+		array_iter_init(&iter, b3_winman_get_winman_arr(winman));
+		while (maximized == NULL && array_iter_next(&iter, (void*) &winman_iter) != CC_ITER_END) {
+			maximized = b3_winman_get_maximized(winman_iter);
+		}
+	}
+
+	return maximized;
 }

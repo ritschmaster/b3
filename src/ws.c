@@ -1055,38 +1055,44 @@ b3_ws_find_last_previous_visitor(b3_winman_t *winman, void *data)
 int
 b3_ws_arrange_wins_impl(b3_ws_t *ws, RECT monitor_area)
 {
+	b3_win_t *maximized_win;
 	ArrayIter iter;
 	b3_win_t *win_iter;
 
-	/**
-	 * Stack of RECT *
-	 */
-	Stack *area_stack;
+	maximized_win = b3_winman_get_maximized(ws->winman);
+	if (maximized_win == NULL) {
+		/**
+		 * Stack of RECT *
+		 */
+		Stack *area_stack;
 
-	RECT *my_area;
+		RECT *my_area;
 
-	stack_new(&area_stack);
+		stack_new(&area_stack);
 
-	my_area = malloc(sizeof(RECT));
-	my_area->top = monitor_area.top;
-	my_area->bottom = monitor_area.bottom;
-	my_area->left = monitor_area.left;
-	my_area->right = monitor_area.right;
-	stack_push(area_stack, my_area);
+		my_area = malloc(sizeof(RECT));
+		my_area->top = monitor_area.top;
+		my_area->bottom = monitor_area.bottom;
+		my_area->left = monitor_area.left;
+		my_area->right = monitor_area.right;
+		stack_push(area_stack, my_area);
 
-	b3_winman_traverse(ws->winman,
-						b3_ws_arrange_wins_visitor,
-						area_stack);
+		b3_winman_traverse(ws->winman,
+						   b3_ws_arrange_wins_visitor,
+						   area_stack);
 
-	stack_destroy(area_stack);
+		stack_destroy(area_stack);
 
-	/*
-	 * Now show all floating windows.
-	 */
-	Sleep(200);
-	array_iter_init(&iter, ws->floating_win_arr);
-	while (array_iter_next(&iter, (void*) &win_iter) != CC_ITER_END) {
-		b3_win_show(win_iter, 1);
+		/*
+		 * Now show all floating windows.
+		 */
+		Sleep(200);
+		array_iter_init(&iter, ws->floating_win_arr);
+		while (array_iter_next(&iter, (void*) &win_iter) != CC_ITER_END) {
+			b3_win_show(win_iter, 1);
+		}
+	} else {
+		b3_win_set_state(maximized_win, MAXIMIZED);
 	}
 
 	return 0;
