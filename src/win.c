@@ -231,7 +231,7 @@ b3_win_show_exec(LPVOID param)
       error = 3;
     }
 
-    insert_after = HWND_TOP;
+    insert_after = HWND_BOTTOM;
     if (topmost) {
       insert_after = HWND_TOPMOST;
     }
@@ -240,17 +240,13 @@ b3_win_show_exec(LPVOID param)
   if (!error) {
     Sleep(100);
 
-    if (b3_win_get_floating(win)) {
-      Sleep(1000);
-    }
-
 		SendMessage(b3_win_get_window_handler(win), WM_ENTERSIZEMOVE, (WPARAM) NULL, (LPARAM) NULL);
 
 		ShowWindow(b3_win_get_window_handler(win), SW_SHOWNOACTIVATE);
 
     GetWindowRect(b3_win_get_window_handler(win), &cur_rect);
-    if (b3_win_get_state(win) != MAXIMIZED) {
-      if (EqualRect(&cur_rect, &(win->rect)) == 0
+    if (b3_win_get_state(win) != MAXIMIZED
+       && EqualRect(&cur_rect, &(win->rect)) == 0
           && !b3_win_get_floating(win)) {
         SetWindowPos(b3_win_get_window_handler(win),
                      insert_after,
@@ -280,7 +276,6 @@ b3_win_show_exec(LPVOID param)
                      win->rect.right - win->rect.left,
                      win->rect.bottom - win->rect.top,
                      SWP_NOACTIVATE | SWP_FRAMECHANGED);
-      }
     } else {
       SetWindowPos(b3_win_get_window_handler(win),
                    insert_after,

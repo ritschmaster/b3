@@ -135,6 +135,9 @@ b3_ws_find_last_previous_visitor(b3_winman_t *winman, void *data);
 static int
 b3_ws_arrange_wins_impl(b3_ws_t *ws, RECT monitor_area);
 
+static DWORD WINAPI
+b3_ws_show_floating_threaded(LPVOID param);
+
 /**
  * @param data Must be actually of type Stack * (containing only RECT *).
  */
@@ -1056,8 +1059,6 @@ int
 b3_ws_arrange_wins_impl(b3_ws_t *ws, RECT monitor_area)
 {
 	b3_win_t *maximized_win;
-	ArrayIter iter;
-	b3_win_t *win_iter;
 
 	maximized_win = b3_winman_get_maximized(ws->winman);
 	if (maximized_win == NULL) {
@@ -1086,13 +1087,33 @@ b3_ws_arrange_wins_impl(b3_ws_t *ws, RECT monitor_area)
 		/*
 		 * Now show all floating windows.
 		 */
-		Sleep(200);
-		array_iter_init(&iter, ws->floating_win_arr);
-		while (array_iter_next(&iter, (void*) &win_iter) != CC_ITER_END) {
-			b3_win_show(win_iter, 1);
-		}
+		CreateThread(NULL,
+					 0,
+					 b3_ws_show_floating_threaded,
+					 (LPVOID) ws,
+					 0,
+					 NULL);
 	} else {
 		b3_win_set_state(maximized_win, MAXIMIZED);
+	}
+
+	return 0;
+}
+
+DWORD WINAPI
+b3_ws_show_floating_threaded(LPVOID param)
+{
+	b3_ws_t *ws;
+	ArrayIter iter;
+	b3_win_t *win_iter;
+
+	ws = (b3_ws_t *) param;
+
+	Sleep(100);
+
+	array_iter_init(&iter, ws->floating_win_arr);
+	while (array_iter_next(&iter, (void*) &win_iter) != CC_ITER_END) {
+		b3_win_show(win_iter, 1);
 	}
 
 	return 0;
@@ -1167,7 +1188,7 @@ b3_ws_arrange_wins_visitor(b3_winman_t *winman, void *data)
 		 * Leaf containing only a window
 		 */
 		b3_win_set_rect(my_win, *my_area);
-		b3_win_show(my_win, 1);
+		b3_win_show(my_win, 0);
 	}
 
 	if (my_area) {
