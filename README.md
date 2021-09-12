@@ -3,6 +3,7 @@
 ![GitHub](https://img.shields.io/github/license/ritschmaster/b3)
 [![Telegram chat](https://img.shields.io/badge/chat-%40b3__dev-%2335ADE1?logo=telegram)](https://t.me/b3_dev)
 ![GitHub All Releases](https://img.shields.io/github/downloads/ritschmaster/b3/total)
+[![Donate with Bitcoin](https://en.cryptobadges.io/badge/micro/3DF2eTL9KSndqbuQTokWvTbUpDNQ6RuwxU)](https://en.cryptobadges.io/donate/3DF2eTL9KSndqbuQTokWvTbUpDNQ6RuwxU)
 
 __b__(aeck's implementation of i) __3__ (wm for Windows)
 
@@ -140,3 +141,9 @@ Richard Bäck <richard.baeck@mailbox.org>
 ## License
 
 MIT License
+
+## Donations
+
+Show me that you really like it by donating something. Thanks for any amount!
+
+[![Donate with Bitcoin](https://en.cryptobadges.io/badge/big/3DF2eTL9KSndqbuQTokWvTbUpDNQ6RuwxU)](https://en.cryptobadges.io/donate/3DF2eTL9KSndqbuQTokWvTbUpDNQ6RuwxU)
