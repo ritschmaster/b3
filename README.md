@@ -47,15 +47,26 @@ See [here](https://github.com/ritschmaster/b3/blob/master/CompatibilityList.md).
 
 ### I need a default configuration
 
-A default config file is included in the [release zip](https://github.com/ritschmaster/b3/releases). There is also an example configuration available at `tests/full.config` (please place it as `config` in the same directory as `b3.exe` to use it).
+A default config file is included in the [release zip](https://github.com/ritschmaster/b3/releases). To get started right away, it is already placed as `config` in the same directory as `b3.exe`.
 
-For more information on where the configuration file can be placed please see the included man page. In a release it can be viewed using
-
-    man /path/b3/share/man/man1/b3.1
+For more information on where the configuration file can be placed please see the included man page.
 
 ### Are there known limitations?
 
 Yes, please see [here](https://github.com/ritschmaster/w32bindkeys#are-there-known-limitations).
+
+## Documentation
+
+### User
+
+* In the unzipped release you can perform `man -l man/b3.1` to see the available command line options and where the configuration file can be placed.
+* Since b3 tries to be a drop in replacement for i3 you can use [i3 User's Guide](https://i3wm.org/docs/userguide.html) also for b3. But please cross check it with the [compatibility list](https://github.com/ritschmaster/b3/blob/master/CompatibilityList.md).
+* b3 releases ship a default configuration file. You can check it to see a list of most used commands.
+
+
+### Developer
+
+* Currently you have to read the source code entirely to get into b3 development. But most methods/functions have a documentation string. In the future some sort of generated documentation and/or class diagram will be added.
 
 ## Compiling
 

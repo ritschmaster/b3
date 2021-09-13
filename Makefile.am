@@ -34,11 +34,26 @@ SUBDIRS = src tests man
 
 EXTRA_DIST = README README.md
 
-CLEANFILES = @PACKAGE_NAME@-@PACKAGE_VERSION@.zip
+clean-local: clean-release-zip
 
-release-zip:
-	zip @PACKAGE_NAME@-@PACKAGE_VERSION@.zip README.md
-	zip @PACKAGE_NAME@-@PACKAGE_VERSION@.zip ChangeLog.md
-	zip @PACKAGE_NAME@-@PACKAGE_VERSION@.zip CompatibilityList.md
-	zip @PACKAGE_NAME@-@PACKAGE_VERSION@.zip -j src/b3.exe
+clean-release-zip:
+	rm -rf @PACKAGE_NAME@-@PACKAGE_VERSION@
+	rm -rf @PACKAGE_NAME@-@PACKAGE_VERSION@.zip
 
+release-zip: clean-release-zip check
+	mkdir @PACKAGE_NAME@-@PACKAGE_VERSION@
+	mkdir @PACKAGE_NAME@-@PACKAGE_VERSION@/bin
+	mkdir @PACKAGE_NAME@-@PACKAGE_VERSION@/share
+	mkdir @PACKAGE_NAME@-@PACKAGE_VERSION@/share/man
+	mkdir @PACKAGE_NAME@-@PACKAGE_VERSION@/share/man/man1
+
+	cp README.md @PACKAGE_NAME@-@PACKAGE_VERSION@
+	cp ChangeLog.md @PACKAGE_NAME@-@PACKAGE_VERSION@
+	cp CompatibilityList.md @PACKAGE_NAME@-@PACKAGE_VERSION@
+
+	cp src/b3.exe @PACKAGE_NAME@-@PACKAGE_VERSION@/bin
+	cp tests/full.config @PACKAGE_NAME@-@PACKAGE_VERSION@/bin/config
+
+	cp man/b3.1 @PACKAGE_NAME@-@PACKAGE_VERSION@/share/man/man1
+
+	zip -r @PACKAGE_NAME@-@PACKAGE_VERSION@.zip @PACKAGE_NAME@-@PACKAGE_VERSION@

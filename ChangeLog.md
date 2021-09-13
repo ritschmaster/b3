@@ -1,3 +1,18 @@
+# Release 0.6
+
+Bugfixes:
+* Window tiling was really slow. Some uneccessary Sleep() statements have been removed to gain speed.
+* Changing the focused window was unbelievable slow. Also the WIN32 API functions for updating the focused window are not reliable. Actually they do not even allow updating the focused window on the top level. Focusing a window is now performed by a fake mouse click using the WIN32 API.
+* Windows created by [Citrix Receiver](https://www.citrix.com/downloads/citrix-receiver/) or [Microsoft Remote Desktop](https://www.microsoft.com/en-us/p/microsoft-remote-desktop/9wzdncrfj3ps?activetab=pivot:overviewtab) were messed up when not floating. This has been fixed.
+
+Features:
+* The window tiling implementation has been completely rewritten. It is now almost i3 like.
+* Containers can now be split manually by the user..
+* Workspaces can now be switched by clicking on the workspace's icon in the b3 bar.
+
+Known bugs:
+* Moving a window over to another monitor by direction does not work anymore. This will be fixed in the next release.
+
 # Release 0.5 "Useable" Editon
 
 Bugfixes:
