@@ -453,7 +453,6 @@ b3_winman_get_maximized_impl(b3_winman_t *winman)
 	ArrayIter iter;
 	b3_winman_t *winman_iter;
 
-	wbk_logger_log(&logger, SEVERE, ">>>\n");
 	maximized = b3_winman_get_win(winman);
 	if (maximized) {
 		if (b3_win_get_state(maximized) != MAXIMIZED) {
