@@ -36,8 +36,14 @@
 
 #include "ws_factory.h"
 
-typedef struct b3_wsman_s
+typedef struct b3_wsman_s b3_wsman_t;
+
+struct b3_wsman_s
 {
+	int (*b3_wsman_free)(b3_wsman_t *wsman);
+	b3_win_t *(*b3_wsman_get_win_at_pos)(b3_wsman_t *wsman, POINT *position);
+
+
 	HANDLE global_mutex;
 
 	b3_ws_factory_t *ws_factory;
@@ -48,7 +54,7 @@ typedef struct b3_wsman_s
 	 * Array of b3_ws_t *
 	 */
 	Array *ws_arr;
-} b3_wsman_t;
+};
 
 /**
  * @brief Creates a new workspace manager 
@@ -131,5 +137,12 @@ b3_wsman_remove_empty_ws(b3_wsman_t *wsman);
  */
 extern int
 b3_wsman_iterate_ws_arr(b3_wsman_t *wsman, void (*visitor)(b3_ws_t *ws));
+
+/**
+ * @return Returns the window at position. If no window can be found at the
+ * given position, then NULL is returned.
+ */
+extern b3_win_t *
+b3_wsman_get_win_at_pos(b3_wsman_t *wsman, POINT *position);
 
 #endif // B3_WSMAN_H

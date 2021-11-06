@@ -67,6 +67,7 @@ struct b3_ws_s {
 												   b3_ws_move_direction_t direction,
 												   char rolling);
 	int (*b3_ws_arrange_wins)(b3_ws_t *ws, RECT monitor_area);
+	b3_win_t *(*b3_ws_get_win_at_pos)(b3_ws_t *ws, POINT *position);
 
 	b3_winman_t *winman;
 
@@ -241,5 +242,12 @@ b3_ws_get_win_rel_to_focused_win(b3_ws_t *ws,
  */
 extern int
 b3_ws_arrange_wins(b3_ws_t *ws, RECT monitor_area);
+
+/**
+ * @return Returns the window at position. If no window can be found at the
+ * given position, then NULL is returned.
+ */
+extern b3_win_t *
+b3_ws_get_win_at_pos(b3_ws_t *ws, POINT *position);
 
 #endif // B3_WS_H

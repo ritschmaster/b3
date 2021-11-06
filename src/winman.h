@@ -70,6 +70,7 @@ struct b3_winman_s {
 	int (*b3_winman_is_empty)(b3_winman_t *root, char check_deep);
 	int (*b3_winman_reorg)(b3_winman_t *winman);
 	b3_win_t *(*b3_winman_get_maximized)(b3_winman_t *winman);
+	b3_win_t *(*b3_winman_get_win_at_pos)(b3_winman_t *winman, POINT *position);
 
 	/**
 	 * Array of b3_winman_t
@@ -230,5 +231,12 @@ b3_winman_reorg(b3_winman_t *winman);
  */
 extern b3_win_t *
 b3_winman_get_maximized(b3_winman_t *winman);
+
+/**
+ * @return Returns the window at position. If no window can be found at the
+ * given position, then NULL is returned.
+ */
+extern b3_win_t *
+b3_winman_get_win_at_pos(b3_winman_t *winman, POINT *position);
 
 #endif // B3_WINMAN_H

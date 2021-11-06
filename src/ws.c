@@ -144,6 +144,9 @@ b3_ws_show_floating_threaded(LPVOID param);
 static void
 b3_ws_arrange_wins_visitor(b3_winman_t *winman, void *data);
 
+static b3_win_t *
+b3_ws_get_win_at_pos_impl(b3_ws_t *ws, POINT *position);
+
 b3_ws_t *
 b3_ws_new(const char *name)
 {
@@ -168,6 +171,7 @@ b3_ws_new(const char *name)
 		ws->b3_ws_is_empty = b3_ws_is_empty_impl;
 		ws->b3_ws_get_win_rel_to_focused_win = b3_ws_get_win_rel_to_focused_win_impl;
 		ws->b3_ws_arrange_wins = b3_ws_arrange_wins_impl;
+		ws->b3_ws_get_win_at_pos = b3_ws_get_win_at_pos_impl;
 
 		ws->winman = b3_winman_new(HORIZONTAL);
 		ws->mode = DEFAULT;
@@ -271,6 +275,12 @@ int
 b3_ws_arrange_wins(b3_ws_t *ws, RECT monitor_area)
 {
 	return ws->b3_ws_arrange_wins(ws, monitor_area);
+}
+
+b3_win_t *
+b3_ws_get_win_at_pos(b3_ws_t *ws, POINT *position)
+{
+	return ws->b3_ws_get_win_at_pos(ws, position);
 }
 
 int
@@ -1195,4 +1205,10 @@ b3_ws_arrange_wins_visitor(b3_winman_t *winman, void *data)
 		free(my_area);
 		my_area = NULL;
 	}
+}
+
+b3_win_t *
+b3_ws_get_win_at_pos_impl(b3_ws_t *ws, POINT *position)
+{
+	return b3_winman_get_win_at_pos(ws->winman, position);
 }

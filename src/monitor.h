@@ -39,8 +39,13 @@
 #ifndef B3_MONITOR_H
 #define B3_MONITOR_H
 
-typedef struct b3_monitor_s
+typedef struct b3_monitor_s b3_monitor_t;
+
+struct b3_monitor_s
 {
+	int (*b3_monitor_free)(b3_monitor_t *ws);
+	b3_win_t *(*b3_monitor_get_win_at_pos)(b3_monitor_t *monitor, POINT *position);
+
 	b3_wsman_factory_t *wsman_factory;
 
 	char *monitor_name;
@@ -50,7 +55,7 @@ typedef struct b3_monitor_s
 	b3_wsman_t *wsman;
 
 	b3_bar_t *bar;
-} b3_monitor_t;
+};
 
 /**
  * @brief Creates a new monitor object
@@ -156,5 +161,12 @@ b3_monitor_show(b3_monitor_t *monitor);
 
 extern int
 b3_monitor_draw(b3_monitor_t *monitor, HWND window_handler);
+
+/**
+ * @return Returns the window at position. If no window can be found at the
+ * given position, then NULL is returned.
+ */
+extern b3_win_t *
+b3_monitor_get_win_at_pos(b3_monitor_t *monitor, POINT *position);
 
 #endif // B3_MONITOR_H

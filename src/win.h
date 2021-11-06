@@ -39,13 +39,18 @@ typedef enum b3_win_state_e
 	MAXIMIZED
 } b3_win_state_t;
 
-typedef struct b3_win_s
+typedef struct b3_win_s b3_win_t;
+
+struct b3_win_s
 {
+	int (*b3_win_free)(b3_win_t *win);
+	int (*b3_win_is_point_in_rect)(b3_win_t *win, POINT *point);
+
 	b3_win_state_t state;
 	HWND window_handler;
 	char floating;
 	RECT rect;
-} b3_win_t;
+};
 
 /**
  * @brief Creates a new window object
@@ -106,6 +111,11 @@ b3_win_get_rect(b3_win_t *win);
 
 extern int
 b3_win_set_rect(b3_win_t *win, RECT rect);
+
+/**
+ * @return Returns non-0 if point is in the window's rectangle. 0 otherwise. */
+extern int
+b3_win_is_point_in_rect(b3_win_t *win, POINT *point);
 
 /**
  * @brief Compares two windows

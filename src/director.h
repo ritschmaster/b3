@@ -38,8 +38,14 @@
 #include "win.h"
 #include "director_ws_switcher.h"
 
-typedef struct b3_director_s
+typedef struct b3_director_s  b3_director_t;
+
+struct b3_director_s
 {
+	int (*b3_director_free)(b3_director_t *director);
+	b3_win_t *(*b3_director_get_win_at_pos)(b3_director_t *director, POINT *position);
+
+
 	HANDLE global_mutex;
 
 	b3_monitor_t *focused_monitor;
@@ -66,7 +72,7 @@ typedef struct b3_director_s
 	 * Array of b3_rule_t *
 	 */
 	Array *rule_arr;
-} b3_director_t;
+};
 
 /**
  * @brief Creates a new director
@@ -253,7 +259,17 @@ extern b3_ws_switcher_t *
 b3_director_create_ws_switcher(b3_director_t *director);
 
 /**
+ * @return Returns the window at position. If no window can be found at the
+ * given position, then NULL is returned.
+ */
+extern b3_win_t *
+b3_director_get_win_at_pos(b3_director_t *director, POINT *position);
+
+/**
  * @brief Set the foreground window
+ *
+ * @param generate_lag This generates a bit of lag before the active window is
+ * set. This might be needed to wait for the windows to stabilize.
  */
 extern int
 b3_director_w32_set_active_window(HWND window_handler, char generate_lag);

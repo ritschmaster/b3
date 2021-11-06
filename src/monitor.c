@@ -58,7 +58,13 @@ b3_monitor_arrange_wins_ws_visitor(b3_ws_t *ws)
   }
 }
 
-b3_monitor_t *
+static int
+b3_monitor_free_impl(b3_monitor_t *monitor);
+
+static b3_win_t *
+b3_monitor_get_win_at_pos_impl(b3_monitor_t *monitor, POINT *position);
+
+	b3_monitor_t *
 b3_monitor_new(const char *monitor_name,
 			   RECT monitor_area,
 			   b3_wsman_factory_t *wsman_factory,
@@ -69,18 +75,22 @@ b3_monitor_new(const char *monitor_name,
 
 	monitor = NULL;
 	monitor = malloc(sizeof(b3_monitor_t));
+	if (monitor) {
+		monitor->b3_monitor_free = b3_monitor_free_impl;
+		monitor->b3_monitor_get_win_at_pos = b3_monitor_get_win_at_pos_impl;
 
-	monitor->wsman_factory = wsman_factory;
+		monitor->wsman_factory = wsman_factory;
 
-	length = strlen(monitor_name) + 1;
-	monitor->monitor_name = malloc(length);
-	strcpy(monitor->monitor_name, monitor_name);
+		length = strlen(monitor_name) + 1;
+		monitor->monitor_name = malloc(length);
+		strcpy(monitor->monitor_name, monitor_name);
 
-	monitor->monitor_area = monitor_area;
+		monitor->monitor_area = monitor_area;
 
-	monitor->wsman = b3_wsman_factory_create(wsman_factory);
+		monitor->wsman = b3_wsman_factory_create(wsman_factory);
 
-	monitor->bar = b3_bar_new(monitor->monitor_name, monitor->monitor_area, monitor->wsman, ws_switcher);
+		monitor->bar = b3_bar_new(monitor->monitor_name, monitor->monitor_area, monitor->wsman, ws_switcher);
+	}
 
 	return monitor;
 }
@@ -88,19 +98,7 @@ b3_monitor_new(const char *monitor_name,
 int
 b3_monitor_free(b3_monitor_t *monitor)
 {
-	monitor->wsman_factory = NULL;
-
-	free(monitor->monitor_name);
-	monitor->monitor_name = NULL;
-
-	b3_bar_free(monitor->bar);
-	monitor->bar = NULL;
-
-	b3_wsman_free(monitor->wsman);
-	monitor->wsman = NULL;
-
-	free(monitor);
-	return 0;
+	return monitor->b3_monitor_free(monitor);
 }
 
 const char *
@@ -245,4 +243,34 @@ b3_monitor_show(b3_monitor_t *monitor)
 int
 b3_monitor_draw(b3_monitor_t *monitor, HWND window_handler)
 {
+}
+
+b3_win_t *
+b3_monitor_get_win_at_pos(b3_monitor_t *monitor, POINT *position)
+{
+	return monitor->b3_monitor_get_win_at_pos(monitor, position);
+}
+
+int
+b3_monitor_free_impl(b3_monitor_t *monitor)
+{
+	monitor->wsman_factory = NULL;
+
+	free(monitor->monitor_name);
+	monitor->monitor_name = NULL;
+
+	b3_bar_free(monitor->bar);
+	monitor->bar = NULL;
+
+	b3_wsman_free(monitor->wsman);
+	monitor->wsman = NULL;
+
+	free(monitor);
+	return 0;
+}
+
+b3_win_t *
+b3_monitor_get_win_at_pos_impl(b3_monitor_t *monitor, POINT *position)
+{
+	return b3_wsman_get_win_at_pos(monitor->wsman, position);
 }

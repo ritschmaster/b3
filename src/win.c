@@ -42,6 +42,11 @@ typedef struct b3_win_show_comm_s
   char topmost;
 } b3_win_show_comm_t;
 
+static int
+b3_win_free_impl(b3_win_t *win);
+
+static int
+b3_win_is_point_in_rect_impl(b3_win_t *win, POINT *point);
 
 /**
  * This function actually performs everything necessary to show a window.
@@ -59,14 +64,18 @@ b3_win_new(HWND window_handler, char floating)
 
 	win = NULL;
 	win = malloc(sizeof(b3_win_t));
+  if (win) {
+    win->b3_win_free = b3_win_free_impl;
+    win->b3_win_is_point_in_rect = b3_win_is_point_in_rect_impl;
 
-	win->state = NORMAL;
+    win->state = NORMAL;
 
-	win->window_handler = window_handler;
+    win->window_handler = window_handler;
 
-	win->floating = floating;
+    win->floating = floating;
 
-	GetWindowRect(window_handler, &(win->rect));
+    GetWindowRect(window_handler, &(win->rect));
+  }
 
 	return win;
 }
@@ -84,11 +93,7 @@ b3_win_copy(const b3_win_t *win)
 int
 b3_win_free(b3_win_t *win)
 {
-	win->window_handler = NULL;
-
-	free(win);
-
-	return 0;
+  return win->b3_win_free(win);
 }
 
 b3_win_state_t
@@ -311,4 +316,36 @@ b3_win_show_exec(LPVOID param)
 	}
 
 	return 0;
+}
+
+int
+b3_win_is_point_in_rect(b3_win_t *win, POINT *point)
+{
+  return win->b3_win_is_point_in_rect(win, point);
+}
+
+int
+b3_win_free_impl(b3_win_t *win)
+{
+  win->window_handler = NULL;
+
+	free(win);
+
+	return 0;
+}
+
+int
+b3_win_is_point_in_rect_impl(b3_win_t *win, POINT *point)
+{
+  int point_is_in_rect;
+  RECT window_rect;
+
+  point_is_in_rect = 0;
+
+  window_rect = b3_win_get_rect(win);
+  if (PtInRect(&window_rect, *point)) {
+    point_is_in_rect = 1;
+  }
+
+  return point_is_in_rect;
 }

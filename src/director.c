@@ -42,6 +42,12 @@
 static wbk_logger_t logger = { "director" };
 
 static int
+b3_director_free_impl(b3_director_t *director);
+
+static b3_win_t *
+b3_director_get_win_at_pos_impl(b3_director_t *director, POINT *position);
+
+static int
 b3_director_free_monitor_arr(b3_director_t *director);
 
 static int
@@ -78,17 +84,22 @@ b3_director_new(b3_monitor_factory_t *monitor_factory)
 	director = NULL;
 	director = malloc(sizeof(b3_director_t));
 
-	memset(director, 0, sizeof(b3_director_t));
+    if (director) {
+        memset(director, 0, sizeof(b3_director_t));
 
-	director->global_mutex = CreateMutex(NULL, FALSE, NULL);
+        director->b3_director_free = b3_director_free_impl;
+        director->b3_director_get_win_at_pos = b3_director_get_win_at_pos_impl;
 
-	array_new(&(director->monitor_arr));
+        director->global_mutex = CreateMutex(NULL, FALSE, NULL);
 
-	director->ignore_set_foucsed_win = 0;
+        array_new(&(director->monitor_arr));
 
-	director->monitor_factory = monitor_factory;
+        director->ignore_set_foucsed_win = 0;
 
-  array_new(&(director->rule_arr));
+        director->monitor_factory = monitor_factory;
+
+        array_new(&(director->rule_arr));
+    }
 
 	return director;
 }
@@ -96,18 +107,7 @@ b3_director_new(b3_monitor_factory_t *monitor_factory)
 int
 b3_director_free(b3_director_t *director)
 {
-	ReleaseMutex(director->global_mutex);
-	CloseHandle(director->global_mutex);
-
-	director->focused_monitor = NULL;
-
-	b3_director_free_monitor_arr(director);
-
-	director->monitor_factory = NULL;
-
-	free(director);
-
-	return 0;
+    return director->b3_director_free(director);
 }
 
 int
@@ -339,7 +339,7 @@ b3_director_switch_to_ws(b3_director_t *director, const char *ws_id)
   if (focused_win) {
     wbk_logger_log(&logger, DEBUG, "Restoring focused window\n");
     director->ignore_set_foucsed_win = 1;
-    b3_director_w32_set_active_window(b3_win_get_window_handler(focused_win), 0);
+    b3_director_w32_set_active_window(b3_win_get_window_handler(focused_win), 1);
   }
 
   b3_director_repaint_all();
@@ -565,7 +565,7 @@ b3_director_move_active_win_to_ws(b3_director_t *director, const char *ws_id)
 					 * the current workspace.
 					 */
 					director->ignore_set_foucsed_win = 1;
-					b3_director_w32_set_active_window(b3_win_get_window_handler(active_win), 1);
+					b3_director_w32_set_active_window(b3_win_get_window_handler(active_win), 0);
 				}
 
 				ret = 0;
@@ -639,7 +639,7 @@ b3_director_set_active_win_by_direction(b3_director_t *director, b3_ws_move_dire
     	b3_ws_set_focused_win(b3_monitor_get_focused_ws(director->focused_monitor),
     						  win);
 		director->ignore_set_foucsed_win = 1;
-		b3_director_w32_set_active_window(b3_win_get_window_handler(win), 1);
+		b3_director_w32_set_active_window(b3_win_get_window_handler(win), 0);
 		b3_director_arrange_wins(director);
         error = 0;
 	} else {
@@ -660,7 +660,7 @@ b3_director_set_active_win_by_direction(b3_director_t *director, b3_ws_move_dire
                 b3_ws_set_focused_win(b3_monitor_get_focused_ws(director->focused_monitor),
                                       win);
                 director->ignore_set_foucsed_win = 1;
-                b3_director_w32_set_active_window(b3_win_get_window_handler(win), 1);
+                b3_director_w32_set_active_window(b3_win_get_window_handler(win), 0);
                 b3_director_arrange_wins(director);
                 error = 0;
             }
@@ -1017,6 +1017,12 @@ b3_director_create_ws_switcher(b3_director_t *director)
     return (b3_ws_switcher_t *) b3_director_ws_switcher_new(director);
 }
 
+b3_win_t *
+b3_director_get_win_at_pos(b3_director_t *director, POINT *position)
+{
+
+}
+
 int
 b3_director_w32_set_active_window(HWND window_handler, char generate_lag)
 {
@@ -1027,6 +1033,10 @@ b3_director_w32_set_active_window(HWND window_handler, char generate_lag)
     INPUT input = { 0 };
 
     error = 0;
+
+    if (generate_lag) {
+        Sleep(500);
+    }
 
     GetWindowRect(window_handler, &window_rect);
     point.x = window_rect.left + 1;
@@ -1068,4 +1078,37 @@ b3_director_repaint_all(void)
 					 NULL);
 
 	return 0;
+}
+
+int
+b3_director_free_impl(b3_director_t *director)
+{
+	ReleaseMutex(director->global_mutex);
+	CloseHandle(director->global_mutex);
+
+	director->focused_monitor = NULL;
+
+	b3_director_free_monitor_arr(director);
+
+	director->monitor_factory = NULL;
+
+	free(director);
+
+	return 0;
+}
+
+b3_win_t *
+b3_director_get_win_at_pos_impl(b3_director_t *director, POINT *position)
+{
+    b3_win_t *win_at_pos;
+    ArrayIter monitor_iter;
+	b3_monitor_t *monitor;
+
+    win_at_pos = NULL;
+	array_iter_init(&monitor_iter, director->monitor_arr);
+	while (win_at_pos == NULL && array_iter_next(&monitor_iter, (void *) &monitor) != CC_ITER_END) {
+        win_at_pos = b3_monitor_get_win_at_pos(monitor, position);
+	}
+
+    return win_at_pos;
 }

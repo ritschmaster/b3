@@ -53,6 +53,12 @@ b3_wsman_get_ws_arr(b3_wsman_t *wsman);
 static int
 b3_wsman_ws_comparator(void const *e1, void const *e2);
 
+static int
+b3_wsman_free_impl(b3_wsman_t *wsman);
+
+static b3_win_t *
+b3_wsman_get_win_at_pos_impl(b3_wsman_t *wsman, POINT *position);
+
 b3_wsman_t *
 b3_wsman_new(b3_ws_factory_t *ws_factory)
 {
@@ -60,32 +66,28 @@ b3_wsman_new(b3_ws_factory_t *ws_factory)
 
 	wsman = NULL;
 	wsman = malloc(sizeof(b3_wsman_t));
+    if (wsman) {
+        wsman->b3_wsman_free = b3_wsman_free_impl;
+        wsman->b3_wsman_get_win_at_pos = b3_wsman_get_win_at_pos_impl;
 
-	wsman->global_mutex = CreateMutex(NULL, FALSE, NULL);
+        wsman->global_mutex = CreateMutex(NULL, FALSE, NULL);
 
-	wsman->ws_factory = ws_factory;
+        wsman->ws_factory = ws_factory;
 
-	array_new(&(wsman->ws_arr));
+        array_new(&(wsman->ws_arr));
 
-	wsman->focused_ws = b3_ws_factory_create(wsman->ws_factory, NULL);
-	array_add(b3_wsman_get_ws_arr(wsman),
-    		  wsman->focused_ws);
+        wsman->focused_ws = b3_ws_factory_create(wsman->ws_factory, NULL);
+        array_add(b3_wsman_get_ws_arr(wsman),
+                  wsman->focused_ws);
+    }
+
 	return wsman;
 }
 
 int
 b3_wsman_free(b3_wsman_t *wsman)
 {
-	ReleaseMutex(wsman->global_mutex);
-	CloseHandle(wsman->global_mutex);
-
-	array_destroy_cb(wsman->ws_arr, free);
-	wsman->ws_arr = NULL;
-
-	wsman->ws_factory = NULL;
-
-	free(wsman);
-	return 0;
+	return wsman->b3_wsman_free(wsman);
 }
 
 b3_ws_t *
@@ -368,4 +370,40 @@ b3_wsman_ws_comparator(void const *e1, void const *e2)
     b3_ws_t *b = *((b3_ws_t **) e2);
 
     return strcmp(b3_ws_get_name(a), b3_ws_get_name(b));
+}
+
+b3_win_t *
+b3_wsman_get_win_at_pos(b3_wsman_t *wsman, POINT *position)
+{
+    return wsman->b3_wsman_get_win_at_pos(wsman, position);
+}
+
+int
+b3_wsman_free_impl(b3_wsman_t *wsman)
+{
+	ReleaseMutex(wsman->global_mutex);
+	CloseHandle(wsman->global_mutex);
+
+	array_destroy_cb(wsman->ws_arr, free);
+	wsman->ws_arr = NULL;
+
+	wsman->ws_factory = NULL;
+
+	free(wsman);
+	return 0;
+}
+
+b3_win_t *
+b3_wsman_get_win_at_pos_impl(b3_wsman_t *wsman, POINT *position)
+{
+    b3_win_t *win_at_pos;
+	b3_ws_t *focused_ws;
+
+	win_at_pos = NULL;
+	focused_ws = b3_wsman_get_focused_ws(wsman);
+	if (focused_ws) {
+        win_at_pos = b3_ws_get_win_at_pos(focused_ws, position);
+	}
+
+	return win_at_pos;
 }

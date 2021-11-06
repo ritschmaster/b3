@@ -83,6 +83,9 @@ b3_winman_reorg_impl(b3_winman_t *winman);
 static b3_win_t *
 b3_winman_get_maximized_impl(b3_winman_t *winman);
 
+static b3_win_t *
+b3_winman_get_win_at_pos_impl(b3_winman_t *winman, POINT *position);
+
 b3_winman_t *
 b3_winman_new(b3_winman_mode_t mode)
 {
@@ -106,6 +109,7 @@ b3_winman_new(b3_winman_mode_t mode)
 		winman->b3_winman_is_empty = b3_winman_is_empty_impl;
 		winman->b3_winman_reorg = b3_winman_reorg_impl;
 		winman->b3_winman_get_maximized = b3_winman_get_maximized_impl;
+		winman->b3_winman_get_win_at_pos = b3_winman_get_win_at_pos_impl;
 
 		array_new(&(winman->winman_arr));
 		winman->win = NULL;
@@ -202,6 +206,12 @@ b3_win_t *
 b3_winman_get_maximized(b3_winman_t *winman)
 {
 	return winman->b3_winman_get_maximized(winman);
+}
+
+b3_win_t *
+b3_winman_get_win_at_pos(b3_winman_t *winman, POINT *position)
+{
+	return winman->b3_winman_get_win_at_pos(winman, position);
 }
 
 int
@@ -466,4 +476,26 @@ b3_winman_get_maximized_impl(b3_winman_t *winman)
 	}
 
 	return maximized;
+}
+
+b3_win_t *
+b3_winman_get_win_at_pos_impl(b3_winman_t *winman, POINT *position)
+{
+	b3_win_t *win_at_pos;
+	ArrayIter iter;
+	b3_winman_t *winman_iter;
+
+	win_at_pos = b3_winman_get_win(winman);
+	if (win_at_pos) {
+		if (!b3_win_is_point_in_rect(win_at_pos, position)) {
+			win_at_pos = NULL;
+		}
+	} else {
+		array_iter_init(&iter, b3_winman_get_winman_arr(winman));
+		while (win_at_pos == NULL && array_iter_next(&iter, (void*) &winman_iter) != CC_ITER_END) {
+			win_at_pos = b3_winman_get_win_at_pos_impl(winman_iter, position);
+		}
+	}
+
+	return win_at_pos;
 }
