@@ -31,9 +31,10 @@ b3_wsman_factory_new(b3_ws_factory_t *ws_factory)
 {
 	b3_wsman_factory_t *wsman_factory;
 
-	wsman_factory = malloc(sizeof(wsman_factory));
-
-	wsman_factory->ws_factory = ws_factory;
+	wsman_factory = malloc(sizeof(b3_wsman_factory_t));
+	if (wsman_factory) {
+		wsman_factory->ws_factory = ws_factory;
+	}
 
 	return wsman_factory;
 }

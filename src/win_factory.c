@@ -31,6 +31,7 @@
 #include "win_factory.h"
 
 #include <stdlib.h>
+#include <string.h>
 
 static int
 b3_win_factory_free_impl(b3_win_factory_t *win_factory);
@@ -46,8 +47,10 @@ b3_win_factory_new(void)
 {
 	b3_win_factory_t *win_factory;
 
-	win_factory = malloc(sizeof(win_factory));
+	win_factory = malloc(sizeof(b3_win_factory_t));
 	if (win_factory) {
+		memset(win_factory, 0, sizeof(b3_win_factory_t));
+
 		win_factory->b3_win_factory_free = b3_win_factory_free_impl;
 		win_factory->b3_win_factory_win_create = b3_win_factory_win_create_impl;
 		win_factory->b3_win_factory_win_free = b3_win_factory_win_free_impl;
@@ -55,7 +58,6 @@ b3_win_factory_new(void)
         win_factory->global_mutex = CreateMutex(NULL, FALSE, NULL);
 		array_new(&(win_factory->win_arr));
 	}
-
 
 	return win_factory;
 }
@@ -86,6 +88,7 @@ b3_win_factory_free_impl(b3_win_factory_t *win_factory)
 
 	ReleaseMutex(win_factory->global_mutex);
 	CloseHandle(win_factory->global_mutex);
+	win_factory->global_mutex = NULL;
 
 	array_iter_init(&iter, win_factory->win_arr);
 	while (array_iter_next(&iter, (void *) &win_iter) != CC_ITER_END) {

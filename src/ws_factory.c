@@ -44,12 +44,12 @@ b3_ws_factory_new(void)
 {
 	b3_ws_factory_t *ws_factory;
 
-	ws_factory = NULL;
 	ws_factory = malloc(sizeof(b3_ws_factory_t));
+	if (ws_factory) {
+		array_new(&(ws_factory->ws_arr));
 
-	array_new(&(ws_factory->ws_arr));
-
-	ws_factory->ws_counter = b3_counter_new(1, 1);
+		ws_factory->ws_counter = b3_counter_new(1, 1);
+	}
 
 	return ws_factory;
 }

@@ -82,7 +82,7 @@ b3_monitor_new(const char *monitor_name,
 		monitor->wsman_factory = wsman_factory;
 
 		length = strlen(monitor_name) + 1;
-		monitor->monitor_name = malloc(length);
+		monitor->monitor_name = malloc(sizeof(char) * length);
 		strcpy(monitor->monitor_name, monitor_name);
 
 		monitor->monitor_area = monitor_area;
