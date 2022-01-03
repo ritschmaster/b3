@@ -1,3 +1,9 @@
+# Release 0.7
+
+Features
+* The internal subroutine to focus a window has been updated. Instead of using the Win32 API function SetActiveWindow() and its friends an automated mouse click is performed on the window to focus. This greatly increases the execution speed of b3.
+* The window watcher utilizes threads to increase the execution speed.
+
 # Release 0.6
 
 Bugfixes:
