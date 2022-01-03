@@ -1027,6 +1027,7 @@ int
 b3_director_w32_set_active_window(HWND window_handler, char generate_lag)
 {
 	int error ;
+    WINDOWPLACEMENT window_placement;
     RECT window_rect;
     POINT point_bak;
     POINT point;
@@ -1034,13 +1035,34 @@ b3_director_w32_set_active_window(HWND window_handler, char generate_lag)
 
     error = 0;
 
-    if (generate_lag) {
-        Sleep(500);
+    /**
+     * Nothing to do if the window is already active.
+     */
+    if (GetActiveWindow() == window_handler) {
+        return error;
     }
 
+    /**
+     * Only perform the lag if the window is not shown at all
+     */
+    GetWindowPlacement(window_handler, &window_placement);
+    switch (window_placement.showCmd) {
+        case SW_HIDE:
+        case SW_SHOWMINIMIZED:
+        case SW_MINIMIZE:
+        case SW_FORCEMINIMIZE:
+            if (generate_lag) {
+                Sleep(500);
+            }
+            break;
+    }
+
+    /**
+     * Active the window by clicking on it
+     */
     GetWindowRect(window_handler, &window_rect);
-    point.x = window_rect.left + 1;
-    point.y = window_rect.top + 1;
+    point.x = window_rect.left;
+    point.y = window_rect.top;
 
     GetCursorPos(&point_bak);
     SetCursorPos(point.x, point.y);

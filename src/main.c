@@ -244,6 +244,7 @@ parameterized_main(void)
 	 * Start win watcher
 	 */
 	if (!error) {
+		b3_win_watcher_set_threaded(win_watcher, 1);
 		b3_win_watcher_start(win_watcher);
 	}
 
@@ -266,6 +267,8 @@ parameterized_main(void)
 	 * Start main loops
 	 */
 	if (!error) {
+		b3_win_watcher_set_threaded(win_watcher, 0);
+
 		main_loop();
 
 		b3_win_watcher_stop(win_watcher);

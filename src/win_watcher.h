@@ -38,8 +38,17 @@
 
 #define B3_WIN_WATCHER_BUFFER_LENGTH 1024
 
-typedef struct b3_win_watcher_s
+typedef struct b3_win_watcher_s b3_win_watcher_t;
+
+struct b3_win_watcher_s
 {
+	int (* b3_win_watcher_free)(b3_win_watcher_t *win_watcher);
+	int (* b3_win_watcher_start)(b3_win_watcher_t *win_watcher);
+	int (* b3_win_watcher_stop)(b3_win_watcher_t *win_watcher);
+	int (* b3_win_watcher_managable_window_handler)(b3_win_watcher_t *win_watcher, HWND window_handler);
+	int (* b3_win_watcher_set_threaded)(b3_win_watcher_t *win_watcher, int threaded);
+	int (* b3_win_watcher_is_threaded)(b3_win_watcher_t *win_watcher);
+
 	b3_win_factory_t *win_factory;
 
 	b3_director_t *director;
@@ -47,7 +56,9 @@ typedef struct b3_win_watcher_s
 	HWND window_handler;
 
 	UINT shellhookid;
-} b3_win_watcher_t;
+
+	int threaded;
+};
 
 /**
  * @param win_factory The object will not be freed. Free it by yourself!
@@ -56,7 +67,7 @@ typedef struct b3_win_watcher_s
 extern b3_win_watcher_t *
 b3_win_watcher_new(b3_win_factory_t *win_factory, b3_director_t *director);
 
-extern b3_win_watcher_t *
+extern int
 b3_win_watcher_free(b3_win_watcher_t *win_watcher);
 
 /**
@@ -71,6 +82,11 @@ b3_win_watcher_start(b3_win_watcher_t *win_watcher);
 extern int
 b3_win_watcher_stop(b3_win_watcher_t *win_watcher);
 
+extern int
+b3_win_watcher_set_threaded(b3_win_watcher_t *win_watcher, int threaded);
+
+extern int
+b3_win_watcher_is_threaded(b3_win_watcher_t *win_watcher);
 
 /**
  * @return 0 if the window is not managable. Non-0 if it is managable.

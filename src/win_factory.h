@@ -36,13 +36,21 @@
 #ifndef B3_WIN_FACTORY_H
 #define B3_WIN_FACTORY_H
 
-typedef struct b3_win_factory_s
+typedef struct b3_win_factory_s b3_win_factory_t;
+
+struct b3_win_factory_s
 {
+	int (* b3_win_factory_free)(b3_win_factory_t *win_factory);
+	b3_win_t *(* b3_win_factory_win_create)(b3_win_factory_t *win_factory, HWND window_handler);
+	int (* b3_win_factory_win_free)(b3_win_factory_t *win_factory, b3_win_t *win);
+
+	HANDLE global_mutex;
+
 	/**
 	 *  Array of b3_win_t *
 	 */
 	Array *win_arr;
-} b3_win_factory_t;
+};
 
 /**
  * @brief Creates a new window factory

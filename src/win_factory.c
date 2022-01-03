@@ -32,14 +32,30 @@
 
 #include <stdlib.h>
 
+static int
+b3_win_factory_free_impl(b3_win_factory_t *win_factory);
+
+static b3_win_t *
+b3_win_factory_win_create_impl(b3_win_factory_t *win_factory, HWND window_handler);
+
+static int
+b3_win_factory_win_free_impl(b3_win_factory_t *win_factory, b3_win_t *win);
+
 b3_win_factory_t *
 b3_win_factory_new(void)
 {
 	b3_win_factory_t *win_factory;
 
 	win_factory = malloc(sizeof(win_factory));
+	if (win_factory) {
+		win_factory->b3_win_factory_free = b3_win_factory_free_impl;
+		win_factory->b3_win_factory_win_create = b3_win_factory_win_create_impl;
+		win_factory->b3_win_factory_win_free = b3_win_factory_win_free_impl;
 
-	array_new(&(win_factory->win_arr));
+        win_factory->global_mutex = CreateMutex(NULL, FALSE, NULL);
+		array_new(&(win_factory->win_arr));
+	}
+
 
 	return win_factory;
 }
@@ -47,8 +63,29 @@ b3_win_factory_new(void)
 int
 b3_win_factory_free(b3_win_factory_t *win_factory)
 {
+	return win_factory->b3_win_factory_free(win_factory);
+}
+
+b3_win_t *
+b3_win_factory_win_create(b3_win_factory_t *win_factory, HWND window_handler)
+{
+	return win_factory->b3_win_factory_win_create(win_factory, window_handler);
+}
+
+int
+b3_win_factory_win_free(b3_win_factory_t *win_factory, b3_win_t *win)
+{
+	return win_factory->b3_win_factory_win_free(win_factory, win);
+}
+
+int
+b3_win_factory_free_impl(b3_win_factory_t *win_factory)
+{
 	ArrayIter iter;
 	b3_win_t *win_iter;
+
+	ReleaseMutex(win_factory->global_mutex);
+	CloseHandle(win_factory->global_mutex);
 
 	array_iter_init(&iter, win_factory->win_arr);
 	while (array_iter_next(&iter, (void *) &win_iter) != CC_ITER_END) {
@@ -64,12 +101,14 @@ b3_win_factory_free(b3_win_factory_t *win_factory)
 }
 
 b3_win_t *
-b3_win_factory_win_create(b3_win_factory_t *win_factory, HWND window_handler)
+b3_win_factory_win_create_impl(b3_win_factory_t *win_factory, HWND window_handler)
 {
 	ArrayIter iter;
 	b3_win_t *win_iter;
 	b3_win_t *win_new;
 	b3_win_t *win;
+
+	WaitForSingleObject(win_factory->global_mutex, INFINITE);
 
 	win_new = b3_win_new(window_handler, 0);
 	win = NULL;
@@ -87,15 +126,22 @@ b3_win_factory_win_create(b3_win_factory_t *win_factory, HWND window_handler)
 		array_add(win_factory->win_arr, win);
 	}
 
+	ReleaseMutex(win_factory->global_mutex);
+
 	return win;
 }
 
 int
-b3_win_factory_win_free(b3_win_factory_t *win_factory, b3_win_t *win)
+b3_win_factory_win_free_impl(b3_win_factory_t *win_factory, b3_win_t *win)
 {
+	int error;
 	ArrayIter iter;
 	b3_win_t *win_iter;
 	char found;
+
+	error = 1;
+
+	WaitForSingleObject(win_factory->global_mutex, INFINITE);
 
 	found = 0;
 	array_iter_init(&iter, win_factory->win_arr);
@@ -110,8 +156,10 @@ b3_win_factory_win_free(b3_win_factory_t *win_factory, b3_win_t *win)
 		if (win_iter != win) {
 			b3_win_free(win_iter);
 		}
-		return b3_win_free(win);
-	} else {
-		return 1;
+		error = b3_win_free(win);
 	}
+
+	ReleaseMutex(win_factory->global_mutex);
+
+	return error;
 }

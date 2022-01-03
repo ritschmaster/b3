@@ -31,13 +31,58 @@
 #include <windows.h>
 #include <collectc/hashtable.h>
 
+typedef struct b3_win_watcher_win_focused_comm_s
+{
+	b3_win_watcher_t *win_watcher;
+	HWND focused_window_handler;
+} b3_win_watcher_win_focused_comm_t;
+
+typedef struct b3_win_watcher_win_opened_comm_s
+{
+	b3_win_watcher_t *win_watcher;
+	HWND opened_window_handler;
+} b3_win_watcher_win_opened_comm_t;
+
+typedef struct b3_win_watcher_win_closed_comm_s
+{
+	b3_win_watcher_t *win_watcher;
+	HWND closed_window_handler;
+} b3_win_watcher_win_closed_comm_t;
+
 static wbk_logger_t logger =  { "win_watcher" };
+
+static int
+b3_win_watcher_free_impl(b3_win_watcher_t *win_watcher);
+
+static int
+b3_win_watcher_start_impl(b3_win_watcher_t *win_watcher);
+
+static int
+b3_win_watcher_stop_impl(b3_win_watcher_t *win_watcher);
 
 static LRESULT CALLBACK
 b3_win_watcher_wnd_proc(HWND window_handler, UINT msg, WPARAM wParam, LPARAM lParam);
 
+static DWORD WINAPI
+b3_win_watcher_win_focused_threaded(LPVOID param);
+
+static DWORD WINAPI
+b3_win_watcher_win_opened_threaded(LPVOID param);
+
+static DWORD WINAPI
+b3_win_watcher_win_closed_threaded(LPVOID param);
+
+static int
+b3_win_watcher_managable_window_handler_impl(b3_win_watcher_t *win_watcher, HWND window_handler);
+
 static BOOL CALLBACK
 b3_win_watcher_enum_windows(HWND window_handler, LPARAM param);
+
+static int
+b3_win_watcher_set_threaded_impl(b3_win_watcher_t *win_watcher, int threaded);
+
+static int
+b3_win_watcher_is_threaded_impl(b3_win_watcher_t *win_watcher);
 
 b3_win_watcher_t *
 b3_win_watcher_new(b3_win_factory_t *win_factory, b3_director_t *director)
@@ -46,17 +91,60 @@ b3_win_watcher_new(b3_win_factory_t *win_factory, b3_director_t *director)
 
 	win_watcher = NULL;
 	win_watcher = malloc(sizeof(b3_win_watcher_t));
-	memset(win_watcher, 0, sizeof(b3_win_watcher_t));
+	if (win_watcher) {
+		memset(win_watcher, 0, sizeof(b3_win_watcher_t));
 
-	win_watcher->win_factory = win_factory;
+		win_watcher->b3_win_watcher_free = b3_win_watcher_free_impl;
+		win_watcher->b3_win_watcher_start = b3_win_watcher_start_impl;
+		win_watcher->b3_win_watcher_stop = b3_win_watcher_stop_impl;
+		win_watcher->b3_win_watcher_managable_window_handler = b3_win_watcher_managable_window_handler_impl;
+		win_watcher->b3_win_watcher_set_threaded = b3_win_watcher_set_threaded_impl;
+		win_watcher->b3_win_watcher_is_threaded = b3_win_watcher_is_threaded_impl;
 
-	win_watcher->director = director;
+		win_watcher->win_factory = win_factory;
+		win_watcher->director = director;
+	}
 
 	return win_watcher;
 }
 
-b3_win_watcher_t *
+int
 b3_win_watcher_free(b3_win_watcher_t *win_watcher)
+{
+	return win_watcher->b3_win_watcher_free(win_watcher);
+}
+
+int
+b3_win_watcher_start(b3_win_watcher_t *win_watcher)
+{
+	return win_watcher->b3_win_watcher_start(win_watcher);
+}
+
+int
+b3_win_watcher_stop(b3_win_watcher_t *win_watcher) {
+	return win_watcher->b3_win_watcher_stop(win_watcher);
+}
+
+int
+b3_win_watcher_managable_window_handler(b3_win_watcher_t *win_watcher, HWND window_handler)
+{
+	return win_watcher->b3_win_watcher_managable_window_handler(win_watcher, window_handler);
+}
+
+int
+b3_win_watcher_set_threaded(b3_win_watcher_t *win_watcher, int threaded)
+{
+	return win_watcher->b3_win_watcher_set_threaded(win_watcher, threaded);
+}
+
+int
+b3_win_watcher_is_threaded(b3_win_watcher_t *win_watcher)
+{
+	return win_watcher->b3_win_watcher_is_threaded(win_watcher);
+}
+
+int
+b3_win_watcher_free_impl(b3_win_watcher_t *win_watcher)
 {
 	b3_win_watcher_stop(win_watcher);
 
@@ -67,10 +155,12 @@ b3_win_watcher_free(b3_win_watcher_t *win_watcher)
 	win_watcher->window_handler = NULL;
 
 	free(win_watcher);
+
+	return 0;
 }
 
 int
-b3_win_watcher_start(b3_win_watcher_t *win_watcher)
+b3_win_watcher_start_impl(b3_win_watcher_t *win_watcher)
 {
 	HINSTANCE hInstance;
 	WNDCLASSEX wc;
@@ -141,7 +231,7 @@ b3_win_watcher_start(b3_win_watcher_t *win_watcher)
 }
 
 int
-b3_win_watcher_stop(b3_win_watcher_t *win_watcher)
+b3_win_watcher_stop_impl(b3_win_watcher_t *win_watcher)
 {
 	if (win_watcher->window_handler) {
 		DestroyWindow(win_watcher->window_handler);
@@ -156,8 +246,9 @@ b3_win_watcher_wnd_proc(HWND window_handler, UINT msg, WPARAM wParam, LPARAM lPa
 {
 	b3_win_watcher_t *win_watcher;
 	b3_win_t *win;
-	HMONITOR monitor;
-    MONITORINFOEX monitor_info;
+	b3_win_watcher_win_focused_comm_t focused_comm;
+	b3_win_watcher_win_opened_comm_t opened_comm;
+	b3_win_watcher_win_closed_comm_t closed_comm;
 
     win_watcher = (b3_win_watcher_t *) GetWindowLongPtr(window_handler, GWLP_USERDATA);
 
@@ -171,38 +262,111 @@ b3_win_watcher_wnd_proc(HWND window_handler, UINT msg, WPARAM wParam, LPARAM lPa
 		    && msg == win_watcher->shellhookid) {
 			switch (wParam & 0x7fff) {
 				case HSHELL_WINDOWCREATED:
-					if (b3_win_watcher_managable_window_handler(win_watcher, (HWND) lParam)) {
-						monitor = MonitorFromWindow((HWND) lParam, MONITOR_DEFAULTTONEAREST);
-						monitor_info.cbSize = sizeof(MONITORINFOEX);
-						GetMonitorInfo(monitor, (LPMONITORINFO) &monitor_info);
-
-						win = b3_win_factory_win_create(win_watcher->win_factory, (HWND) lParam);
-						if (b3_director_add_win(win_watcher->director, monitor_info.szDevice, win)) {
-						}
-
-						DeleteObject(monitor);
+					opened_comm.win_watcher = win_watcher;
+					opened_comm.opened_window_handler = (HWND) lParam;
+					if (b3_win_watcher_is_threaded(win_watcher)) {
+						CreateThread(NULL,
+									 0,
+									 b3_win_watcher_win_opened_threaded,
+									 (LPVOID) &opened_comm,
+									 0,
+									 NULL);
+					} else {
+						b3_win_watcher_win_opened_threaded((LPVOID) &opened_comm);
 					}
 					break;
 
 				case HSHELL_WINDOWDESTROYED:
-					win = b3_win_factory_win_create(win_watcher->win_factory, (HWND) lParam);
-					if (b3_director_remove_win(win_watcher->director, win) == 0) {
-						b3_win_factory_win_free(win_watcher->win_factory, win);
-            b3_director_remove_empty_ws(win_watcher->director);
+					closed_comm.win_watcher = win_watcher;
+					closed_comm.closed_window_handler = (HWND) lParam;
+					if (b3_win_watcher_is_threaded(win_watcher)) {
+						CreateThread(NULL,
+									 0,
+									 b3_win_watcher_win_closed_threaded,
+									 (LPVOID) &closed_comm,
+									 0,
+									 NULL);
+					} else {
+						b3_win_watcher_win_closed_threaded((LPVOID) &closed_comm);
 					}
 					break;
 
 				case HSHELL_WINDOWACTIVATED:
-					if (b3_win_watcher_managable_window_handler(win_watcher, (HWND) lParam)) {
-						win = b3_win_factory_win_create(win_watcher->win_factory, (HWND) lParam);
-						if (b3_director_set_active_win(win_watcher->director, win) == 0) {
-						}
+					focused_comm.win_watcher = win_watcher;
+					focused_comm.focused_window_handler = (HWND) lParam;
+					if (b3_win_watcher_is_threaded(win_watcher)) {
+						CreateThread(NULL,
+									 0,
+									 b3_win_watcher_win_focused_threaded,
+									 (LPVOID) &focused_comm,
+									 0,
+									 NULL);
+					} else {
+						b3_win_watcher_win_focused_threaded((LPVOID) &focused_comm);
 					}
 					break;
 			}
 		} else {
 			return DefWindowProc(window_handler, msg, wParam, lParam);
 		}
+	}
+
+	return 0;
+}
+
+DWORD WINAPI
+b3_win_watcher_win_focused_threaded(LPVOID param)
+{
+	b3_win_watcher_win_focused_comm_t *comm;
+	b3_win_t *win;
+
+	comm = (b3_win_watcher_win_focused_comm_t *) param;
+	if (b3_win_watcher_managable_window_handler(comm->win_watcher, comm->focused_window_handler)) {
+		win = b3_win_factory_win_create(comm->win_watcher->win_factory, comm->focused_window_handler);
+		if (b3_director_set_active_win(comm->win_watcher->director, win) == 0) {
+		}
+	}
+
+	return 0;
+}
+
+DWORD WINAPI
+b3_win_watcher_win_opened_threaded(LPVOID param)
+{
+	b3_win_watcher_win_opened_comm_t *comm;
+	HMONITOR monitor;
+    MONITORINFOEX monitor_info;
+	b3_win_t *win;
+
+	comm = (b3_win_watcher_win_opened_comm_t *) param;
+
+	if (b3_win_watcher_managable_window_handler(comm->win_watcher, comm->opened_window_handler)) {
+		monitor = MonitorFromWindow(comm->opened_window_handler, MONITOR_DEFAULTTONEAREST);
+		monitor_info.cbSize = sizeof(MONITORINFOEX);
+		GetMonitorInfo(monitor, (LPMONITORINFO) &monitor_info);
+
+		win = b3_win_factory_win_create(comm->win_watcher->win_factory, comm->opened_window_handler);
+		if (b3_director_add_win(comm->win_watcher->director, monitor_info.szDevice, win)) {
+		}
+
+		DeleteObject(monitor);
+	}
+
+	return 0;
+}
+
+DWORD WINAPI
+b3_win_watcher_win_closed_threaded(LPVOID param)
+{
+	b3_win_watcher_win_closed_comm_t *comm;
+	b3_win_t *win;
+
+	comm = (b3_win_watcher_win_closed_comm_t *) param;
+
+	win = b3_win_factory_win_create(comm->win_watcher->win_factory, comm->closed_window_handler);
+	if (b3_director_remove_win(comm->win_watcher->director, win) == 0) {
+		b3_win_factory_win_free(comm->win_watcher->win_factory, win);
+		b3_director_remove_empty_ws(comm->win_watcher->director);
 	}
 
 	return 0;
@@ -235,7 +399,7 @@ b3_win_watcher_enum_windows(HWND window_handler, LPARAM param)
 }
 
 int
-b3_win_watcher_managable_window_handler(b3_win_watcher_t *win_watcher, HWND window_handler)
+b3_win_watcher_managable_window_handler_impl(b3_win_watcher_t *win_watcher, HWND window_handler)
 {
 	int exstyle;
 	HWND window_owner;
@@ -324,4 +488,17 @@ b3_win_watcher_managable_window_handler(b3_win_watcher_t *win_watcher, HWND wind
 	}
 
 	return 0;
+}
+
+int
+b3_win_watcher_set_threaded_impl(b3_win_watcher_t *win_watcher, int threaded)
+{
+	win_watcher->threaded = threaded;
+	return 0;
+}
+
+int
+b3_win_watcher_is_threaded_impl(b3_win_watcher_t *win_watcher)
+{
+	return win_watcher->threaded;
 }
