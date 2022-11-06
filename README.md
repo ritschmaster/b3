@@ -98,6 +98,8 @@ Then compile and install w32bindkeys. Please have a look at its [README](https:/
 
 Then compile b3:
 
+    git clone https://github.com/ritschmaster/b3.git
+    cd b3
     ./autogen.sh
     make
 
@@ -131,6 +133,8 @@ Then compile and install w32bindkeys. Please have a look at its [README](https:/
 
 Then compile b3:
 
+    git clone https://github.com/ritschmaster/b3.git
+    cd b3
     export PKG_CONFIG_PATH=/usr/x86_64-w64-mingw32/lib/pkgconfig/
     ./configure --host=x86_64-w64-mingw32
     make
