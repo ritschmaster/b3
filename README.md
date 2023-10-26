@@ -7,6 +7,10 @@
 
 __b__(aeck's implementation of i) __3__ (wm for Windows)
 
+## Current state
+
+I have moved on to use macOS exclusively. As a result I completely dropped using tiling window managers and also stopped developing b3. Therefore I am open to transfer the ownership to anyone who is willing to actively maintain this piece of software. Just write me an e-mail.
+
 ## Using b3
 
 ### Using binary releases
